@@ -29,13 +29,19 @@ with app.app_context():
     except Exception as e:
         print(f"Baza yaratishda xatolik: {e}")
 
-# Bosh sahifa (Maqolalar ro'yxati)
 @app.route('/')
 def index():
-    articles = Article.query.all()
-    return render_template('index.html', articles=articles)
+    query = request.args.get('q', '')
+    if query:
+        articles = Article.query.filter(
+            (Article.title_uz.ilike(f'%{query}%')) | 
+            (Article.title_en.ilike(f'%{query}%')) | 
+            (Article.title_ru.ilike(f'%{query}%'))
+        ).all()
+    else:
+        articles = Article.query.order_by(Article.created_at.desc()).all()
+    return render_template('index.html', articles=articles, query=query)
 
-# Alohida maqola sahifasi
 @app.route('/article/<int:article_id>')
 def article_detail(article_id):
     article = Article.query.get_or_404(article_id)
@@ -43,7 +49,6 @@ def article_detail(article_id):
     db.session.commit()
     return render_template('article.html', article=article)
 
-# Maqolani yuklab olish
 @app.route('/download/<int:article_id>')
 def download_article(article_id):
     article = Article.query.get_or_404(article_id)
@@ -51,49 +56,52 @@ def download_article(article_id):
     db.session.commit()
     return redirect(article.pdf_filename)
 
-# Admin Panel (Yangi maqola qo'shish)
 @app.route('/admin/add', methods=['GET', 'POST'])
 def add_article():
     if request.method == 'POST':
-        title = request.form.get('title')
-        abstract = request.form.get('abstract')
+        title_uz = request.form.get('title_uz')
+        title_en = request.form.get('title_en')
+        title_ru = request.form.get('title_ru')
+        
+        abstract_uz = request.form.get('abstract_uz')
+        abstract_en = request.form.get('abstract_en')
+        abstract_ru = request.form.get('abstract_ru')
+        
+        keywords_uz = request.form.get('keywords_uz')
+        keywords_en = request.form.get('keywords_en')
+        keywords_ru = request.form.get('keywords_ru')
+        
         doi = request.form.get('doi')
         authors_input = request.form.get('authors')
         pdf_file = request.files.get('pdf_file')
         
         if pdf_file and pdf_file.filename != '':
             filename = f"{int(time.time())}_{secure_filename(pdf_file.filename)}"
-            
             try:
                 bucket = storage.bucket()
                 blob = bucket.blob(f"articles/{filename}")
-                
-                blob.upload_from_string(
-                    pdf_file.read(),
-                    content_type='application/pdf'
-                )
-                
+                blob.upload_from_string(pdf_file.read(), content_type='application/pdf')
                 blob.make_public()
                 public_url = blob.public_url
                 
-                new_article = Article(title=title, abstract=abstract, doi=doi, pdf_filename=public_url)
+                new_article = Article(
+                    title_uz=title_uz, title_en=title_en, title_ru=title_ru,
+                    abstract_uz=abstract_uz, abstract_en=abstract_en, abstract_ru=abstract_ru,
+                    keywords_uz=keywords_uz, keywords_en=keywords_en, keywords_ru=keywords_ru,
+                    doi=doi, pdf_filename=public_url
+                )
                 db.session.add(new_article)
                 db.session.commit()
                 
                 if authors_input:
                     author_names = authors_input.split(',')
                     for idx, name in enumerate(author_names):
-                        new_author = Author(
-                            full_name=name.strip(), 
-                            order_index=idx+1, 
-                            article_id=new_article.id
-                        )
+                        new_author = Author(full_name=name.strip(), order_index=idx+1, article_id=new_article.id)
                         db.session.add(new_author)
                     db.session.commit()
                 
-                flash("Maqola muvaffaqiyatli saqlandi!", "success")
+                flash("Maqola muvaffaqiyatli qo'shildi!", "success")
                 return redirect(url_for('add_article'))
-                
             except Exception as e:
                 flash(f"Xatolik yuz berdi: {str(e)}", "danger")
                 return redirect(url_for('add_article'))
