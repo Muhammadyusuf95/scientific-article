@@ -1,6 +1,6 @@
 import os
 import time
-from flask import Flask, request, render_template, redirect, url_for, flash
+from flask import Flask, request, render_template, redirect, url_for, flash, make_response
 from werkzeug.utils import secure_filename
 from models import db, Article, Author
 import firebase_admin
@@ -107,6 +107,34 @@ def add_article():
                 return redirect(url_for('add_article'))
                 
     return render_template('admin_add.html')
+
+@app.route('/sitemap.xml')
+def sitemap():
+    base_url = "https://scientific-article.onrender.com"
+    
+    xml_content = '<?xml version="1.0" encoding="UTF-8"?>\n'
+    xml_content += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+    
+    xml_content += f'  <url>\n    <loc>{base_url}/</loc>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>\n'
+    
+    try:
+        articles = Article.query.all()
+        for article in articles:
+            lastmod = article.created_at.strftime('%Y-%m-%d') if hasattr(article, 'created_at') and article.created_at else '2026-11-05'
+            xml_content += f'  <url>\n'
+            xml_content += f'    <loc>{base_url}/article/{article.id}</loc>\n'
+            xml_content += f'    <lastmod>{lastmod}</lastmod>\n'
+            xml_content += f'    <changefreq>weekly</changefreq>\n'
+            xml_content += f'    <priority>0.8</priority>\n'
+            xml_content += f'  </url>\n'
+    except Exception as e:
+        print(f"Sitemap xatoligi: {e}")
+        
+    xml_content += '</urlset>'
+    
+    response = make_response(xml_content)
+    response.headers["Content-Type"] = "application/xml"
+    return response
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
