@@ -1,15 +1,21 @@
 import os
 import time
-from flask import Flask, request, render_template, redirect, url_for, flash, make_response
+from flask import Flask, request, render_template, redirect, url_for, flash, make_response, session
 from werkzeug.utils import secure_filename
-from models import db, Article, Author
+from werkzeug.security import generate_password_hash, check_password_hash
+from models import db, Article, Author, User  # User modeli models.py fayliga qo'shilgan bo'lishi kerak
 import firebase_admin
 from firebase_admin import credentials, storage
+from functools import wraps
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///scholar_db.sqlite')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = os.getenv('SECRET_KEY', 'super_maxfiy_kalit')
+
+# --- ADMIN LOGOUT VA LOGIN MA'LUMOTLARI ---
+ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', 'admin')
+ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'parol123') # O'zingizning xavfsiz parolingizga o'zgartiring
 
 FIREBASE_KEY_PATH = os.getenv('FIREBASE_KEY_PATH', 'firebase_key.json')
 FIREBASE_BUCKET = 'scientific-article-22107.firebasestorage.app'
@@ -29,6 +35,26 @@ with app.app_context():
     except Exception as e:
         print(f"Baza yaratishda xatolik: {e}")
 
+# --- DEKORATORLAR (Himoya uchun) ---
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('is_admin'):
+            flash("Bu sahifaga kirish uchun admin sifatida kiring!", "danger")
+            return redirect(url_for('admin_login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            flash("Maqolani yuklab olish uchun avval tizimga kiring yoki ro'yxatdan o'ting!", "warning")
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+# --- ASOSIY SAHIFA ---
 @app.route('/')
 def index():
     query = request.args.get('q', '')
@@ -42,6 +68,7 @@ def index():
         articles = Article.query.order_by(Article.created_at.desc()).all()
     return render_template('index.html', articles=articles, query=query)
 
+# --- MAQOLA TAFSILOTI ---
 @app.route('/article/<int:article_id>')
 def article_detail(article_id):
     article = Article.query.get_or_404(article_id)
@@ -49,14 +76,86 @@ def article_detail(article_id):
     db.session.commit()
     return render_template('article.html', article=article)
 
+# --- YUKLAB OLISH (Faqat ro'yxatdan o'tganlar uchun) ---
 @app.route('/download/<int:article_id>')
+@login_required
 def download_article(article_id):
     article = Article.query.get_or_404(article_id)
     article.downloads_count += 1
     db.session.commit()
     return redirect(article.pdf_filename)
 
+# --- ADMIN LOGIN ---
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+            session['is_admin'] = True
+            flash("Admin panelga xush kelibsiz!", "success")
+            return redirect(url_for('add_article'))
+        else:
+            flash("Login yoki parol xato!", "danger")
+    return render_template('admin_login.html')
+
+@app.route('/admin/logout')
+def admin_logout():
+    session.pop('is_admin', None)
+    flash("Admin tizimidan chiqildi.", "info")
+    return redirect(url_for('index'))
+
+# --- FOYDALANUVCHI RO'YXATDAN O'TISHI (REGISTER) ---
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        user_exists = User.query.filter_by(username=username).first()
+        if user_exists:
+            flash("Bu foydalanuvchi nomi band qilingan!", "danger")
+            return redirect(url_for('register'))
+            
+        hashed_password = generate_password_hash(password)
+        new_user = User(username=username, password=hashed_password)
+        db.session.add(new_user)
+        db.session.commit()
+        
+        flash("Muvaffaqiyatli ro'yxatdan o'tdingiz! Endi kiring.", "success")
+        return redirect(url_for('login'))
+        
+    return render_template('register.html')
+
+# --- FOYDALANUVCHI TIZIMGA KIRishi (LOGIN) ---
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        user = User.query.filter_by(username=username).first()
+        if user and check_password_hash(user.password, password):
+            session['user_id'] = user.id
+            session['username'] = user.username
+            flash("Tizimga muvaffaqiyatli kirdingiz!", "success")
+            return redirect(url_for('index'))
+        else:
+            flash("Login yoki parol xato!", "danger")
+            
+    return render_template('login.html')
+
+# --- FOYDALANUVCHI TIZIMDAN CHIQISHI ---
+@app.route('/logout')
+def logout():
+    session.pop('user_id', None)
+    session.pop('username', None)
+    flash("Tizimdan chiqdingiz.", "info")
+    return redirect(url_for('index'))
+
+# --- MAQOLA QO'SHISH (Faqat Admin uchun) ---
 @app.route('/admin/add', methods=['GET', 'POST'])
+@admin_required
 def add_article():
     if request.method == 'POST':
         title_uz = request.form.get('title_uz')
@@ -108,6 +207,7 @@ def add_article():
                 
     return render_template('admin_add.html')
 
+# --- SITEMAP ---
 @app.route('/sitemap.xml')
 def sitemap():
     base_url = "https://scientific-article.onrender.com"
