@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maqola Yuklash - Admin Panel</title>
+    <!-- Chiroyli dizayn uchun Bootstrap kutubxonasi ulangan -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow-lg border-0 rounded-lg mt-5">
+                    <div class="card-header bg-dark text-white text-center">
+                        <h3 class="font-weight-light my-2">Yangi maqola yuklash</h3>
+                    </div>
+                    <div class="card-body">
+                        
+                        <!-- Xabar chiqadigan joy (Muvaffaqiyatli saqlandi yoki Xatolik) -->
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                        {{ message }}
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+
+                        <!-- Maqola yuklash formasi -->
+                        <form action="/admin/add" method="POST" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label for="title" class="form-label fw-bold">Maqola sarlavhasi (Title)</label>
+                                <input type="text" class="form-control" id="title" name="title" required placeholder="Maqolaning to'liq nomini kiriting">
+                            </div>
+                            <div class="mb-3">
+                                <label for="abstract" class="form-label fw-bold">Annotatsiya (Abstract)</label>
+                                <textarea class="form-control" id="abstract" name="abstract" rows="5" required placeholder="Maqolaning qisqacha mazmunini yozing"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="doi" class="form-label fw-bold">DOI raqami (ixtiyoriy)</label>
+                                <input type="text" class="form-control" id="doi" name="doi" placeholder="Masalan: 10.1234/sc.2026.01">
+                            </div>
+                            <div class="mb-3">
+                                <label for="authors" class="form-label fw-bold">Mualliflar</label>
+                                <input type="text" class="form-control" id="authors" name="authors" required placeholder="Masalan: Ikromov Muhammadyusuf, Ali Valiyev (vergul bilan ajrating)">
+                            </div>
+                            <div class="mb-4">
+                                <label for="pdf_file" class="form-label fw-bold text-danger">Maqola PDF faylini yuklash *</label>
+                                <input class="form-control form-control-lg" type="file" id="pdf_file" name="pdf_file" accept=".pdf" required>
+                            </div>
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary btn-lg">Kiritish va Firebase'ga yuklash</button>
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
