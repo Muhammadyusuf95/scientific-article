@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="bg-light">
-    <nav class="navbar navbar-dark bg-dark shadow-sm">
+    <nav class="navbar navbar-dark bg-dark shadow-sm py-3">
         <div class="container">
             <a class="navbar-brand fw-bold" href="/"><i class="fas fa-arrow-left me-2"></i>Bosh sahifaga qaytish</a>
         </div>
@@ -16,51 +16,92 @@
 
     <div class="container my-5">
         <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="card shadow border-0 rounded-4 p-4">
-                    <div class="card-body">
-                        <h2 class="fw-bold mb-4 text-primary"><i class="fas fa-upload me-2"></i>Yangi Ilmiy Maqola Qo'shish</h2>
-                        
-                        {% with messages = get_flashed_messages(with_categories=true) %}
-                            {% if messages %}
-                                {% for category, message in messages %}
-                                    <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show" role="alert">
-                                        {{ message }}
-                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                    </div>
-                                {% endfor %}
-                            {% endif %}
-                        {% endwith %}
+            <div class="col-md-9">
+                <div class="card shadow border-0 rounded-4 p-4 p-md-5 bg-white">
+                    <h2 class="fw-bold mb-4 text-primary"><i class="fas fa-upload me-2"></i>Yangi Ilmiy Maqola Qo'shish</h2>
+                    
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show" role="alert">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
 
-                        <form method="POST" enctype="multipart/form-data">
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold">Maqola Sarlavhasi</label>
-                                <input type="text" name="title" class="form-control" required placeholder="Maqola nomini kiriting...">
-                            </div>
-                            
-                            <div class="mb-3">
+                    <form method="POST" enctype="multipart/form-data">
+                        <!-- Mualliflar va DOI -->
+                        <div class="row mb-3">
+                            <div class="col-md-8">
                                 <label class="form-label fw-semibold">Mualliflar (vergul bilan ajrating)</label>
                                 <input type="text" name="authors" class="form-control" required placeholder="Masalan: Alisher Navoiy, Bobur Mirzo">
                             </div>
-
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold">DOI raqami (ixtiyoriy)</label>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">DOI raqami</label>
                                 <input type="text" name="doi" class="form-control" placeholder="10.1000/xyz123">
                             </div>
+                        </div>
 
+                        <!-- O'ZBEKCHA -->
+                        <div class="card bg-light border-0 p-3 mb-3 rounded-3">
+                            <h6 class="fw-bold text-primary mb-3">🇺🇿 O'zbek tilidagi ma'lumotlar</h6>
                             <div class="mb-3">
-                                <label class="form-label fw-semibold">Annotatsiya (Abstract)</label>
-                                <textarea name="abstract" class="form-control" rows="4" required placeholder="Maqola haqida qisqacha ma'lumot..."></textarea>
+                                <label class="form-label small fw-semibold">Maqola Sarlavhasi (Uz)</label>
+                                <input type="text" name="title_uz" class="form-control" required placeholder="Maqola nomi...">
                             </div>
-
-                            <div class="mb-4">
-                                <label class="form-label fw-semibold">PDF Faylni Yuklash</label>
-                                <input type="file" name="pdf_file" class="form-control" accept=".pdf" required>
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">Annotatsiya (Uz)</label>
+                                <textarea name="abstract_uz" class="form-control" rows="3" required placeholder="Qisqacha mazmuni..."></textarea>
                             </div>
+                            <div>
+                                <label class="form-label small fw-semibold">Kalit so'zlar (Uz)</label>
+                                <input type="text" name="keywords_uz" class="form-control" placeholder="Ilm, ta'lim, tahlil...">
+                            </div>
+                        </div>
 
-                            <button type="submit" class="btn btn-primary w-100 py-2 fw-bold shadow-sm"><i class="fas fa-save me-2"></i>Maqolani Saqlash va Yuklash</button>
-                        </form>
-                    </div>
+                        <!-- INGLIZCHA -->
+                        <div class="card bg-light border-0 p-3 mb-3 rounded-3">
+                            <h6 class="fw-bold text-primary mb-3">🇬🇧 Ingliz tilidagi ma'lumotlar (English)</h6>
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">Title (En)</label>
+                                <input type="text" name="title_en" class="form-control" placeholder="Article title...">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">Abstract (En)</label>
+                                <textarea name="abstract_en" class="form-control" rows="3" placeholder="Summary..."></textarea>
+                            </div>
+                            <div>
+                                <label class="form-label small fw-semibold">Keywords (En)</label>
+                                <input type="text" name="keywords_en" class="form-control" placeholder="Science, education...">
+                            </div>
+                        </div>
+
+                        <!-- RUSCHA -->
+                        <div class="card bg-light border-0 p-3 mb-3 rounded-3">
+                            <h6 class="fw-bold text-primary mb-3">🇷🇺 Rus tilidagi ma'lumotlar (Русский)</h6>
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">Название (Ru)</label>
+                                <input type="text" name="title_ru" class="form-control" placeholder="Название статьи...">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">Аннотация (Ru)</label>
+                                <textarea name="abstract_ru" class="form-control" rows="3" placeholder="Аннотация..."></textarea>
+                            </div>
+                            <div>
+                                <label class="form-label small fw-semibold">Ключевые слова (Ru)</label>
+                                <input type="text" name="keywords_ru" class="form-control" placeholder="Наука, образование...">
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">PDF Faylni Yuklash</label>
+                            <input type="file" name="pdf_file" class="form-control" accept=".pdf" required>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 py-3 fw-bold shadow-sm rounded-pill"><i class="fas fa-save me-2"></i>Maqolani Saqlash va Nashr Qilish</button>
+                    </form>
                 </div>
             </div>
         </div>
