@@ -9,19 +9,26 @@ from firebase_admin import credentials, storage
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///scholar_db.sqlite')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.secret_key = 'super_maxfiy_kalit' 
+app.secret_key = os.getenv('SECRET_KEY', 'super_maxfiy_kalit')
 
 FIREBASE_KEY_PATH = os.getenv('FIREBASE_KEY_PATH', 'firebase_key.json')
 FIREBASE_BUCKET = 'scientific-article-22107.firebasestorage.app'
 
 if not firebase_admin._apps:
-    cred = credentials.Certificate(FIREBASE_KEY_PATH)
-    firebase_admin.initialize_app(cred, {'storageBucket': FIREBASE_BUCKET})
+    try:
+        cred = credentials.Certificate(FIREBASE_KEY_PATH)
+        firebase_admin.initialize_app(cred, {'storageBucket': FIREBASE_BUCKET})
+    except Exception as e:
+        print(f"Firebase ulanishida xatolik: {e}")
 
 db.init_app(app)
 
+# Ma'lumotlar bazasini xavfsiz tarzda yaratish uchun app_context qo'shamiz
 with app.app_context():
-    db.create_all()
+    try:
+        db.create_all()
+    except Exception as e:
+        print(f"Baza yaratishda xatolik: {e}")
 
 # Bosh sahifa (Maqolalar ro'yxati)
 @app.route('/')
