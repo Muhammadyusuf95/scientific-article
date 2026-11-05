@@ -3,65 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ article.title }} - Ilmiy Portali</title>
+    <title>{{ article.title_uz }} - Ilmiy Portali</title>
+    
+    <!-- Google Scholar Meta Teglari (Indexlash uchun majburiy) -->
+    <meta name="citation_title" content="{{ article.title_uz }}">
+    {% for author in article.authors %}
+    <meta name="citation_author" content="{{ author.full_name }}">
+    {% endfor %}
+    <meta name="citation_publication_date" content="{{ article.created_at.strftime('%Y/%m/%d') }}">
+    <meta name="citation_pdf_url" content="{{ article.pdf_filename }}">
+    {% if article.doi %}<meta name="citation_doi" content="{{ article.doi }}">{% endif %}
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .article-header { background: linear-gradient(135deg, #0d6efd, #0dcaf0); color: white; padding: 3rem 2rem; border-radius: 0 0 1.5rem 1.5rem; margin-bottom: 2rem; }
-        .content-card { border: none; border-radius: 1rem; box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.05); }
-        .stats-badge { font-size: 0.9rem; background-color: #e9ecef; color: #495057; padding: 0.4rem 0.8rem; border-radius: 50rem; }
+        body { background-color: #f8fafc; font-family: 'Inter', system-ui, sans-serif; color: #334155; }
+        .article-header { background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); color: white; padding: 3rem 1rem; border-radius: 0 0 2rem 2rem; margin-bottom: 2rem; }
+        .content-card { border: none; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); background: white; }
+        .stats-badge { font-size: 0.9rem; background-color: rgba(255,255,255,0.1); color: white; padding: 0.4rem 1rem; border-radius: 50rem; backdrop-filter: blur(5px); }
+        .nav-tabs .nav-link.active { font-weight: bold; color: var(--bs-primary); border-bottom: 3px solid var(--bs-primary); background: transparent; }
+        .nav-tabs .nav-link { color: #64748b; border: none; }
+        .citation-box { background: #f1f5f9; border-radius: 0.75rem; padding: 1rem; font-family: monospace; font-size: 0.9rem; border-left: 4px solid #2563eb; }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm py-3">
         <div class="container">
             <a class="navbar-brand fw-bold" href="/"><i class="fas fa-arrow-left me-2"></i>Bosh sahifaga qaytish</a>
         </div>
     </nav>
 
-    <div class="article-header text-center">
-        <div class="container">
-            <h1 class="display-6 fw-bold mb-3">{{ article.title }}</h1>
-            <div class="d-flex justify-content-center gap-3">
-                <span class="stats-badge"><i class="fas fa-eye me-1 text-primary"></i>Ko'rishlar: {{ article.views_count }}</span>
-                <span class="stats-badge"><i class="fas fa-download me-1 text-success"></i>Yuklab olishlar: {{ article.downloads_count }}</span>
+    <div class="article-header">
+        <div class="container text-center">
+            <h1 class="h3 fw-bold mb-3" style="max-width: 800px; margin: 0 auto; line-height: 1.4;">{{ article.title_uz }}</h1>
+            {% if article.title_en %}<h2 class="h6 text-slate-300 fst-italic mb-3">{{ article.title_en }}</h2>{% endif %}
+            
+            <div class="d-flex justify-content-center gap-3 mt-4">
+                <span class="stats-badge"><i class="fas fa-eye me-1 text-info"></i> Ko'rganlar: {{ article.views_count }}</span>
+                <span class="stats-badge"><i class="fas fa-download me-1 text-success"></i> Yuklab olishlar: {{ article.downloads_count }}</span>
             </div>
         </div>
     </div>
 
     <div class="container mb-5">
         <div class="row justify-content-center">
-            <div class="col-md-9">
-                <div class="card content-card p-4 p-md-5 bg-white">
-                    <div class="mb-4">
-                        <h4 class="text-secondary fw-semibold mb-2"><i class="fas fa-info-circle me-2"></i>Maqola haqida (Abstract)</h4>
-                        <p class="lead fs-6 text-dark" style="line-height: 1.8;">{{ article.abstract }}</p>
+            <div class="col-lg-9">
+                <div class="card content-card p-4 p-md-5 mb-4">
+                    
+                    <!-- Mualliflar va DOI -->
+                    <div class="d-flex flex-wrap justify-content-between align-items-center border-bottom pb-3 mb-4">
+                        <div>
+                            <span class="text-muted small d-block mb-1">Mualliflar:</span>
+                            <h5 class="fw-bold text-dark m-0">
+                                {% for author in article.authors %}
+                                    <i class="fas fa-user-graduate text-primary me-1"></i>{{ author.full_name }}{% if not loop.last %}, {% endif %}
+                                {% endfor %}
+                            </h5>
+                        </div>
+                        {% if article.doi %}
+                        <div class="mt-2 mt-md-0">
+                            <span class="badge bg-light text-secondary border px-3 py-2 fs-6">DOI: {{ article.doi }}</span>
+                        </div>
+                        {% endif %}
                     </div>
 
-                    {% if article.doi %}
-                    <div class="mb-4">
-                        <h5 class="text-secondary fw-semibold"><i class="fas fa-fingerprint me-2"></i>DOI Raqami</h5>
-                        <p class="badge bg-secondary fs-6">{{ article.doi }}</p>
-                    </div>
-                    {% endif %}
+                    <!-- Til bo'yicha annotatsiyalarni almashtirish (Tabs) -->
+                    <ul class="nav nav-tabs mb-4" id="langTab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active fw-semibold" id="uz-tab" data-bs-toggle="tab" data-bs-target="#uz" type="button" role="tab">O'zbekcha</button>
+                        </li>
+                        {% if article.abstract_en %}
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link fw-semibold" id="en-tab" data-bs-toggle="tab" data-bs-target="#en" type="button" role="tab">English</button>
+                        </li>
+                        {% endif %}
+                        {% if article.abstract_ru %}
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link fw-semibold" id="ru-tab" data-bs-toggle="tab" data-bs-target="#ru" type="button" role="tab">Русский</button>
+                        </li>
+                        {% endif %}
+                    </ul>
 
-                    {% if article.authors %}
-                    <div class="mb-4">
-                        <h5 class="text-secondary fw-semibold"><i class="fas fa-users me-2"></i>Mualliflar</h5>
-                        <ul class="list-group list-group-flush">
-                            {% for author in article.authors %}
-                                <li class="list-group-item px-0"><i class="fas fa-user-graduate me-2 text-primary"></i>{{ author.full_name }}</li>
-                            {% endfor %}
-                        </ul>
+                    <div class="tab-content mb-4" id="langTabContent">
+                        <div class="tab-pane fade show active" id="uz" role="tabpanel">
+                            <h5 class="text-secondary fw-semibold mb-2">Annotatsiya</h5>
+                            <p class="text-dark" style="line-height: 1.8;">{{ article.abstract_uz }}</p>
+                            {% if article.keywords_uz %}
+                            <div class="mt-3"><span class="fw-semibold text-muted small">Kalit so'zlar:</span> <span class="text-primary">{{ article.keywords_uz }}</span></div>
+                            {% endif %}
+                        </div>
+                        {% if article.abstract_en %}
+                        <div class="tab-pane fade" id="en" role="tabpanel">
+                            <h5 class="text-secondary fw-semibold mb-2">Abstract</h5>
+                            <p class="text-dark" style="line-height: 1.8;">{{ article.abstract_en }}</p>
+                            {% if article.keywords_en %}
+                            <div class="mt-3"><span class="fw-semibold text-muted small">Keywords:</span> <span class="text-primary">{{ article.keywords_en }}</span></div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        {% if article.abstract_ru %}
+                        <div class="tab-pane fade" id="ru" role="tabpanel">
+                            <h5 class="text-secondary fw-semibold mb-2">Аннотация</h5>
+                            <p class="text-dark" style="line-height: 1.8;">{{ article.abstract_ru }}</p>
+                            {% if article.keywords_ru %}
+                            <div class="mt-3"><span class="fw-semibold text-muted small">Ключевые слова:</span> <span class="text-primary">{{ article.keywords_ru }}</span></div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
                     </div>
-                    {% endif %}
 
-                    <div class="d-grid gap-2 mt-4">
-                        <a href="/download/{{ article.id }}" class="btn btn-success btn-lg fw-bold shadow-sm">
-                            <i class="fas fa-file-pdf me-2"></i>To'liq matnni yuklab olish (PDF)
+                    <!-- PDF Yuklab olish tugmasi -->
+                    <div class="d-grid gap-2 mb-5">
+                        <a href="/download/{{ article.id }}" class="btn btn-success btn-lg fw-bold shadow-sm py-3 rounded-pill">
+                            <i class="fas fa-file-pdf me-2"></i> To'liq matnni yuklab olish (PDF)
                         </a>
                     </div>
+
+                    <!-- Zamonaviy Iqtibos (Citation) olish bo'limi -->
+                    <div class="card bg-light border-0 p-4 rounded-4">
+                        <h5 class="fw-bold text-dark mb-3"><i class="fas fa-quote-left text-primary me-2"></i>Iqtibos keltirish (Cite this article)</h5>
+                        
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-muted">APA Formati:</label>
+                            <div class="citation-box" id="apaCitation">
+                                {% for author in article.authors %}{{ author.full_name }}{% if not loop.last %}, {% endif %}{% endfor %} ({{ article.created_at.strftime('%Y') }}). {{ article.title_uz }}. <i>Ilmiy Portali</i>.
+                            </div>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label small fw-semibold text-muted">ГОСТ Formati:</label>
+                            <div class="citation-box" id="gostCitation">
+                                {% for author in article.authors %}{{ author.full_name }}{% if not loop.last %}, {% endif %}{% endfor %} {{ article.title_uz }} // Ilmiy Portali — {{ article.created_at.strftime('%Y') }}.
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
