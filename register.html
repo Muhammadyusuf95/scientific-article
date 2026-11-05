@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <title>Ro'yxatdan o'tish</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>Ro'yxatdan o'tish</h2>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        <form method="POST">
+            <input type="text" name="username" placeholder="Foydalanuvchi nomi" required>
+            <input type="password" name="password" placeholder="Parol" required>
+            <button type="submit">Ro'yxatdan o'tish</button>
+        </form>
+        <p>Hisobingiz bormi? <a href="{{ url_for('login') }}">Tizimga kirish</a></p>
+    </div>
+</body>
+</html>
