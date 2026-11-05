@@ -23,7 +23,6 @@ if not firebase_admin._apps:
 
 db.init_app(app)
 
-# Ma'lumotlar bazasini xavfsiz tarzda yaratish uchun app_context qo'shamiz
 with app.app_context():
     try:
         db.create_all()
@@ -36,7 +35,7 @@ def index():
     articles = Article.query.all()
     return render_template('index.html', articles=articles)
 
-# Alohida maqola sahifasi (Har gal ochilganda views_count 1 taga oshadi)
+# Alohida maqola sahifasi
 @app.route('/article/<int:article_id>')
 def article_detail(article_id):
     article = Article.query.get_or_404(article_id)
@@ -44,7 +43,7 @@ def article_detail(article_id):
     db.session.commit()
     return render_template('article.html', article=article)
 
-# Maqolani yuklab olish sonini oshirib, Firebase havolasiga yo'naltiruvchi maxsus yo'l
+# Maqolani yuklab olish
 @app.route('/download/<int:article_id>')
 def download_article(article_id):
     article = Article.query.get_or_404(article_id)
