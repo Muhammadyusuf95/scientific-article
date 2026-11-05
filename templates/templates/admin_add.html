@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Maqola Qo'shish</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-dark bg-dark shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/"><i class="fas fa-arrow-left me-2"></i>Bosh sahifaga qaytish</a>
+        </div>
+    </nav>
+
+    <div class="container my-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow border-0 rounded-4 p-4">
+                    <div class="card-body">
+                        <h2 class="fw-bold mb-4 text-primary"><i class="fas fa-upload me-2"></i>Yangi Ilmiy Maqola Qo'shish</h2>
+                        
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show" role="alert">
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+
+                        <form method="POST" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Maqola Sarlavhasi</label>
+                                <input type="text" name="title" class="form-control" required placeholder="Maqola nomini kiriting...">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Mualliflar (vergul bilan ajrating)</label>
+                                <input type="text" name="authors" class="form-control" required placeholder="Masalan: Alisher Navoiy, Bobur Mirzo">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">DOI raqami (ixtiyoriy)</label>
+                                <input type="text" name="doi" class="form-control" placeholder="10.1000/xyz123">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Annotatsiya (Abstract)</label>
+                                <textarea name="abstract" class="form-control" rows="4" required placeholder="Maqola haqida qisqacha ma'lumot..."></textarea>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold">PDF Faylni Yuklash</label>
+                                <input type="file" name="pdf_file" class="form-control" accept=".pdf" required>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100 py-2 fw-bold shadow-sm"><i class="fas fa-save me-2"></i>Maqolani Saqlash va Yuklash</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
