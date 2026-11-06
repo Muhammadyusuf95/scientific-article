@@ -3,7 +3,7 @@ import time
 from flask import Flask, request, render_template, redirect, url_for, flash, make_response, session
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
-from models import db, Article, Author, User
+from models import db, Article, Author, User, Collection
 import firebase_admin
 from firebase_admin import credentials, storage
 from functools import wraps
@@ -54,19 +54,14 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'user_id' not in session:
-            flash("Maqolani yuklab olish uchun avval tizimga kiring yoki ro'yxatdan o'ting!", "warning")
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
+# (login_required olib tashlandi, chunki maqolalar endi barchaga ochiq)
 
 # --- ASOSIY SAHIFA (Yil va sonlar bo'yicha tartibli) ---
 @app.route('/')
 def index():
     query = request.args.get('q', '')
+    collections = Collection.query.order_by(Collection.created_at.desc()).all()
+    
     if query:
         articles = Article.query.filter(
             (Article.title_uz.ilike(f'%{query}%')) | 
@@ -75,9 +70,17 @@ def index():
         ).order_by(Article.year.desc(), Article.issue.desc()).all()
     else:
         articles = Article.query.order_by(Article.year.desc(), Article.issue.desc(), Article.created_at.desc()).all()
-    return render_template('index.html', articles=articles, query=query)
+        
+    return render_template('index.html', articles=articles, collections=collections, query=query)
 
-# --- MAQOLA TAFSILOTI ---
+# --- TO'PLAM / KONFERENSIYA SAHIFASI ---
+@app.route('/collection/<int:collection_id>')
+def collection_detail(collection_id):
+    collection = Collection.query.get_or_404(collection_id)
+    articles = Article.query.filter_by(collection_id=collection.id).order_by(Article.year.desc()).all()
+    return render_template('collection.html', collection=collection, articles=articles)
+
+# --- MAQOLA TAFSILOTI VA ONLAYN O'QISH ---
 @app.route('/article/<int:article_id>')
 def article_detail(article_id):
     article = Article.query.get_or_404(article_id)
@@ -85,9 +88,8 @@ def article_detail(article_id):
     db.session.commit()
     return render_template('article.html', article=article)
 
-# --- YUKLAB OLISH (Faqat ro'yxatdan o'tganlar uchun) ---
+# --- YUKLAB OLISH (Barcha uchun ochiq) ---
 @app.route('/download/<int:article_id>')
-@login_required
 def download_article(article_id):
     article = Article.query.get_or_404(article_id)
     article.downloads_count += 1
@@ -187,6 +189,18 @@ def logout():
 def add_article():
     if request.method == 'POST':
         try:
+            # Konferensiya / To'plamni aniqlash yoki yaratish
+            collection_name = request.form.get('collection_name', '').strip()
+            collection_id = None
+            
+            if collection_name:
+                collection = Collection.query.filter_by(name=collection_name).first()
+                if not collection:
+                    collection = Collection(name=collection_name)
+                    db.session.add(collection)
+                    db.session.commit()
+                collection_id = collection.id
+
             title_uz = request.form.get('title_uz')
             title_en = request.form.get('title_en')
             title_ru = request.form.get('title_ru')
@@ -221,6 +235,7 @@ def add_article():
             public_url = blob.public_url
             
             new_article = Article(
+                collection_id=collection_id,
                 title_uz=title_uz, title_en=title_en, title_ru=title_ru,
                 abstract_uz=abstract_uz, abstract_en=abstract_en, abstract_ru=abstract_ru,
                 keywords_uz=keywords_uz, keywords_en=keywords_en, keywords_ru=keywords_ru,
@@ -246,7 +261,9 @@ def add_article():
             flash(f"Xatolik yuz berdi: {str(e)}", "danger")
             return redirect(url_for('add_article'))
             
-    return render_template('admin_add.html')
+    # GET so'rovi uchun mavjud to'plamlarni formaga yuborish
+    collections = Collection.query.all()
+    return render_template('admin_add.html', collections=collections)
 
 # --- SITEMAP ---
 @app.route('/sitemap.xml')
