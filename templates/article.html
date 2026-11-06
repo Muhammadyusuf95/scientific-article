@@ -136,11 +136,18 @@
 
                     <!-- Bibliografik manbalar (References) -->
                     {% if article.references %}
-                    <div class="card bg-light border-0 p-4 rounded-4 mb-5">
-                        <h5 class="fw-bold text-dark mb-3"><i class="fas fa-list-ul text-primary me-2"></i>Foydalanilgan adabiyotlar (References)</h5>
-                        <div class="text-dark" style="white-space: pre-line; line-height: 1.7;">{{ article.references }}</div>
-                    </div>
-                    {% endif %}
+                   <!-- Bibliografik manbalar (References) - Google Scholar Standartlariga mos -->
+{% if article.references %}
+<div class="card border-0 shadow-sm p-4 p-md-5 rounded-4 mb-5 bg-white">
+    <div class="d-flex align-items-center mb-3 border-bottom pb-3">
+        <i class="fas fa-list-ol text-primary fs-4 me-2"></i>
+        <h4 class="fw-bold text-dark m-0">References / Foydalanilgan adabiyotlar</h4>
+    </div>
+    <div class="text-dark references-content" style="white-space: pre-line; line-height: 1.8; font-size: 1rem; color: #1e293b;">
+        {{ article.references }}
+    </div>
+</div>
+{% endif %}
 
                     <!-- PDF O'QISH VA YUKLAB OLISH QISMI -->
                     <div class="border-top pt-4 mb-5">
