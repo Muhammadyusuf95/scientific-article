@@ -78,7 +78,6 @@ def index():
         
     return render_template('index.html', articles=articles, collections=collections, query=query)
 
-# --- TO'PLAM SAHIFASI (Xatolikni oldini olish uchun tuzatildi) ---
 @app.route('/collection/<int:collection_id>')
 def collection_detail(collection_id):
     collection = Collection.query.get_or_404(collection_id)
@@ -100,23 +99,17 @@ def download_article(article_id):
     db.session.commit()
     return redirect(article.pdf_filename)
 
-# --- MAQOLANI O'CHIRISH (Admin va foydalanuvchilar uchun) ---
+# --- MAQOLANI O'CHIRISH (Faqat Admin uchun) ---
 @app.route('/article/delete/<int:article_id>', methods=['POST'])
+@admin_required
 def delete_article(article_id):
     article = Article.query.get_or_404(article_id)
-    
-    # Faqat admin yoki tizimga kirgan foydalanuvchilar o'chira oladi
-    if not session.get('is_admin') and not session.get('user_id'):
-        flash("Maqolani o'chirish uchun tizimga kiring!", "danger")
-        return redirect(url_for('login'))
-        
     try:
         db.session.delete(article)
         db.session.commit()
         flash("Maqola muvaffaqiyatli o'chirildi!", "success")
     except Exception as e:
         flash(f"O'chirishda xatolik: {str(e)}", "danger")
-        
     return redirect(url_for('index'))
 
 @app.route('/admin/login', methods=['GET', 'POST'])
