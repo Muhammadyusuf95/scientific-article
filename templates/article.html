@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ article.title_uz }} - Ilmiy Portali</title>
     
-    <!-- Google Scholar Meta Teglari (Indexlash uchun majburiy) -->
+    <!-- Google Scholar va SEO Meta Teglari -->
     <meta name="citation_title" content="{{ article.title_uz }}">
     {% for author in article.authors %}
     <meta name="citation_author" content="{{ author.full_name }}">
@@ -16,6 +16,9 @@
     {% if article.pages %}<meta name="citation_firstpage" content="{{ article.pages.split('-')[0] }}">{% endif %}
     <meta name="citation_pdf_url" content="{{ article.pdf_filename }}">
     {% if article.doi %}<meta name="citation_doi" content="{{ article.doi }}">{% endif %}
+    {% if article.references %}
+    <meta name="citation_references" content="{{ article.references }}">
+    {% endif %}
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -26,7 +29,7 @@
         .stats-badge { font-size: 0.9rem; background-color: rgba(255,255,255,0.1); color: white; padding: 0.4rem 1rem; border-radius: 50rem; backdrop-filter: blur(5px); }
         .nav-tabs .nav-link.active { font-weight: bold; color: var(--bs-primary); border-bottom: 3px solid var(--bs-primary); background: transparent; }
         .nav-tabs .nav-link { color: #64748b; border: none; }
-        .citation-box { background: #f1f5f9; border-radius: 0.75rem; padding: 1rem; font-family: monospace; font-size: 0.9rem; border-left: 4px solid #2563eb; position: relative; }
+        .citation-box { background: #f1f5f9; border-radius: 0.75rem; padding: 1rem; font-family: monospace; font-size: 0.9rem; border-left: 4px solid #2563eb; white-space: pre-line; }
         .pdf-container { width: 100%; height: 800px; border: 1px solid #e2e8f0; border-radius: 0.5rem; overflow: hidden; margin-top: 2rem; }
     </style>
 </head>
@@ -57,6 +60,17 @@
             <div class="col-lg-10">
                 <div class="card content-card p-4 p-md-5 mb-4">
                     
+                    <!-- Maqolani o'chirish tugmasi (Faqat Admin uchun) -->
+                    {% if session.get('is_admin') %}
+                    <div class="mb-4 text-end border-bottom pb-3">
+                        <form action="/article/delete/{{ article.id }}" method="POST" onsubmit="return confirm('Haqiqatan ham ushbu maqolani oʻchirmoqchimisiz?');">
+                            <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3">
+                                <i class="fas fa-trash-alt me-1"></i> Maqolani o'chirish
+                            </button>
+                        </form>
+                    </div>
+                    {% endif %}
+
                     <!-- Mualliflar va DOI/Ma'lumotlar -->
                     <div class="d-flex flex-wrap justify-content-between align-items-start border-bottom pb-3 mb-4">
                         <div class="mb-3 mb-md-0">
@@ -120,6 +134,14 @@
                         {% endif %}
                     </div>
 
+                    <!-- Bibliografik manbalar (References) -->
+                    {% if article.references %}
+                    <div class="card bg-light border-0 p-4 rounded-4 mb-5">
+                        <h5 class="fw-bold text-dark mb-3"><i class="fas fa-list-ul text-primary me-2"></i>Foydalanilgan adabiyotlar (References)</h5>
+                        <div class="text-dark" style="white-space: pre-line; line-height: 1.7;">{{ article.references }}</div>
+                    </div>
+                    {% endif %}
+
                     <!-- PDF O'QISH VA YUKLAB OLISH QISMI -->
                     <div class="border-top pt-4 mb-5">
                         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -129,7 +151,6 @@
                             </a>
                         </div>
                         
-                        <!-- Brauzer ichiga PDF o'rnatish -->
                         <div class="pdf-container shadow-sm">
                             <iframe src="{{ article.pdf_filename }}" width="100%" height="100%" style="border: none;">
                                 Sizning brauzeringiz PDF fayllarni bevosita o'qishni qo'llab-quvvatlamaydi. Iltimos, faylni yuklab oling.
@@ -137,21 +158,49 @@
                         </div>
                     </div>
 
-                    <!-- Zamonaviy Iqtibos (Citation) olish bo'limi -->
+                    <!-- MUKAMMAL IQTIBOS KELTIRISH (Cite this article) -->
                     <div class="card bg-light border-0 p-4 rounded-4">
                         <h5 class="fw-bold text-dark mb-3"><i class="fas fa-quote-left text-primary me-2"></i>Iqtibos keltirish (Cite this article)</h5>
                         
-                        <div class="mb-3">
-                            <label class="form-label small fw-semibold text-muted">APA Formati:</label>
-                            <div class="citation-box" id="apaCitation">
-                                {% for author in article.authors %}{{ author.full_name }}{% if not loop.last %}, {% endif %}{% endfor %} ({{ article.year }}). {{ article.title_uz }}. <i>Ilmiy Portali</i>, {{ article.volume }}({{ article.issue }}){% if article.pages %}, {{ article.pages }}{% endif %}. {% if article.doi %}https://doi.org/{{ article.doi }}{% endif %}
-                            </div>
-                        </div>
+                        <!-- Stil tanlash tugmalari -->
+                        <ul class="nav nav-pills mb-3 gap-2" id="citeTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active btn-sm fw-semibold" id="apa-tab" data-bs-toggle="pill" data-bs-target="#apa" type="button">APA</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link btn-sm fw-semibold" id="gost-tab" data-bs-toggle="pill" data-bs-target="#gost" type="button">ГОСТ (OAK)</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link btn-sm fw-semibold" id="mla-tab" data-bs-toggle="pill" data-bs-target="#mla" type="button">MLA</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link btn-sm fw-semibold" id="harvard-tab" data-bs-toggle="pill" data-bs-target="#harvard" type="button">Harvard</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link btn-sm fw-semibold" id="chicago-tab" data-bs-toggle="pill" data-bs-target="#chicago" type="button">Chicago</button>
+                            </li>
+                        </ul>
 
-                        <div class="mb-2">
-                            <label class="form-label small fw-semibold text-muted">ГОСТ Formati (OAK):</label>
-                            <div class="citation-box" id="gostCitation">
-                                {% for author in article.authors %}{{ author.full_name }}{% if not loop.last %}, {% endif %}{% endfor %} {{ article.title_uz }} // Ilmiy Portali. — {{ article.year }}. — Т. {{ article.volume }}, № {{ article.issue }}.{% if article.pages %} — С. {{ article.pages }}.{% endif %} {% if article.doi %}DOI: {{ article.doi }}{% endif %}
+                        <div class="tab-content" id="citeTabContent">
+                            <!-- APA -->
+                            <div class="tab-pane fade show active" id="apa" role="tabpanel">
+                                <div class="citation-box">{% for author in article.authors %}{{ author.full_name }}{% if not loop.last %}, {% endif %}{% endfor %} ({{ article.year }}). {{ article.title_uz }}. <i>Ilmiy Portali</i>, {{ article.volume }}({{ article.issue }}){% if article.pages %}, {{ article.pages }}{% endif %}. {% if article.doi %}https://doi.org/{{ article.doi }}{% endif %}</div>
+                            </div>
+                            <!-- GOST -->
+                            <div class="tab-pane fade" id="gost" role="tabpanel">
+                                <div class="citation-box">{% for author in article.authors %}{{ author.full_name }}{% if not loop.last %}, {% endif %}{% endfor %} {{ article.title_uz }} // Ilmiy Portali. — {{ article.year }}. — Т. {{ article.volume }}, № {{ article.issue }}.{% if article.pages %} — С. {{ article.pages }}.{% endif %} {% if article.doi %}DOI: {{ article.doi }}{% endif %}</div>
+                            </div>
+                            <!-- MLA -->
+                            <div class="tab-pane fade" id="mla" role="tabpanel">
+                                <div class="citation-box">{% for author in article.authors %}{{ author.full_name }}{% if not loop.last %}, {% endif %}{% endfor %} "{{ article.title_uz }}." <i>Ilmiy Portali</i>, vol. {{ article.volume }}, no. {{ article.issue }}, {{ article.year }}, pp. {{ article.pages }}.</div>
+                            </div>
+                            <!-- Harvard -->
+                            <div class="tab-pane fade" id="harvard" role="tabpanel">
+                                <div class="citation-box">{% for author in article.authors %}{{ author.full_name }}{% if not loop.last %}, {% endif %}{% endfor %} ({{ article.year }}) '{{ article.title_uz }}', <i>Ilmiy Portali</i>, {{ article.volume }}({{ article.issue }}){% if article.pages %}, pp. {{ article.pages }}{% endif %}.</div>
+                            </div>
+                            <!-- Chicago -->
+                            <div class="tab-pane fade" id="chicago" role="tabpanel">
+                                <div class="citation-box">{% for author in article.authors %}{{ author.full_name }}{% if not loop.last %}, {% endif %}{% endfor %} "{{ article.title_uz }}." <i>Ilmiy Portali</i> {{ article.volume }}, no. {{ article.issue }} ({{ article.year }}): {{ article.pages }}.</div>
                             </div>
                         </div>
                     </div>
