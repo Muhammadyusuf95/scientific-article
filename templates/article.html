@@ -24,6 +24,23 @@
     <style>
         body { background-color: #f8fafc; font-family: 'Inter', system-ui, sans-serif; color: #334155; }
         .article-hero { background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); color: white; padding: 3rem 1rem; border-radius: 0 0 2rem 2rem; margin-bottom: 2rem; }
+        
+        /* PDF Reader konteyneri stili */
+        #pdfContainer {
+            transition: all 0.3s ease-in-out;
+            height: 550px; /* Boshlang'ich kichikroq hajm */
+        }
+        #pdfContainer.fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 9999;
+            background: white;
+            padding: 15px;
+            border-radius: 0 !important;
+        }
     </style>
 </head>
 <body>
@@ -41,40 +58,40 @@
     <!-- Maqola Sarlavhasi va Asosiy Ma'lumotlar -->
     <div class="article-hero text-center">
         <div class="container" style="max-width: 800px;">
-            <a href="/collection/1" class="badge bg-warning text-dark text-decoration-none mb-3 px-3 py-2">
-                <i class="fas fa-folder me-1"></i>Ilmiy tadqiqotlar
+            {% if article.collection %}
+            <a href="/collection/{{ article.collection.id }}" class="badge bg-warning text-dark text-decoration-none mb-3 px-3 py-2">
+                <i class="fas fa-folder me-1"></i>{{ article.collection.name }}
             </a>
-           <!-- Maqola Sarlavhasi va Asosiy Ma'lumotlar -->
-<div class="article-hero text-center">
-    <div class="container" style="max-width: 800px;">
-        {% if article.collection %}
-        <a href="/collection/{{ article.collection.id }}" class="badge bg-warning text-dark text-decoration-none mb-3 px-3 py-2">
-            <i class="fas fa-folder me-1"></i>{{ article.collection.name }}
-        </a>
-        {% endif %}
-        
-        <!-- Sarlavhaga bosganda PDF fayl yangi oynada ochilishi uchun <a> tegi qo'shildi -->
-        <h1 class="fw-bold mb-3 fs-3">
-            <a href="{{ article.pdf_filename }}" target="_blank" class="text-white text-decoration-none" title="PDF faylni ochish">
-                {{ article.title_uz }} <i class="fas fa-external-link-alt fs-5 ms-1 text-warning"></i>
-            </a>
-        </h1>
-
-        {% if article.title_en %}
-        <h5 class="text-slate-300 fst-italic mb-3">{{ article.title_en }}</h5>
-        {% endif %}
-        <div class="text-slate-300 small">
-            <span class="me-3"><i class="fas fa-calendar-alt me-1"></i> Yil: {{ article.year }}</span>
-            <span class="me-3"><i class="fas fa-book me-1"></i> Tom: {{ article.volume }}, Son: {{ article.issue }}</span>
-            {% if article.pages %}
-            <span><i class="fas fa-file-alt me-1"></i> Sahifalar: {{ article.pages }}</span>
             {% endif %}
+            <h1 class="fw-bold mb-3 fs-3">{{ article.title_uz }}</h1>
+            {% if article.title_en %}
+            <h5 class="text-slate-300 fst-italic mb-3">{{ article.title_en }}</h5>
+            {% endif %}
+            <div class="text-slate-300 small">
+                <span class="me-3"><i class="fas fa-calendar-alt me-1"></i> Yil: {{ article.year }}</span>
+                <span class="me-3"><i class="fas fa-book me-1"></i> Tom: {{ article.volume }}, Son: {{ article.issue }}</span>
+                {% if article.pages %}
+                <span><i class="fas fa-file-alt me-1"></i> Sahifalar: {{ article.pages }}</span>
+                {% endif %}
+            </div>
         </div>
     </div>
-</div>
 
     <!-- Tarkib -->
     <div class="container mb-5" style="max-width: 800px;">
+
+        <!-- 📄 ONLINE PDF O'QISH PLAYERI (Mualliflar va metadan yuqorida) -->
+        <div class="card border-0 shadow-sm p-3 rounded-4 mb-4 bg-white" id="pdfContainer">
+            <div class="d-flex align-items-center justify-content-between mb-2 pb-2 border-bottom">
+                <span class="fw-bold text-primary small"><i class="fas fa-book-reader me-2"></i>Maqolani Onlayn O'qish</span>
+                <button onclick="toggleFullscreen()" id="fsBtn" class="btn btn-sm btn-outline-secondary rounded-pill px-3" title="Kengaytirish / Kichraytirish">
+                    <i class="fas fa-expand" id="fsIcon"></i> <span id="fsText">Butun ekran</span>
+                </button>
+            </div>
+            <!-- PDF Viewer iframe -->
+            <iframe src="https://storage.googleapis.com/scientific-article-22107.firebasestorage.app/articles/1793968553_QDU.pdf" class="w-100 h-100 border-0 rounded-3" id="pdfFrame"></iframe>
+        </div>
+
         <!-- Mualliflar -->
         <div class="card border-0 shadow-sm p-4 rounded-4 mb-4 bg-white">
             <h6 class="text-muted text-uppercase small fw-bold mb-2">Mualliflar:</h6>
@@ -208,7 +225,7 @@
         <div class="container"><p class="mb-0 small">&copy; 2026 Ilmiy Maqolalar Portali. Barcha huquqlar himoyalangan.</p></div>
     </footer>
 
-    <!-- JavaScript orqali matnni nusxalash funksiyasi -->
+    <!-- JavaScript funksiyalari (Nusxalash va Fullscreen) -->
     <script>
     function copyCitation(elementId) {
         const textElement = document.getElementById(elementId);
@@ -218,6 +235,25 @@
         }).catch(err => {
             console.error("Nusxalashda xatolik yuz berdi: ", err);
         });
+    }
+
+    // PDF oynasini butun ekranga yoyish va kichraytirish funksiyasi
+    function toggleFullscreen() {
+        const container = document.getElementById('pdfContainer');
+        const icon = document.getElementById('fsIcon');
+        const text = document.getElementById('fsText');
+        
+        container.classList.toggle('fullscreen');
+        
+        if (container.classList.contains('fullscreen')) {
+            icon.classList.remove('fa-expand');
+            icon.classList.add('fa-compress');
+            text.innerText = "Kichraytirish";
+        } else {
+            icon.classList.remove('fa-compress');
+            icon.classList.add('fa-expand');
+            text.innerText = "Butun ekran";
+        }
     }
     </script>
 
