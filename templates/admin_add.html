@@ -35,6 +35,19 @@
                     {% endwith %}
 
                     <form method="POST" enctype="multipart/form-data">
+                        
+                        <!-- To'plam / Konferensiya nomi qo'shildi -->
+                        <div class="card bg-light border-warning border-2 p-3 mb-4 rounded-3 shadow-sm">
+                            <h6 class="fw-bold text-dark mb-2"><i class="fas fa-folder-open text-warning me-2"></i>To'plam yoki Konferensiya nomi</h6>
+                            <p class="small text-muted mb-2">Agar bu maqola biror konferensiya materialiga tegishli bo'lsa, nomini kiriting (yoki ro'yxatdan tanlang). Agar mustaqil maqola bo'lsa, bo'sh qoldiring.</p>
+                            <input type="text" name="collection_name" class="form-control" list="collectionList" placeholder="Masalan: Tilshunoslikning dolzarb masalalari">
+                            <datalist id="collectionList">
+                                {% for collection in collections %}
+                                    <option value="{{ collection.name }}">
+                                {% endfor %}
+                            </datalist>
+                        </div>
+
                         <!-- Mualliflar va DOI -->
                         <div class="row mb-3">
                             <div class="col-md-8">
