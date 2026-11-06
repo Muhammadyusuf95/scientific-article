@@ -89,6 +89,77 @@
         </div>
         {% endif %}
 
+        <!-- Iqtibos olish (Citation Generator) bo'limi -->
+        <div class="card border-0 shadow-sm p-4 rounded-4 mb-4 bg-white">
+            <div class="d-flex align-items-center mb-3 border-bottom pb-3">
+                <i class="fas fa-quote-right text-primary fs-4 me-2"></i>
+                <h4 class="fw-bold text-dark m-0">Iqtibos olish (Cite Article)</h4>
+            </div>
+            
+            <p class="text-muted small mb-3">Ushbu maqola uchun xalqaro akademik stillardagi iqtibosni tanlang va nusxalang:</p>
+            
+            <!-- Stil tanlash tugmalari -->
+            <ul class="nav nav-pills mb-3 gap-2" id="citationTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active rounded-pill px-3 py-1 small" id="apa-tab" data-bs-toggle="pill" data-bs-target="#apa-content" type="button" role="tab">APA (7th)</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link rounded-pill px-3 py-1 small" id="gost-tab" data-bs-toggle="pill" data-bs-target="#gost-content" type="button" role="tab">GOST (OAK)</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link rounded-pill px-3 py-1 small" id="mla-tab" data-bs-toggle="pill" data-bs-target="#mla-content" type="button" role="tab">MLA (9th)</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link rounded-pill px-3 py-1 small" id="chicago-tab" data-bs-toggle="pill" data-bs-target="#chicago-content" type="button" role="tab">Chicago</button>
+                </li>
+            </ul>
+
+            <!-- Stillar bo'yicha generatsiya qilingan matnlar -->
+            <div class="tab-content border p-3 rounded-3 bg-light position-relative" id="citationContent">
+                
+                <!-- APA Stili -->
+                <div class="tab-pane fade show active" id="apa-content" role="tabpanel">
+                    <p class="mb-2 font-monospace small text-dark" id="text-apa">
+                        {% for author in article.authors %}{{ author.full_name }}{% if not loop.last %}, {% endif %}{% endfor %} ({{ article.year }}). {{ article.title_uz }}. <em>Ilmiy Maqolalar Portali</em>, vol. {{ article.volume }}, no. {{ article.issue }}, pp. {{ article.pages or '1-10' }}.
+                    </p>
+                    <button onclick="copyCitation('text-apa')" class="btn btn-sm btn-outline-dark rounded-pill px-3">
+                        <i class="fas fa-copy me-1"></i> Nusxalash
+                    </button>
+                </div>
+
+                <!-- GOST Stili -->
+                <div class="tab-pane fade" id="gost-content" role="tabpanel">
+                    <p class="mb-2 font-monospace small text-dark" id="text-gost">
+                        {% for author in article.authors %}{{ author.full_name }}{% if not loop.last %}, {% endif %}{% endfor %} {{ article.title_uz }} // Ilmiy Maqolalar Portali. – {{ article.year }}. – T. {{ article.volume }}, № {{ article.issue }}. – B. {{ article.pages or '1-10' }}.
+                    </p>
+                    <button onclick="copyCitation('text-gost')" class="btn btn-sm btn-outline-dark rounded-pill px-3">
+                        <i class="fas fa-copy me-1"></i> Nusxalash
+                    </button>
+                </div>
+
+                <!-- MLA Stili -->
+                <div class="tab-pane fade" id="mla-content" role="tabpanel">
+                    <p class="mb-2 font-monospace small text-dark" id="text-mla">
+                        {% for author in article.authors %}{{ author.full_name }}{% if not loop.last %}, {% endif %}{% endfor %} "{{ article.title_uz }}." <em>Ilmiy Maqolalar Portali</em>, vol. {{ article.volume }}, no. {{ article.issue }}, {{ article.year }}, pp. {{ article.pages or '1-10' }}.
+                    </p>
+                    <button onclick="copyCitation('text-mla')" class="btn btn-sm btn-outline-dark rounded-pill px-3">
+                        <i class="fas fa-copy me-1"></i> Nusxalash
+                    </button>
+                </div>
+
+                <!-- Chicago Stili -->
+                <div class="tab-pane fade" id="chicago-content" role="tabpanel">
+                    <p class="mb-2 font-monospace small text-dark" id="text-chicago">
+                        {% for author in article.authors %}{{ author.full_name }}{% if not loop.last %}, {% endif %}{% endfor %} "{{ article.title_uz }}." <em>Ilmiy Maqolalar Portali</em> {{ article.volume }}, no. {{ article.issue }} ({{ article.year }}): {{ article.pages or '1-10' }}.
+                    </p>
+                    <button onclick="copyCitation('text-chicago')" class="btn btn-sm btn-outline-dark rounded-pill px-3">
+                        <i class="fas fa-copy me-1"></i> Nusxalash
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
         <!-- Bibliografik manbalar (References) - Google Scholar Standartiga mos -->
         {% if article.references %}
         <div class="card border-0 shadow-sm p-4 rounded-4 mb-4 bg-white">
@@ -125,6 +196,19 @@
     <footer class="bg-dark text-white text-center py-4 mt-auto">
         <div class="container"><p class="mb-0 small">&copy; 2026 Ilmiy Maqolalar Portali. Barcha huquqlar himoyalangan.</p></div>
     </footer>
+
+    <!-- JavaScript orqali matnni nusxalash funksiyasi -->
+    <script>
+    function copyCitation(elementId) {
+        const textElement = document.getElementById(elementId);
+        const textToCopy = textElement.innerText;
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            alert("Iqtibos buferga nusxalandi!");
+        }).catch(err => {
+            console.error("Nusxalashda xatolik yuz berdi: ", err);
+        });
+    }
+    </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
