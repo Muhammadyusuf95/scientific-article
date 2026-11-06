@@ -14,8 +14,8 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = os.getenv('SECRET_KEY', 'super_maxfiy_kalit')
 
 # --- ADMIN LOGIN VA PAROL ---
-ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', 'Muhammadyusuf_95')
-ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'Muhammadyusuf+95')
+ADMIN_USERNAME = 'Muhammadyusuf_95'
+ADMIN_PASSWORD = 'Muhammadyusuf+95'
 
 FIREBASE_KEY_PATH = os.getenv('FIREBASE_KEY_PATH', 'firebase_key.json')
 FIREBASE_BUCKET = 'scientific-article-22107.firebasestorage.app'
