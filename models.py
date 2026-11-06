@@ -11,7 +11,7 @@ class User(UserMixin, db.Model):
     password = db.Column(db.String(200), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-# 2. MAQOLALAR MODELI
+# 2. MAQOLALAR MODELI (Google Scholar va ilmiy talablarga moslashtirilgan)
 class Article(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     
@@ -30,7 +30,13 @@ class Article(db.Model):
     keywords_en = db.Column(db.String(250), nullable=True)
     keywords_ru = db.Column(db.String(250), nullable=True)
     
-    doi = db.Column(db.String(100), nullable=True)
+    # --- GOOGLE SCHOLAR VA ILMIY METAMA'LUMOTLAR ---
+    year = db.Column(db.Integer, nullable=False, default=2026)      # Nashr yili (masalan: 2026)
+    volume = db.Column(db.Integer, nullable=True, default=1)        # Jild / Tom (Volume)
+    issue = db.Column(db.Integer, nullable=True, default=1)         # Soni / Выпуск (Issue)
+    pages = db.Column(db.String(50), nullable=True)                 # Sahifalar oralig'i (masalan: 115-122)
+    doi = db.Column(db.String(100), nullable=True)                  # DOI raqami
+    
     pdf_filename = db.Column(db.String(500), nullable=False)
     views_count = db.Column(db.Integer, default=0)
     downloads_count = db.Column(db.Integer, default=0)
@@ -38,9 +44,9 @@ class Article(db.Model):
     
     authors = db.relationship('Author', backref='article', lazy=True, cascade="all, delete-orphan")
 
-# 3. MUALIFLAR MODELI
+# 3. MUALLIFLAR MODELI
 class Author(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=Year := int) if False else db.Column(db.Integer, primary_key=True) # Oddiy va toza yozuv
     full_name = db.Column(db.String(150), nullable=False)
     order_index = db.Column(db.Integer, default=1)
     article_id = db.Column(db.Integer, db.ForeignKey('article.id'), nullable=False)
