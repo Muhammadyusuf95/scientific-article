@@ -67,7 +67,6 @@ def index():
             (Article.title_ru.ilike(f'%{query}%'))
         ).order_by(Article.year.desc(), Article.issue.desc()).all()
     else:
-        # Eng yangi yil va son bo'yicha tartiblab chiqarish
         articles = Article.query.order_by(Article.year.desc(), Article.issue.desc(), Article.created_at.desc()).all()
     return render_template('index.html', articles=articles, query=query)
 
@@ -89,11 +88,9 @@ def download_article(article_id):
     return redirect(article.pdf_filename)
 
 # --- ADMIN LOGIN ---
-# --- ADMIN LOGIN ---
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
     if request.method == 'POST':
-        # .strip() qo'shildi: kiritilgan matn boshidagi va oxiridagi ortiqcha bo'sh joylarni kesib tashlaydi
         username = request.form.get('username', '').strip()
         password = request.form.get('password', '').strip()
         
@@ -177,7 +174,7 @@ def logout():
     flash("Tizimdan chiqdingiz.", "info")
     return redirect(url_for('index'))
 
-# --- MAQOLA QO'SHISH (Faqat Admin uchun - Yil va Son bilan) ---
+# --- MAQOLA QO'SHISH (Faqat Admin uchun) ---
 @app.route('/admin/add', methods=['GET', 'POST'])
 @admin_required
 def add_article():
@@ -210,14 +207,12 @@ def add_article():
 
             filename = f"{int(time.time())}_{secure_filename(pdf_file.filename)}"
             
-            # Firebase ga yuklash
             bucket = storage.bucket()
             blob = bucket.blob(f"articles/{filename}")
             blob.upload_from_string(pdf_file.read(), content_type='application/pdf')
             blob.make_public()
             public_url = blob.public_url
             
-            # Maqolani bazaga saqlash
             new_article = Article(
                 title_uz=title_uz, title_en=title_en, title_ru=title_ru,
                 abstract_uz=abstract_uz, abstract_en=abstract_en, abstract_ru=abstract_ru,
@@ -228,7 +223,6 @@ def add_article():
             db.session.add(new_article)
             db.session.commit()
             
-            # Mualliflarni qo'shish
             if authors_input:
                 author_names = authors_input.split(',')
                 for idx, name in enumerate(author_names):
@@ -244,7 +238,7 @@ def add_article():
             print(f"Maqola qo'shish xatoligi: {str(e)}")
             flash(f"Xatolik yuz berdi: {str(e)}", "danger")
             return redirect(url_for('add_article'))
-                
+            
     return render_template('admin_add.html')
 
 # --- SITEMAP ---
