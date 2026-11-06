@@ -11,6 +11,9 @@
     <nav class="navbar navbar-dark bg-dark shadow-sm py-3">
         <div class="container">
             <a class="navbar-brand fw-bold" href="/"><i class="fas fa-arrow-left me-2"></i>Bosh sahifaga qaytish</a>
+            <div class="ms-auto">
+                <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger btn-sm rounded-pill px-3"><i class="fas fa-sign-out-alt me-1"></i> Chiqish</a>
+            </div>
         </div>
     </nav>
 
@@ -41,6 +44,26 @@
                             <div class="col-md-4">
                                 <label class="form-label fw-semibold">DOI raqami</label>
                                 <input type="text" name="doi" class="form-control" placeholder="10.1000/xyz123">
+                            </div>
+                        </div>
+
+                        <!-- Jurnal Chiqarilish Ma'lumotlari (Google Scholar va Tartiblash uchun) -->
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold">Nashr yili (Year)</label>
+                                <input type="number" name="year" class="form-control" value="2026" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold">Jild (Volume)</label>
+                                <input type="number" name="volume" class="form-control" value="1">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold">Son (Issue)</label>
+                                <input type="number" name="issue" class="form-control" value="1" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold">Sahifalar (Pages)</label>
+                                <input type="text" name="pages" class="form-control" placeholder="115-122">
                             </div>
                         </div>
 
