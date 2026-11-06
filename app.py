@@ -148,6 +148,24 @@ def login():
             
     return render_template('login.html')
 
+# --- PAROLNI TIKLASH (UNUTGANDA) ---
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        new_password = request.form.get('new_password')
+        
+        user = User.query.filter_by(username=username).first()
+        if user:
+            user.password = generate_password_hash(new_password)
+            db.session.commit()
+            flash("Parolingiz muvaffaqiyatli yangilandi! Yangi parol bilan kiring.", "success")
+            return redirect(url_for('login'))
+        else:
+            flash("Bunday foydalanuvchi topilmadi!", "danger")
+            
+    return render_template('forgot_password.html')
+
 # --- FOYDALANUVCHI TIZIMDAN CHIQISHI ---
 @app.route('/logout')
 def logout():
@@ -161,58 +179,68 @@ def logout():
 @admin_required
 def add_article():
     if request.method == 'POST':
-        title_uz = request.form.get('title_uz')
-        title_en = request.form.get('title_en')
-        title_ru = request.form.get('title_ru')
-        
-        abstract_uz = request.form.get('abstract_uz')
-        abstract_en = request.form.get('abstract_en')
-        abstract_ru = request.form.get('abstract_ru')
-        
-        keywords_uz = request.form.get('keywords_uz')
-        keywords_en = request.form.get('keywords_en')
-        keywords_ru = request.form.get('keywords_ru')
-        
-        doi = request.form.get('doi')
-        year = request.form.get('year', type=int) or 2026
-        volume = request.form.get('volume', type=int) or 1
-        issue = request.form.get('issue', type=int) or 1
-        pages = request.form.get('pages')
-        
-        authors_input = request.form.get('authors')
-        pdf_file = request.files.get('pdf_file')
-        
-        if pdf_file and pdf_file.filename != '':
+        try:
+            title_uz = request.form.get('title_uz')
+            title_en = request.form.get('title_en')
+            title_ru = request.form.get('title_ru')
+            
+            abstract_uz = request.form.get('abstract_uz')
+            abstract_en = request.form.get('abstract_en')
+            abstract_ru = request.form.get('abstract_ru')
+            
+            keywords_uz = request.form.get('keywords_uz')
+            keywords_en = request.form.get('keywords_en')
+            keywords_ru = request.form.get('keywords_ru')
+            
+            doi = request.form.get('doi')
+            year = request.form.get('year', type=int) or 2026
+            volume = request.form.get('volume', type=int) or 1
+            issue = request.form.get('issue', type=int) or 1
+            pages = request.form.get('pages')
+            
+            authors_input = request.form.get('authors')
+            pdf_file = request.files.get('pdf_file')
+            
+            if not pdf_file or pdf_file.filename == '':
+                flash("Iltimos, PDF faylni biriktiring!", "danger")
+                return redirect(url_for('add_article'))
+
             filename = f"{int(time.time())}_{secure_filename(pdf_file.filename)}"
-            try:
-                bucket = storage.bucket()
-                blob = bucket.blob(f"articles/{filename}")
-                blob.upload_from_string(pdf_file.read(), content_type='application/pdf')
-                blob.make_public()
-                public_url = blob.public_url
-                
-                new_article = Article(
-                    title_uz=title_uz, title_en=title_en, title_ru=title_ru,
-                    abstract_uz=abstract_uz, abstract_en=abstract_en, abstract_ru=abstract_ru,
-                    keywords_uz=keywords_uz, keywords_en=keywords_en, keywords_ru=keywords_ru,
-                    doi=doi, year=year, volume=volume, issue=issue, pages=pages,
-                    pdf_filename=public_url
-                )
-                db.session.add(new_article)
-                db.session.commit()
-                
-                if authors_input:
-                    author_names = authors_input.split(',')
-                    for idx, name in enumerate(author_names):
+            
+            # Firebase ga yuklash
+            bucket = storage.bucket()
+            blob = bucket.blob(f"articles/{filename}")
+            blob.upload_from_string(pdf_file.read(), content_type='application/pdf')
+            blob.make_public()
+            public_url = blob.public_url
+            
+            # Maqolani bazaga saqlash
+            new_article = Article(
+                title_uz=title_uz, title_en=title_en, title_ru=title_ru,
+                abstract_uz=abstract_uz, abstract_en=abstract_en, abstract_ru=abstract_ru,
+                keywords_uz=keywords_uz, keywords_en=keywords_en, keywords_ru=keywords_ru,
+                doi=doi, year=year, volume=volume, issue=issue, pages=pages,
+                pdf_filename=public_url
+            )
+            db.session.add(new_article)
+            db.session.commit()
+            
+            # Mualliflarni qo'shish
+            if authors_input:
+                author_names = authors_input.split(',')
+                for idx, name in enumerate(author_names):
+                    if name.strip():
                         new_author = Author(full_name=name.strip(), order_index=idx+1, article_id=new_article.id)
                         db.session.add(new_author)
-                    db.session.commit()
-                
-                flash("Maqola muvaffaqiyatli qo'shildi!", "success")
-                return redirect(url_for('add_article'))
-            except Exception as e:
-                flash(f"Xatolik yuz berdi: {str(e)}", "danger")
-                return redirect(url_for('add_article'))
+                db.session.commit()
+            
+            flash("Maqola muvaffaqiyatli qo'shildi va chop etildi!", "success")
+            return redirect(url_for('add_article'))
+            
+        except Exception as e:
+            print(f"Maqola qo'shish xatoligi: {str(e)}")
+            flash(f"Xatolik yuz berdi: {str(e)}", "danger")
+            return redirect(url_for('add_article'))
                 
     return render_template('admin_add.html')
 
