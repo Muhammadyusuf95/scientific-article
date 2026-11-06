@@ -2,4 +2,4 @@ Flask
 Flask-SQLAlchemy
 Flask-Login
 firebase-admin
-psycopg2-binary
+gunicorn
