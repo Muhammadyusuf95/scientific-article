@@ -1,10 +1,20 @@
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import UserMixin
 from datetime import datetime
 
 db = SQLAlchemy()
 
+# 1. FOYDALANUVCHILAR MODELI (Ro'yxatdan o'tish va Login uchun)
+class User(UserMixin, db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(150), unique=True, nullable=False)
+    password = db.Column(db.String(200), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+# 2. MAQOLALAR MODELI
 class Article(db.Model):
-    id = db.Model.id if hasattr(db.Model, 'id') else db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+    
     # Sarlavhalar (3 tilda)
     title_uz = db.Column(db.String(300), nullable=False)
     title_en = db.Column(db.String(300), nullable=True)
@@ -28,6 +38,7 @@ class Article(db.Model):
     
     authors = db.relationship('Author', backref='article', lazy=True, cascade="all, delete-orphan")
 
+# 3. MUALIFLAR MODELI
 class Author(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     full_name = db.Column(db.String(150), nullable=False)
