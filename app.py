@@ -28,7 +28,6 @@ ADMIN_PASSWORD = 'Muhammadyusuf95'
 # --- FIREBASE SOZLAMALARI ---
 FIREBASE_BUCKET = 'scientific-article-22107.firebasestorage.app'
 
-# Render tizimidagi maxfiy fayl manzilini tekshirish
 if os.path.exists('/etc/secrets/firebase_key.json'):
     FIREBASE_KEY_PATH = '/etc/secrets/firebase_key.json'
 else:
@@ -44,7 +43,6 @@ if not firebase_admin._apps:
 
 db.init_app(app)
 
-# Baza jadvallarini avtomatik yaratish
 with app.app_context():
     try:
         db.create_all()
@@ -62,7 +60,7 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# --- ASOSIY SAHIFA (Yil va sonlar bo'yicha tartibli) ---
+# --- ASOSIY SAHIFA ---
 @app.route('/')
 def index():
     query = request.args.get('q', '')
@@ -79,7 +77,7 @@ def index():
         
     return render_template('index.html', articles=articles, collections=collections, query=query)
 
-# --- TO'PLAM / KONFERENSIYA SAHIFASI ---
+# --- TO'PLAM SAHIFASI ---
 @app.route('/collection/<int:collection_id>')
 def collection_detail(collection_id):
     collection = Collection.query.get_or_404(collection_id)
@@ -94,13 +92,26 @@ def article_detail(article_id):
     db.session.commit()
     return render_template('article.html', article=article)
 
-# --- YUKLAB OLISH (Barcha uchun ochiq) ---
+# --- YUKLAB OLISH ---
 @app.route('/download/<int:article_id>')
 def download_article(article_id):
     article = Article.query.get_or_404(article_id)
     article.downloads_count += 1
     db.session.commit()
     return redirect(article.pdf_filename)
+
+# --- MAQOLANI O'CHIRISH (Admin uchun) ---
+@app.route('/article/delete/<int:article_id>', methods=['POST'])
+@admin_required
+def delete_article(article_id):
+    article = Article.query.get_or_404(article_id)
+    try:
+        db.session.delete(article)
+        db.session.commit()
+        flash("Maqola muvaffaqiyatli o'chirildi!", "success")
+    except Exception as e:
+        flash(f"O'chirishda xatolik yuz berdi: {str(e)}", "danger")
+    return redirect(url_for('index'))
 
 # --- ADMIN LOGIN ---
 @app.route('/admin/login', methods=['GET', 'POST'])
@@ -123,7 +134,7 @@ def admin_logout():
     flash("Admin tizimidan chiqildi.", "info")
     return redirect(url_for('index'))
 
-# --- FOYDALANUVCHI RO'YXATDAN O'TISHI (REGISTER) ---
+# --- REGISTER / LOGIN ---
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -145,7 +156,6 @@ def register():
         
     return render_template('register.html')
 
-# --- FOYDALANUVCHI TIZIMGA KIRISHI (LOGIN) ---
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -163,7 +173,6 @@ def login():
             
     return render_template('login.html')
 
-# --- PAROLNI TIKLASH (UNUTGANDA) ---
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
     if request.method == 'POST':
@@ -181,7 +190,6 @@ def forgot_password():
             
     return render_template('forgot_password.html')
 
-# --- FOYDALANUVCHI TIZIMDAN CHIQISHI ---
 @app.route('/logout')
 def logout():
     session.pop('user_id', None)
@@ -189,7 +197,7 @@ def logout():
     flash("Tizimdan chiqdingiz.", "info")
     return redirect(url_for('index'))
 
-# --- MAQOLA QO'SHISH (Faqat Admin uchun) ---
+# --- MAQOLA QO'SHISH (References qo'shildi) ---
 @app.route('/admin/add', methods=['GET', 'POST'])
 @admin_required
 def add_article():
@@ -218,6 +226,9 @@ def add_article():
             keywords_en = request.form.get('keywords_en')
             keywords_ru = request.form.get('keywords_ru')
             
+            # Bibliografik havolalar (References)
+            references_text = request.form.get('references')
+            
             doi = request.form.get('doi')
             year = request.form.get('year', type=int) or 2026
             volume = request.form.get('volume', type=int) or 1
@@ -244,6 +255,7 @@ def add_article():
                 title_uz=title_uz, title_en=title_en, title_ru=title_ru,
                 abstract_uz=abstract_uz, abstract_en=abstract_en, abstract_ru=abstract_ru,
                 keywords_uz=keywords_uz, keywords_en=keywords_en, keywords_ru=keywords_ru,
+                references=references_text,
                 doi=doi, year=year, volume=volume, issue=issue, pages=pages,
                 pdf_filename=public_url
             )
@@ -269,7 +281,7 @@ def add_article():
     collections = Collection.query.all()
     return render_template('admin_add.html', collections=collections)
 
-# --- KENGAYTIRILGAN SITEMAP ---
+# --- SITEMAP ---
 @app.route('/sitemap.xml')
 def sitemap():
     base_url = "https://scientific-article.onrender.com"
@@ -277,24 +289,13 @@ def sitemap():
     xml_content = '<?xml version="1.0" encoding="UTF-8"?>\n'
     xml_content += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
     
-    # Asosiy sahifa
-    xml_content += f'  <url>\n'
-    xml_content += f'    <loc>{base_url}/</loc>\n'
-    xml_content += f'    <changefreq>daily</changefreq>\n'
-    xml_content += f'    <priority>1.0</priority>\n'
-    xml_content += f'  </url>\n'
+    xml_content += f'  <url>\n    <loc>{base_url}/</loc>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>\n'
     
     try:
-        # Barcha to'plamlar / konferensiyalar sahifalari
         collections = Collection.query.all()
         for collection in collections:
-            xml_content += f'  <url>\n'
-            xml_content += f'    <loc>{base_url}/collection/{collection.id}</loc>\n'
-            xml_content += f'    <changefreq>weekly</changefreq>\n'
-            xml_content += f'    <priority>0.9</priority>\n'
-            xml_content += f'  </url>\n'
+            xml_content += f'  <url>\n    <loc>{base_url}/collection/{collection.id}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.9</priority>\n  </url>\n'
 
-        # Har bir ilmiy maqola sahifasi
         articles = Article.query.all()
         for article in articles:
             lastmod = article.created_at.strftime('%Y-%m-%d') if hasattr(article, 'created_at') and article.created_at else '2026-11-05'
@@ -304,7 +305,6 @@ def sitemap():
             xml_content += f'    <changefreq>monthly</changefreq>\n'
             xml_content += f'    <priority>0.8</priority>\n'
             xml_content += f'  </url>\n'
-            
     except Exception as e:
         print(f"Sitemap xatoligi: {e}")
         
