@@ -11,9 +11,22 @@ class User(UserMixin, db.Model):
     password = db.Column(db.String(200), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-# 2. MAQOLALAR MODELI (Google Scholar va ilmiy talablarga moslashtirilgan)
+# 2. TO'PLAM / KONFERENSIYA MODELI (Maqolalarni guruhlash uchun)
+class Collection(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(300), nullable=False) # Masalan: "Tilshunoslikning dolzarb masalalari"
+    description = db.Column(db.Text, nullable=True)  # To'plam haqida qisqacha ma'lumot
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Bitta to'plamda bir nechta maqola bo'lishi mumkin (One-to-Many)
+    articles = db.relationship('Article', backref='collection', lazy=True)
+
+# 3. MAQOLALAR MODELI (Google Scholar va ilmiy talablarga moslashtirilgan)
 class Article(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    
+    # Qaysi to'plamga (konferensiyaga) tegishli ekanligi
+    collection_id = db.Column(db.Integer, db.ForeignKey('collection.id'), nullable=True)
     
     # Sarlavhalar (3 tilda)
     title_uz = db.Column(db.String(300), nullable=False)
@@ -44,7 +57,7 @@ class Article(db.Model):
     
     authors = db.relationship('Author', backref='article', lazy=True, cascade="all, delete-orphan")
 
-# 3. MUALLIFLAR MODELI
+# 4. MUALLIFLAR MODELI
 class Author(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     full_name = db.Column(db.String(150), nullable=False)
