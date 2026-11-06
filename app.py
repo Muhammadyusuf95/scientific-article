@@ -3,7 +3,7 @@ import time
 from flask import Flask, request, render_template, redirect, url_for, flash, make_response, session
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
-from models import db, Article, Author, User  # User modeli models.py fayliga qo'shilgan bo'lishi kerak
+from models import db, Article, Author, User
 import firebase_admin
 from firebase_admin import credentials, storage
 from functools import wraps
@@ -13,9 +13,9 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///sch
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = os.getenv('SECRET_KEY', 'super_maxfiy_kalit')
 
-# --- ADMIN LOGOUT VA LOGIN MA'LUMOTLARI ---
+# --- ADMIN LOGIN VA PAROL ---
 ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', 'admin')
-ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'parol123') # O'zingizning xavfsiz parolingizga o'zgartiring
+ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'parol123')
 
 FIREBASE_KEY_PATH = os.getenv('FIREBASE_KEY_PATH', 'firebase_key.json')
 FIREBASE_BUCKET = 'scientific-article-22107.firebasestorage.app'
@@ -29,13 +29,15 @@ if not firebase_admin._apps:
 
 db.init_app(app)
 
+# Baza jadvallarini (User, Article, Author) avtomatik yaratish
 with app.app_context():
     try:
         db.create_all()
+        print("Ma'lumotlar bazasi jadvallari muvaffaqiyatli tekshirildi/yaratildi!")
     except Exception as e:
         print(f"Baza yaratishda xatolik: {e}")
 
-# --- DEKORATORLAR (Himoya uchun) ---
+# --- DEKORATORLAR (Xavfsizlik) ---
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -127,7 +129,7 @@ def register():
         
     return render_template('register.html')
 
-# --- FOYDALANUVCHI TIZIMGA KIRishi (LOGIN) ---
+# --- FOYDALANUVCHI TIZIMGA KIRISHI (LOGIN) ---
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
