@@ -31,9 +31,9 @@ class Article(db.Model):
     keywords_ru = db.Column(db.String(250), nullable=True)
     
     # --- GOOGLE SCHOLAR VA ILMIY METAMA'LUMOTLAR ---
-    year = db.Column(db.Integer, nullable=False, default=2026)      # Nashr yili (masalan: 2026)
+    year = db.Column(db.Integer, nullable=False, default=2026)      # Nashr yili
     volume = db.Column(db.Integer, nullable=True, default=1)        # Jild / Tom (Volume)
-    issue = db.Column(db.Integer, nullable=True, default=1)         # Soni / Выпуск (Issue)
+    issue = db.Column(db.Integer, nullable=True, default=1)         # Soni (Issue)
     pages = db.Column(db.String(50), nullable=True)                 # Sahifalar oralig'i (masalan: 115-122)
     doi = db.Column(db.String(100), nullable=True)                  # DOI raqami
     
@@ -46,7 +46,7 @@ class Article(db.Model):
 
 # 3. MUALLIFLAR MODELI
 class Author(db.Model):
-    id = db.Column(db.Integer, primary_key=Year := int) if False else db.Column(db.Integer, primary_key=True) # Oddiy va toza yozuv
+    id = db.Column(db.Integer, primary_key=True)
     full_name = db.Column(db.String(150), nullable=False)
     order_index = db.Column(db.Integer, default=1)
     article_id = db.Column(db.Integer, db.ForeignKey('article.id'), nullable=False)
