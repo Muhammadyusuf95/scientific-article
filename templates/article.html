@@ -44,15 +44,34 @@
             <a href="/collection/1" class="badge bg-warning text-dark text-decoration-none mb-3 px-3 py-2">
                 <i class="fas fa-folder me-1"></i>Ilmiy tadqiqotlar
             </a>
-            <h1 class="fw-bold mb-3 fs-3">FITONIMLARNI XALQ ETNOMADANIYATINING SHAKLLANISHIDAGI ROLI</h1>
-            <h5 class="text-slate-300 fst-italic mb-3">THE ROLE OF PHYTONYMS IN THE FORMATION OF FOLK ETHNOCULTURE</h5>
-            <div class="text-slate-300 small">
-                <span class="me-3"><i class="fas fa-calendar-alt me-1"></i> Yil: 2026</span>
-                <span class="me-3"><i class="fas fa-book me-1"></i> Tom: 1, Son: 1</span>
-                <span><i class="fas fa-file-alt me-1"></i> Sahifalar: 405-409</span>
-            </div>
+           <!-- Maqola Sarlavhasi va Asosiy Ma'lumotlar -->
+<div class="article-hero text-center">
+    <div class="container" style="max-width: 800px;">
+        {% if article.collection %}
+        <a href="/collection/{{ article.collection.id }}" class="badge bg-warning text-dark text-decoration-none mb-3 px-3 py-2">
+            <i class="fas fa-folder me-1"></i>{{ article.collection.name }}
+        </a>
+        {% endif %}
+        
+        <!-- Sarlavhaga bosganda PDF fayl yangi oynada ochilishi uchun <a> tegi qo'shildi -->
+        <h1 class="fw-bold mb-3 fs-3">
+            <a href="{{ article.pdf_filename }}" target="_blank" class="text-white text-decoration-none" title="PDF faylni ochish">
+                {{ article.title_uz }} <i class="fas fa-external-link-alt fs-5 ms-1 text-warning"></i>
+            </a>
+        </h1>
+
+        {% if article.title_en %}
+        <h5 class="text-slate-300 fst-italic mb-3">{{ article.title_en }}</h5>
+        {% endif %}
+        <div class="text-slate-300 small">
+            <span class="me-3"><i class="fas fa-calendar-alt me-1"></i> Yil: {{ article.year }}</span>
+            <span class="me-3"><i class="fas fa-book me-1"></i> Tom: {{ article.volume }}, Son: {{ article.issue }}</span>
+            {% if article.pages %}
+            <span><i class="fas fa-file-alt me-1"></i> Sahifalar: {{ article.pages }}</span>
+            {% endif %}
         </div>
     </div>
+</div>
 
     <!-- Tarkib -->
     <div class="container mb-5" style="max-width: 800px;">
