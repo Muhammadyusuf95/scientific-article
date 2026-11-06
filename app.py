@@ -9,9 +9,14 @@ from firebase_admin import credentials, storage
 from functools import wraps
 
 app = Flask(__name__)
+
+# Baza manzilini to'g'rilash (PostgreSQL uchun psycopg2 drayverini majburlash)
 db_url = os.getenv('DATABASE_URL', 'sqlite:///scholar_db.sqlite')
 if db_url.startswith("postgres://"):
-    db_url = db_url.replace("postgres://", "postgresql://", 1)
+    db_url = db_url.replace("postgres://", "postgresql+psycopg2://", 1)
+elif db_url.startswith("postgresql://"):
+    db_url = db_url.replace("postgresql://", "postgresql+psycopg2://", 1)
+
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = os.getenv('SECRET_KEY', 'super_maxfiy_kalit')
@@ -56,8 +61,6 @@ def admin_required(f):
             return redirect(url_for('admin_login'))
         return f(*args, **kwargs)
     return decorated_function
-
-# (login_required olib tashlandi, chunki maqolalar endi barchaga ochiq)
 
 # --- ASOSIY SAHIFA (Yil va sonlar bo'yicha tartibli) ---
 @app.route('/')
@@ -192,7 +195,6 @@ def logout():
 def add_article():
     if request.method == 'POST':
         try:
-            # Konferensiya / To'plamni aniqlash yoki yaratish
             collection_name = request.form.get('collection_name', '').strip()
             collection_id = None
             
@@ -264,7 +266,6 @@ def add_article():
             flash(f"Xatolik yuz berdi: {str(e)}", "danger")
             return redirect(url_for('add_article'))
             
-    # GET so'rovi uchun mavjud to'plamlarni formaga yuborish
     collections = Collection.query.all()
     return render_template('admin_add.html', collections=collections)
 
