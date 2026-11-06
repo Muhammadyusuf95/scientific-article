@@ -29,7 +29,7 @@ if not firebase_admin._apps:
 
 db.init_app(app)
 
-# Baza jadvallarini (User, Article, Author) avtomatik yaratish
+# Baza jadvallarini avtomatik yaratish
 with app.app_context():
     try:
         db.create_all()
@@ -56,7 +56,7 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# --- ASOSIY SAHIFA ---
+# --- ASOSIY SAHIFA (Yil va sonlar bo'yicha tartibli) ---
 @app.route('/')
 def index():
     query = request.args.get('q', '')
@@ -65,9 +65,10 @@ def index():
             (Article.title_uz.ilike(f'%{query}%')) | 
             (Article.title_en.ilike(f'%{query}%')) | 
             (Article.title_ru.ilike(f'%{query}%'))
-        ).all()
+        ).order_by(Article.year.desc(), Article.issue.desc()).all()
     else:
-        articles = Article.query.order_by(Article.created_at.desc()).all()
+        # Eng yangi yil va son bo'yicha tartiblab chiqarish
+        articles = Article.query.order_by(Article.year.desc(), Article.issue.desc(), Article.created_at.desc()).all()
     return render_template('index.html', articles=articles, query=query)
 
 # --- MAQOLA TAFSILOTI ---
@@ -155,7 +156,7 @@ def logout():
     flash("Tizimdan chiqdingiz.", "info")
     return redirect(url_for('index'))
 
-# --- MAQOLA QO'SHISH (Faqat Admin uchun) ---
+# --- MAQOLA QO'SHISH (Faqat Admin uchun - Yil va Son bilan) ---
 @app.route('/admin/add', methods=['GET', 'POST'])
 @admin_required
 def add_article():
@@ -173,6 +174,11 @@ def add_article():
         keywords_ru = request.form.get('keywords_ru')
         
         doi = request.form.get('doi')
+        year = request.form.get('year', type=int) or 2026
+        volume = request.form.get('volume', type=int) or 1
+        issue = request.form.get('issue', type=int) or 1
+        pages = request.form.get('pages')
+        
         authors_input = request.form.get('authors')
         pdf_file = request.files.get('pdf_file')
         
@@ -189,7 +195,8 @@ def add_article():
                     title_uz=title_uz, title_en=title_en, title_ru=title_ru,
                     abstract_uz=abstract_uz, abstract_en=abstract_en, abstract_ru=abstract_ru,
                     keywords_uz=keywords_uz, keywords_en=keywords_en, keywords_ru=keywords_ru,
-                    doi=doi, pdf_filename=public_url
+                    doi=doi, year=year, volume=volume, issue=issue, pages=pages,
+                    pdf_filename=public_url
                 )
                 db.session.add(new_article)
                 db.session.commit()
