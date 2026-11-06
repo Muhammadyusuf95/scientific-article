@@ -89,11 +89,14 @@ def download_article(article_id):
     return redirect(article.pdf_filename)
 
 # --- ADMIN LOGIN ---
+# --- ADMIN LOGIN ---
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
     if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
+        # .strip() qo'shildi: kiritilgan matn boshidagi va oxiridagi ortiqcha bo'sh joylarni kesib tashlaydi
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
+        
         if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
             session['is_admin'] = True
             flash("Admin panelga xush kelibsiz!", "success")
