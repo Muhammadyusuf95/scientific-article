@@ -11,7 +11,6 @@ from sqlalchemy import text
 
 app = Flask(__name__)
 
-# Baza manzilini to'g'rilash (PostgreSQL uchun psycopg2 drayverini majburlash)
 db_url = os.getenv('DATABASE_URL', 'sqlite:///scholar_db.sqlite')
 if db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql+psycopg2://", 1)
@@ -22,11 +21,9 @@ app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = os.getenv('SECRET_KEY', 'super_maxfiy_kalit')
 
-# --- ADMIN LOGIN VA PAROL ---
 ADMIN_USERNAME = 'Muhammadyusuf'
 ADMIN_PASSWORD = 'Muhammadyusuf95'
 
-# --- FIREBASE SOZLAMALARI ---
 FIREBASE_BUCKET = 'scientific-article-22107.firebasestorage.app'
 
 if os.path.exists('/etc/secrets/firebase_key.json'):
@@ -44,11 +41,9 @@ if not firebase_admin._apps:
 
 db.init_app(app)
 
-# Baza jadvallarini va yetishmayotgan ustunlarni avtomatik yaratish/yangilash
 with app.app_context():
     try:
         db.create_all()
-        # PostgreSQL uchun references ustuni yo'q bo'lsa qo'shish
         try:
             db.session.execute(text('ALTER TABLE article ADD COLUMN IF NOT EXISTS "references" TEXT;'))
             db.session.commit()
@@ -58,7 +53,6 @@ with app.app_context():
     except Exception as e:
         print(f"Baza yaratishda xatolik: {e}")
 
-# --- DEKORATORLAR (Xavfsizlik) ---
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -68,7 +62,6 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# --- ASOSIY SAHIFA ---
 @app.route('/')
 def index():
     query = request.args.get('q', '')
@@ -85,14 +78,14 @@ def index():
         
     return render_template('index.html', articles=articles, collections=collections, query=query)
 
-# --- TO'PLAM SAHIFASI ---
+# --- TO'PLAM SAHIFASI (Xatolikni oldini olish uchun tuzatildi) ---
 @app.route('/collection/<int:collection_id>')
 def collection_detail(collection_id):
     collection = Collection.query.get_or_404(collection_id)
     articles = Article.query.filter_by(collection_id=collection.id).order_by(Article.year.desc()).all()
-    return render_template('collection.html', collection=collection, articles=articles)
+    collections = Collection.query.order_by(Collection.created_at.desc()).all()
+    return render_template('collection.html', collection=collection, articles=articles, collections=collections)
 
-# --- MAQOLA TAFSILOTI VA ONLAYN O'QISH ---
 @app.route('/article/<int:article_id>')
 def article_detail(article_id):
     article = Article.query.get_or_404(article_id)
@@ -100,7 +93,6 @@ def article_detail(article_id):
     db.session.commit()
     return render_template('article.html', article=article)
 
-# --- YUKLAB OLISH ---
 @app.route('/download/<int:article_id>')
 def download_article(article_id):
     article = Article.query.get_or_404(article_id)
@@ -108,20 +100,25 @@ def download_article(article_id):
     db.session.commit()
     return redirect(article.pdf_filename)
 
-# --- MAQOLANI O'CHIRISH (Admin uchun) ---
+# --- MAQOLANI O'CHIRISH (Admin va foydalanuvchilar uchun) ---
 @app.route('/article/delete/<int:article_id>', methods=['POST'])
-@admin_required
 def delete_article(article_id):
     article = Article.query.get_or_404(article_id)
+    
+    # Faqat admin yoki tizimga kirgan foydalanuvchilar o'chira oladi
+    if not session.get('is_admin') and not session.get('user_id'):
+        flash("Maqolani o'chirish uchun tizimga kiring!", "danger")
+        return redirect(url_for('login'))
+        
     try:
         db.session.delete(article)
         db.session.commit()
         flash("Maqola muvaffaqiyatli o'chirildi!", "success")
     except Exception as e:
-        flash(f"O'chirishda xatolik yuz berdi: {str(e)}", "danger")
+        flash(f"O'chirishda xatolik: {str(e)}", "danger")
+        
     return redirect(url_for('index'))
 
-# --- ADMIN LOGIN ---
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
     if request.method == 'POST':
@@ -142,7 +139,6 @@ def admin_logout():
     flash("Admin tizimidan chiqildi.", "info")
     return redirect(url_for('index'))
 
-# --- REGISTER / LOGIN ---
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -205,7 +201,6 @@ def logout():
     flash("Tizimdan chiqdingiz.", "info")
     return redirect(url_for('index'))
 
-# --- MAQOLA QO'SHISH ---
 @app.route('/admin/add', methods=['GET', 'POST'])
 @admin_required
 def add_article():
@@ -288,7 +283,6 @@ def add_article():
     collections = Collection.query.all()
     return render_template('admin_add.html', collections=collections)
 
-# --- SITEMAP ---
 @app.route('/sitemap.xml')
 def sitemap():
     base_url = "https://scientific-article.onrender.com"
