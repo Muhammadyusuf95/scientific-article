@@ -3,21 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ article.title_uz }} - Ilmiy Portali</title>
+    <title>FITONIMLARNI XALQ ETNOMADANIYATINING SHAKLLANISHIDAGI ROLI - Ilmiy Portali</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+        
     <!-- Google Scholar uchun Meta Ma'lumotlar -->
-    <meta name="citation_title" content="{{ article.title_uz }}">
-    {% for author in article.authors %}
-    <meta name="citation_author" content="{{ author.full_name }}">
-    {% endfor %}
-    <meta name="citation_publication_date" content="{{ article.year }}">
-    <meta name="citation_pdf_url" content="{{ article.pdf_filename }}">
-    {% if article.references %}
-    <meta name="citation_references" content="{{ article.references }}">
-    {% endif %}
-
+    <meta name="citation_title" content="FITONIMLARNI XALQ ETNOMADANIYATINING SHAKLLANISHIDAGI ROLI">
+    <meta name="citation_author" content="Ikromov Maxamadyusub Tursunali o‘g‘li">
+    <meta name="citation_publication_date" content="2026">
+    <meta name="citation_pdf_url" content="https://storage.googleapis.com/scientific-article-22107.firebasestorage.app/articles/1793968553_QDU.pdf">
+    <meta name="citation_references" content="1. Aytmatov Ch. Oq kema : qissa. — Toshkent : Yoshlar nashriyot uyi, 2018. — B. 6.
+2. Ikromov M. Botanik terminlarni antroposentrik paradigmada o‘rganishning ahamiyati // Namangan davlat universiteti ilmiy axborotnomasi. – 2025. – № 2. – B.448-452.
+3. Ikromov M. Fitonimlarning ramziy va etnomadaniy xususiyatlari // Globallashuv jarayonida ta’lim, ilm-fan, texnologiya va sun’iy intellektning o‘rni: Resp. ilmiy-amaliy anj. mat. to‘plami. – Andijon, 2026. – B. 264-268.
+4. Sobotka P. Rostlinstvo a jeho význam v národních písních, pověstech, bájích, obřadech a povĕrách slovanských. Praha, 1879. – C. 47.
+5. Дьякова Т. А. Этнокультурная основа использования фитонимов... // Вопросы журналистики, педагогики, языкознания. 38.4 (2019): 508-515.
+6. Колосова В. Б. Лексика и символика славянской народной ботаники. — М.: «Индрик», 2009. – С. 61.
+7. Толмачева У. К. Цветочная символика в повседневной и праздничной культуре Китая // Державинский форум. — 2021. — Т. 5. — № 18. — С. 135–142.
+8. Усманов Ф. Ўзбек тилидаги ўхшатишларнинг лингвомаданий тадқиқи: Филол. фан. б. фалс. докт. (PhD) ... дисс. – Тошкент, 2020. – Б. 79.">
+    
     <style>
         body { background-color: #f8fafc; font-family: 'Inter', system-ui, sans-serif; color: #334155; }
         .article-hero { background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); color: white; padding: 3rem 1rem; border-radius: 0 0 2rem 2rem; margin-bottom: 2rem; }
@@ -29,10 +32,8 @@
         <div class="container">
             <a class="navbar-brand fw-bold" href="/"><i class="fas fa-arrow-left me-2"></i>Bosh sahifaga qaytish</a>
             <div class="ms-auto d-flex gap-2">
-                {% if session.get('is_admin') %}
-                    <a href="{{ url_for('add_article') }}" class="btn btn-primary btn-sm rounded-pill px-3"><i class="fas fa-plus me-1"></i> Maqola qo'shish</a>
-                    <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger btn-sm rounded-pill px-3">Chiqish</a>
-                {% endif %}
+                <a href="/admin/add" class="btn btn-primary btn-sm rounded-pill px-3"><i class="fas fa-plus me-1"></i> Maqola qo'shish</a>
+                <a href="/admin/logout" class="btn btn-outline-danger btn-sm rounded-pill px-3">Chiqish</a>
             </div>
         </div>
     </nav>
@@ -40,21 +41,15 @@
     <!-- Maqola Sarlavhasi va Asosiy Ma'lumotlar -->
     <div class="article-hero text-center">
         <div class="container" style="max-width: 800px;">
-            {% if article.collection %}
-            <a href="/collection/{{ article.collection.id }}" class="badge bg-warning text-dark text-decoration-none mb-3 px-3 py-2">
-                <i class="fas fa-folder me-1"></i>{{ article.collection.name }}
+            <a href="/collection/1" class="badge bg-warning text-dark text-decoration-none mb-3 px-3 py-2">
+                <i class="fas fa-folder me-1"></i>Ilmiy tadqiqotlar
             </a>
-            {% endif %}
-            <h1 class="fw-bold mb-3 fs-3">{{ article.title_uz }}</h1>
-            {% if article.title_en %}
-            <h5 class="text-slate-300 fst-italic mb-3">{{ article.title_en }}</h5>
-            {% endif %}
+            <h1 class="fw-bold mb-3 fs-3">FITONIMLARNI XALQ ETNOMADANIYATINING SHAKLLANISHIDAGI ROLI</h1>
+            <h5 class="text-slate-300 fst-italic mb-3">THE ROLE OF PHYTONYMS IN THE FORMATION OF FOLK ETHNOCULTURE</h5>
             <div class="text-slate-300 small">
-                <span class="me-3"><i class="fas fa-calendar-alt me-1"></i> Yil: {{ article.year }}</span>
-                <span class="me-3"><i class="fas fa-book me-1"></i> Tom: {{ article.volume }}, Son: {{ article.issue }}</span>
-                {% if article.pages %}
-                <span><i class="fas fa-file-alt me-1"></i> Sahifalar: {{ article.pages }}</span>
-                {% endif %}
+                <span class="me-3"><i class="fas fa-calendar-alt me-1"></i> Yil: 2026</span>
+                <span class="me-3"><i class="fas fa-book me-1"></i> Tom: 1, Son: 1</span>
+                <span><i class="fas fa-file-alt me-1"></i> Sahifalar: 405-409</span>
             </div>
         </div>
     </div>
@@ -65,30 +60,24 @@
         <div class="card border-0 shadow-sm p-4 rounded-4 mb-4 bg-white">
             <h6 class="text-muted text-uppercase small fw-bold mb-2">Mualliflar:</h6>
             <div class="fw-semibold text-dark">
-                {% for author in article.authors %}
-                    <span class="badge bg-light text-primary border px-3 py-2 me-2 mb-2 fs-6">
-                        <i class="fas fa-user-graduate me-1"></i>{{ author.full_name }}
-                    </span>
-                {% endfor %}
+                <span class="badge bg-light text-primary border px-3 py-2 me-2 mb-2 fs-6">
+                    <i class="fas fa-user-graduate me-1"></i>Ikromov Maxamadyusub Tursunali o‘g‘li
+                </span>
             </div>
         </div>
 
         <!-- Annotatsiya (Abstract) -->
-        {% if article.abstract_uz %}
         <div class="card border-0 shadow-sm p-4 rounded-4 mb-4 bg-white">
             <h5 class="fw-bold text-dark mb-3"><i class="fas fa-align-left text-primary me-2"></i>Annotatsiya</h5>
-            <p class="text-muted mb-0" style="line-height: 1.7;">{{ article.abstract_uz }}</p>
+            <p class="text-muted mb-0" style="line-height: 1.7;">Ushbu maqolada fitonimlarning (o‘simlik nomlari) xalq etnomadaniyati, madaniy xotirasi va global lingvistik manzara shakllanishidagi lingvomadaniy va etnolingvistik roli o‘rganiladi. Unda fitonim ta'limotining etimologik va semantik xususiyatlari, uning xalq tabobati, marosimlar va ritual folklor, mifologiya, g‘oyalar va maishiy hayot bilan uzviy bog‘liqligi tahlil qilinadi. Maqolada fitonimlarni o‘qitishni lingvomadaniy jarayonga aylantirish va ularning etnik guruhning aqliy va madaniy kodini saqlashdagi roli ilmiy asoslanadi</p>
         </div>
-        {% endif %}
-
+        
         <!-- Kalit so'zlar -->
-        {% if article.keywords_uz %}
         <div class="card border-0 shadow-sm p-4 rounded-4 mb-4 bg-white">
             <h6 class="fw-bold text-dark mb-2"><i class="fas fa-tags text-primary me-2"></i>Kalit so'zlar:</h6>
-            <p class="text-muted mb-0">{{ article.keywords_uz }}</p>
+            <p class="text-muted mb-0">fitonim, etnolingvistika, lingvokulturologiya, etnomadaniyat, olamning lisoniy manzarasi, lingvokulturema, nominatsiya.</p>
         </div>
-        {% endif %}
-
+        
         <!-- Iqtibos olish (Citation Generator) bo'limi -->
         <div class="card border-0 shadow-sm p-4 rounded-4 mb-4 bg-white">
             <div class="d-flex align-items-center mb-3 border-bottom pb-3">
@@ -120,7 +109,7 @@
                 <!-- APA Stili -->
                 <div class="tab-pane fade show active" id="apa-content" role="tabpanel">
                     <p class="mb-2 font-monospace small text-dark" id="text-apa">
-                        {% for author in article.authors %}{{ author.full_name }}{% if not loop.last %}, {% endif %}{% endfor %} ({{ article.year }}). {{ article.title_uz }}. <em>Ilmiy Maqolalar Portali</em>, vol. {{ article.volume }}, no. {{ article.issue }}, pp. {{ article.pages or '1-10' }}.
+                        Ikromov Maxamadyusub Tursunali o‘g‘li (2026). FITONIMLARNI XALQ ETNOMADANIYATINING SHAKLLANISHIDAGI ROLI. <em>Ilmiy Maqolalar Portali</em>, vol. 1, no. 1, pp. 405-409.
                     </p>
                     <button onclick="copyCitation('text-apa')" class="btn btn-sm btn-outline-dark rounded-pill px-3">
                         <i class="fas fa-copy me-1"></i> Nusxalash
@@ -130,7 +119,7 @@
                 <!-- GOST Stili -->
                 <div class="tab-pane fade" id="gost-content" role="tabpanel">
                     <p class="mb-2 font-monospace small text-dark" id="text-gost">
-                        {% for author in article.authors %}{{ author.full_name }}{% if not loop.last %}, {% endif %}{% endfor %} {{ article.title_uz }} // Ilmiy Maqolalar Portali. – {{ article.year }}. – T. {{ article.volume }}, № {{ article.issue }}. – B. {{ article.pages or '1-10' }}.
+                        Ikromov Maxamadyusub Tursunali o‘g‘li FITONIMLARNI XALQ ETNOMADANIYATINING SHAKLLANISHIDAGI ROLI // Ilmiy Maqolalar Portali. – 2026. – T. 1, № 1. – B. 405-409.
                     </p>
                     <button onclick="copyCitation('text-gost')" class="btn btn-sm btn-outline-dark rounded-pill px-3">
                         <i class="fas fa-copy me-1"></i> Nusxalash
@@ -140,7 +129,7 @@
                 <!-- MLA Stili -->
                 <div class="tab-pane fade" id="mla-content" role="tabpanel">
                     <p class="mb-2 font-monospace small text-dark" id="text-mla">
-                        {% for author in article.authors %}{{ author.full_name }}{% if not loop.last %}, {% endif %}{% endfor %} "{{ article.title_uz }}." <em>Ilmiy Maqolalar Portali</em>, vol. {{ article.volume }}, no. {{ article.issue }}, {{ article.year }}, pp. {{ article.pages or '1-10' }}.
+                        Ikromov Maxamadyusub Tursunali o‘g‘li "FITONIMLARNI XALQ ETNOMADANIYATINING SHAKLLANISHIDAGI ROLI." <em>Ilmiy Maqolalar Portali</em>, vol. 1, no. 1, 2026, pp. 405-409.
                     </p>
                     <button onclick="copyCitation('text-mla')" class="btn btn-sm btn-outline-dark rounded-pill px-3">
                         <i class="fas fa-copy me-1"></i> Nusxalash
@@ -150,7 +139,7 @@
                 <!-- Chicago Stili -->
                 <div class="tab-pane fade" id="chicago-content" role="tabpanel">
                     <p class="mb-2 font-monospace small text-dark" id="text-chicago">
-                        {% for author in article.authors %}{{ author.full_name }}{% if not loop.last %}, {% endif %}{% endfor %} "{{ article.title_uz }}." <em>Ilmiy Maqolalar Portali</em> {{ article.volume }}, no. {{ article.issue }} ({{ article.year }}): {{ article.pages or '1-10' }}.
+                        Ikromov Maxamadyusub Tursunali o‘g‘li "FITONIMLARNI XALQ ETNOMADANIYATINING SHAKLLANISHIDAGI ROLI." <em>Ilmiy Maqolalar Portali</em> 1, no. 1 (2026): 405-409.
                     </p>
                     <button onclick="copyCitation('text-chicago')" class="btn btn-sm btn-outline-dark rounded-pill px-3">
                         <i class="fas fa-copy me-1"></i> Nusxalash
@@ -161,34 +150,37 @@
         </div>
 
         <!-- Bibliografik manbalar (References) - Google Scholar Standartiga mos -->
-        {% if article.references %}
         <div class="card border-0 shadow-sm p-4 rounded-4 mb-4 bg-white">
             <div class="d-flex align-items-center mb-3 border-bottom pb-3">
                 <i class="fas fa-list-ol text-primary fs-4 me-2"></i>
                 <h4 class="fw-bold text-dark m-0">References / Foydalanilgan adabiyotlar</h4>
             </div>
             <div class="text-dark references-content" style="white-space: pre-line; line-height: 1.8; font-size: 1rem; color: #1e293b;">
-                {{ article.references }}
+1. Aytmatov Ch. Oq kema : qissa. — Toshkent : Yoshlar nashriyot uyi, 2018. — B. 6.
+2. Ikromov M. Botanik terminlarni antroposentrik paradigmada o‘rganishning ahamiyati // Namangan davlat universiteti ilmiy axborotnomasi. – 2025. – № 2. – B.448-452.
+3. Ikromov M. Fitonimlarning ramziy va etnomadaniy xususiyatlari // Globallashuv jarayonida ta’lim, ilm-fan, texnologiya va sun’iy intellektning o‘rni: Resp. ilmiy-amaliy anj. mat. to‘plami. – Andijon, 2026. – B. 264-268.
+4. Sobotka P. Rostlinstvo a jeho význam v národních písních, pověstech, bájích, obřadech a povĕrách slovanských. Praha, 1879. – C. 47.
+5. Дьякова Т. А. Этнокультурная основа использования фитонимов лексико- семантической группы «Дикорастущие травы» // Вопросы журналистики, педагогики, языкознания. 38.4 (2019): 508-515.
+6. Колосова В. Б. Лексика и символика славянской народной ботаники. — М.: «Индрик», 2009. – С. 61.
+7. Толмачева У. К. Цветочная символика в повседневной и праздничной культуре Китая // Державинский форум. — 2021. — Т. 5. — № 18. — С. 135–142.
+8. Усманов Ф. Ўзбек тилидаги ўхшатишларнинг лингвомаданий тадқиқи: Филол. фан. б. фалс. докт. (PhD) ... дисс. – Тошкент, 2020. – Б. 79.
             </div>
         </div>
-        {% endif %}
-
+        
         <!-- Tugmalar: O'qish va Yuklab olish -->
         <div class="d-flex gap-3 justify-content-center mt-4">
-            <a href="{{ article.pdf_filename }}" class="btn btn-primary px-4 py-2 rounded-pill shadow-sm" target="_blank">
+            <a href="https://storage.googleapis.com/scientific-article-22107.firebasestorage.app/articles/1793968553_QDU.pdf" class="btn btn-primary px-4 py-2 rounded-pill shadow-sm" target="_blank">
                 <i class="fas fa-book-open me-2"></i>PDF Faylni O'qish
             </a>
-            <a href="/download/{{ article.id }}" class="btn btn-success px-4 py-2 rounded-pill shadow-sm" target="_blank">
+            <a href="/download/3" class="btn btn-success px-4 py-2 rounded-pill shadow-sm" target="_blank">
                 <i class="fas fa-download me-2"></i>Yuklab olish
             </a>
             
-            {% if session.get('is_admin') %}
-            <form action="/article/delete/{{ article.id }}" method="POST" class="d-inline" onsubmit="return confirm('Haqiqatan ham ushbu maqolani oʻchirmoqchimisiz?');">
+            <form action="/article/delete/3" method="POST" class="d-inline" onsubmit="return confirm('Haqiqatan ham ushbu maqolani oʻchirmoqchimisiz?');">
                 <button type="submit" class="btn btn-outline-danger px-4 py-2 rounded-pill shadow-sm">
                     <i class="fas fa-trash-alt me-2"></i>O'chirish
                 </button>
             </form>
-            {% endif %}
         </div>
     </div>
 
