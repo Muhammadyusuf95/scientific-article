@@ -7,6 +7,7 @@ from models import db, Article, Author, User, Collection
 import firebase_admin
 from firebase_admin import credentials, storage
 from functools import wraps
+from sqlalchemy import text
 
 app = Flask(__name__)
 
@@ -43,9 +44,16 @@ if not firebase_admin._apps:
 
 db.init_app(app)
 
+# Baza jadvallarini va yetishmayotgan ustunlarni avtomatik yaratish/yangilash
 with app.app_context():
     try:
         db.create_all()
+        # PostgreSQL uchun references ustuni yo'q bo'lsa qo'shish
+        try:
+            db.session.execute(text('ALTER TABLE article ADD COLUMN IF NOT EXISTS "references" TEXT;'))
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
         print("Ma'lumotlar bazasi jadvallari muvaffaqiyatli tekshirildi/yaratildi!")
     except Exception as e:
         print(f"Baza yaratishda xatolik: {e}")
@@ -197,7 +205,7 @@ def logout():
     flash("Tizimdan chiqdingiz.", "info")
     return redirect(url_for('index'))
 
-# --- MAQOLA QO'SHISH (References qo'shildi) ---
+# --- MAQOLA QO'SHISH ---
 @app.route('/admin/add', methods=['GET', 'POST'])
 @admin_required
 def add_article():
@@ -226,7 +234,6 @@ def add_article():
             keywords_en = request.form.get('keywords_en')
             keywords_ru = request.form.get('keywords_ru')
             
-            # Bibliografik havolalar (References)
             references_text = request.form.get('references')
             
             doi = request.form.get('doi')
