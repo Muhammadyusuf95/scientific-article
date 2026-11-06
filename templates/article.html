@@ -4,221 +4,126 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ article.title_uz }} - Ilmiy Portali</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Google Scholar va SEO Meta Teglari -->
+    <!-- Google Scholar uchun Meta Ma'lumotlar -->
     <meta name="citation_title" content="{{ article.title_uz }}">
     {% for author in article.authors %}
     <meta name="citation_author" content="{{ author.full_name }}">
     {% endfor %}
-    <meta name="citation_publication_date" content="{{ article.year }}/01/01">
-    <meta name="citation_volume" content="{{ article.volume }}">
-    <meta name="citation_issue" content="{{ article.issue }}">
-    {% if article.pages %}<meta name="citation_firstpage" content="{{ article.pages.split('-')[0] }}">{% endif %}
+    <meta name="citation_publication_date" content="{{ article.year }}">
     <meta name="citation_pdf_url" content="{{ article.pdf_filename }}">
-    {% if article.doi %}<meta name="citation_doi" content="{{ article.doi }}">{% endif %}
     {% if article.references %}
     <meta name="citation_references" content="{{ article.references }}">
     {% endif %}
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { background-color: #f8fafc; font-family: 'Inter', system-ui, sans-serif; color: #334155; }
-        .article-header { background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); color: white; padding: 3rem 1rem; border-radius: 0 0 2rem 2rem; margin-bottom: 2rem; }
-        .content-card { border: none; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); background: white; }
-        .stats-badge { font-size: 0.9rem; background-color: rgba(255,255,255,0.1); color: white; padding: 0.4rem 1rem; border-radius: 50rem; backdrop-filter: blur(5px); }
-        .nav-tabs .nav-link.active { font-weight: bold; color: var(--bs-primary); border-bottom: 3px solid var(--bs-primary); background: transparent; }
-        .nav-tabs .nav-link { color: #64748b; border: none; }
-        .citation-box { background: #f1f5f9; border-radius: 0.75rem; padding: 1rem; font-family: monospace; font-size: 0.9rem; border-left: 4px solid #2563eb; white-space: pre-line; }
-        .pdf-container { width: 100%; height: 800px; border: 1px solid #e2e8f0; border-radius: 0.5rem; overflow: hidden; margin-top: 2rem; }
+        .article-hero { background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); color: white; padding: 3rem 1rem; border-radius: 0 0 2rem 2rem; margin-bottom: 2rem; }
     </style>
 </head>
 <body>
+    <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm py-3">
         <div class="container">
             <a class="navbar-brand fw-bold" href="/"><i class="fas fa-arrow-left me-2"></i>Bosh sahifaga qaytish</a>
+            <div class="ms-auto d-flex gap-2">
+                {% if session.get('is_admin') %}
+                    <a href="{{ url_for('add_article') }}" class="btn btn-primary btn-sm rounded-pill px-3"><i class="fas fa-plus me-1"></i> Maqola qo'shish</a>
+                    <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger btn-sm rounded-pill px-3">Chiqish</a>
+                {% endif %}
+            </div>
         </div>
     </nav>
 
-    <div class="article-header">
-        <div class="container text-center">
-            <h1 class="h3 fw-bold mb-3" style="max-width: 800px; margin: 0 auto; line-height: 1.4;">{{ article.title_uz }}</h1>
-            {% if article.title_en %}<h2 class="h6 text-slate-300 fst-italic mb-3">{{ article.title_en }}</h2>{% endif %}
-            
-            <div class="d-flex justify-content-center flex-wrap gap-3 mt-4">
-                <span class="stats-badge"><i class="fas fa-eye me-1 text-info"></i> Ko'rganlar: {{ article.views_count }}</span>
-                <span class="stats-badge"><i class="fas fa-download me-1 text-success"></i> Yuklab olishlar: {{ article.downloads_count }}</span>
-                {% if article.collection %}
-                <a href="/collection/{{ article.collection.id }}" class="stats-badge text-decoration-none bg-warning text-dark"><i class="fas fa-folder me-1"></i> {{ article.collection.name }}</a>
+    <!-- Maqola Sarlavhasi va Asosiy Ma'lumotlar -->
+    <div class="article-hero text-center">
+        <div class="container" style="max-width: 800px;">
+            {% if article.collection %}
+            <a href="/collection/{{ article.collection.id }}" class="badge bg-warning text-dark text-decoration-none mb-3 px-3 py-2">
+                <i class="fas fa-folder me-1"></i>{{ article.collection.name }}
+            </a>
+            {% endif %}
+            <h1 class="fw-bold mb-3 fs-3">{{ article.title_uz }}</h1>
+            {% if article.title_en %}
+            <h5 class="text-slate-300 fst-italic mb-3">{{ article.title_en }}</h5>
+            {% endif %}
+            <div class="text-slate-300 small">
+                <span class="me-3"><i class="fas fa-calendar-alt me-1"></i> Yil: {{ article.year }}</span>
+                <span class="me-3"><i class="fas fa-book me-1"></i> Tom: {{ article.volume }}, Son: {{ article.issue }}</span>
+                {% if article.pages %}
+                <span><i class="fas fa-file-alt me-1"></i> Sahifalar: {{ article.pages }}</span>
                 {% endif %}
             </div>
         </div>
     </div>
 
-    <div class="container mb-5">
-        <div class="row justify-content-center">
-            <div class="col-lg-10">
-                <div class="card content-card p-4 p-md-5 mb-4">
-                    
-                    <!-- Maqolani o'chirish tugmasi (Faqat Admin uchun) -->
-                    {% if session.get('is_admin') %}
-                    <div class="mb-4 text-end border-bottom pb-3">
-                        <form action="/article/delete/{{ article.id }}" method="POST" onsubmit="return confirm('Haqiqatan ham ushbu maqolani oʻchirmoqchimisiz?');">
-                            <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3">
-                                <i class="fas fa-trash-alt me-1"></i> Maqolani o'chirish
-                            </button>
-                        </form>
-                    </div>
-                    {% endif %}
-
-                    <!-- Mualliflar va DOI/Ma'lumotlar -->
-                    <div class="d-flex flex-wrap justify-content-between align-items-start border-bottom pb-3 mb-4">
-                        <div class="mb-3 mb-md-0">
-                            <span class="text-muted small d-block mb-1">Mualliflar:</span>
-                            <h5 class="fw-bold text-dark m-0">
-                                {% for author in article.authors %}
-                                    <i class="fas fa-user-graduate text-primary me-1"></i>{{ author.full_name }}{% if not loop.last %}, {% endif %}
-                                {% endfor %}
-                            </h5>
-                        </div>
-                        <div class="text-end">
-                            {% if article.doi %}
-                            <span class="badge bg-light text-secondary border px-3 py-2 fs-6 mb-2 d-block">DOI: {{ article.doi }}</span>
-                            {% endif %}
-                            <span class="text-muted small">Yil: {{ article.year }} | Jild: {{ article.volume }}, Son: {{ article.issue }} {% if article.pages %}| B.: {{ article.pages }}{% endif %}</span>
-                        </div>
-                    </div>
-
-                    <!-- Til bo'yicha annotatsiyalarni almashtirish (Tabs) -->
-                    <ul class="nav nav-tabs mb-4" id="langTab" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active fw-semibold" id="uz-tab" data-bs-toggle="tab" data-bs-target="#uz" type="button" role="tab">O'zbekcha</button>
-                        </li>
-                        {% if article.abstract_en %}
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link fw-semibold" id="en-tab" data-bs-toggle="tab" data-bs-target="#en" type="button" role="tab">English</button>
-                        </li>
-                        {% endif %}
-                        {% if article.abstract_ru %}
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link fw-semibold" id="ru-tab" data-bs-toggle="tab" data-bs-target="#ru" type="button" role="tab">Русский</button>
-                        </li>
-                        {% endif %}
-                    </ul>
-
-                    <div class="tab-content mb-5" id="langTabContent">
-                        <div class="tab-pane fade show active" id="uz" role="tabpanel">
-                            <h5 class="text-secondary fw-semibold mb-2">Annotatsiya</h5>
-                            <p class="text-dark" style="line-height: 1.8;">{{ article.abstract_uz }}</p>
-                            {% if article.keywords_uz %}
-                            <div class="mt-3"><span class="fw-semibold text-muted small">Kalit so'zlar:</span> <span class="text-primary">{{ article.keywords_uz }}</span></div>
-                            {% endif %}
-                        </div>
-                        {% if article.abstract_en %}
-                        <div class="tab-pane fade" id="en" role="tabpanel">
-                            <h5 class="text-secondary fw-semibold mb-2">Abstract</h5>
-                            <p class="text-dark" style="line-height: 1.8;">{{ article.abstract_en }}</p>
-                            {% if article.keywords_en %}
-                            <div class="mt-3"><span class="fw-semibold text-muted small">Keywords:</span> <span class="text-primary">{{ article.keywords_en }}</span></div>
-                            {% endif %}
-                        </div>
-                        {% endif %}
-                        {% if article.abstract_ru %}
-                        <div class="tab-pane fade" id="ru" role="tabpanel">
-                            <h5 class="text-secondary fw-semibold mb-2">Аннотация</h5>
-                            <p class="text-dark" style="line-height: 1.8;">{{ article.abstract_ru }}</p>
-                            {% if article.keywords_ru %}
-                            <div class="mt-3"><span class="fw-semibold text-muted small">Ключевые слова:</span> <span class="text-primary">{{ article.keywords_ru }}</span></div>
-                            {% endif %}
-                        </div>
-                        {% endif %}
-                    </div>
-
-                    <!-- Bibliografik manbalar (References) -->
-                    {% if article.references %}
-                   <!-- Bibliografik manbalar (References) - Google Scholar Standartlariga mos -->
-{% if article.references %}
-<div class="card border-0 shadow-sm p-4 p-md-5 rounded-4 mb-5 bg-white">
-    <div class="d-flex align-items-center mb-3 border-bottom pb-3">
-        <i class="fas fa-list-ol text-primary fs-4 me-2"></i>
-        <h4 class="fw-bold text-dark m-0">References / Foydalanilgan adabiyotlar</h4>
-    </div>
-    <div class="text-dark references-content" style="white-space: pre-line; line-height: 1.8; font-size: 1rem; color: #1e293b;">
-        {{ article.references }}
-    </div>
-</div>
-{% endif %}
-
-                    <!-- PDF O'QISH VA YUKLAB OLISH QISMI -->
-                    <div class="border-top pt-4 mb-5">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h4 class="fw-bold text-dark m-0"><i class="fas fa-book-open text-primary me-2"></i>To'liq matn (Online o'qish)</h4>
-                            <a href="/download/{{ article.id }}" class="btn btn-success fw-bold shadow-sm rounded-pill px-4">
-                                <i class="fas fa-file-pdf me-2"></i> Yuklab olish
-                            </a>
-                        </div>
-                        
-                        <div class="pdf-container shadow-sm">
-                            <iframe src="{{ article.pdf_filename }}" width="100%" height="100%" style="border: none;">
-                                Sizning brauzeringiz PDF fayllarni bevosita o'qishni qo'llab-quvvatlamaydi. Iltimos, faylni yuklab oling.
-                            </iframe>
-                        </div>
-                    </div>
-
-                    <!-- MUKAMMAL IQTIBOS KELTIRISH (Cite this article) -->
-                    <div class="card bg-light border-0 p-4 rounded-4">
-                        <h5 class="fw-bold text-dark mb-3"><i class="fas fa-quote-left text-primary me-2"></i>Iqtibos keltirish (Cite this article)</h5>
-                        
-                        <!-- Stil tanlash tugmalari -->
-                        <ul class="nav nav-pills mb-3 gap-2" id="citeTab" role="tablist">
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link active btn-sm fw-semibold" id="apa-tab" data-bs-toggle="pill" data-bs-target="#apa" type="button">APA</button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link btn-sm fw-semibold" id="gost-tab" data-bs-toggle="pill" data-bs-target="#gost" type="button">ГОСТ (OAK)</button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link btn-sm fw-semibold" id="mla-tab" data-bs-toggle="pill" data-bs-target="#mla" type="button">MLA</button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link btn-sm fw-semibold" id="harvard-tab" data-bs-toggle="pill" data-bs-target="#harvard" type="button">Harvard</button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link btn-sm fw-semibold" id="chicago-tab" data-bs-toggle="pill" data-bs-target="#chicago" type="button">Chicago</button>
-                            </li>
-                        </ul>
-
-                        <div class="tab-content" id="citeTabContent">
-                            <!-- APA -->
-                            <div class="tab-pane fade show active" id="apa" role="tabpanel">
-                                <div class="citation-box">{% for author in article.authors %}{{ author.full_name }}{% if not loop.last %}, {% endif %}{% endfor %} ({{ article.year }}). {{ article.title_uz }}. <i>Ilmiy Portali</i>, {{ article.volume }}({{ article.issue }}){% if article.pages %}, {{ article.pages }}{% endif %}. {% if article.doi %}https://doi.org/{{ article.doi }}{% endif %}</div>
-                            </div>
-                            <!-- GOST -->
-                            <div class="tab-pane fade" id="gost" role="tabpanel">
-                                <div class="citation-box">{% for author in article.authors %}{{ author.full_name }}{% if not loop.last %}, {% endif %}{% endfor %} {{ article.title_uz }} // Ilmiy Portali. — {{ article.year }}. — Т. {{ article.volume }}, № {{ article.issue }}.{% if article.pages %} — С. {{ article.pages }}.{% endif %} {% if article.doi %}DOI: {{ article.doi }}{% endif %}</div>
-                            </div>
-                            <!-- MLA -->
-                            <div class="tab-pane fade" id="mla" role="tabpanel">
-                                <div class="citation-box">{% for author in article.authors %}{{ author.full_name }}{% if not loop.last %}, {% endif %}{% endfor %} "{{ article.title_uz }}." <i>Ilmiy Portali</i>, vol. {{ article.volume }}, no. {{ article.issue }}, {{ article.year }}, pp. {{ article.pages }}.</div>
-                            </div>
-                            <!-- Harvard -->
-                            <div class="tab-pane fade" id="harvard" role="tabpanel">
-                                <div class="citation-box">{% for author in article.authors %}{{ author.full_name }}{% if not loop.last %}, {% endif %}{% endfor %} ({{ article.year }}) '{{ article.title_uz }}', <i>Ilmiy Portali</i>, {{ article.volume }}({{ article.issue }}){% if article.pages %}, pp. {{ article.pages }}{% endif %}.</div>
-                            </div>
-                            <!-- Chicago -->
-                            <div class="tab-pane fade" id="chicago" role="tabpanel">
-                                <div class="citation-box">{% for author in article.authors %}{{ author.full_name }}{% if not loop.last %}, {% endif %}{% endfor %} "{{ article.title_uz }}." <i>Ilmiy Portali</i> {{ article.volume }}, no. {{ article.issue }} ({{ article.year }}): {{ article.pages }}.</div>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
+    <!-- Tarkib -->
+    <div class="container mb-5" style="max-width: 800px;">
+        <!-- Mualliflar -->
+        <div class="card border-0 shadow-sm p-4 rounded-4 mb-4 bg-white">
+            <h6 class="text-muted text-uppercase small fw-bold mb-2">Mualliflar:</h6>
+            <div class="fw-semibold text-dark">
+                {% for author in article.authors %}
+                    <span class="badge bg-light text-primary border px-3 py-2 me-2 mb-2 fs-6">
+                        <i class="fas fa-user-graduate me-1"></i>{{ author.full_name }}
+                    </span>
+                {% endfor %}
             </div>
+        </div>
+
+        <!-- Annotatsiya (Abstract) -->
+        {% if article.abstract_uz %}
+        <div class="card border-0 shadow-sm p-4 rounded-4 mb-4 bg-white">
+            <h5 class="fw-bold text-dark mb-3"><i class="fas fa-align-left text-primary me-2"></i>Annotatsiya</h5>
+            <p class="text-muted mb-0" style="line-height: 1.7;">{{ article.abstract_uz }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Kalit so'zlar -->
+        {% if article.keywords_uz %}
+        <div class="card border-0 shadow-sm p-4 rounded-4 mb-4 bg-white">
+            <h6 class="fw-bold text-dark mb-2"><i class="fas fa-tags text-primary me-2"></i>Kalit so'zlar:</h6>
+            <p class="text-muted mb-0">{{ article.keywords_uz }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Bibliografik manbalar (References) - Google Scholar Standartiga mos -->
+        {% if article.references %}
+        <div class="card border-0 shadow-sm p-4 rounded-4 mb-4 bg-white">
+            <div class="d-flex align-items-center mb-3 border-bottom pb-3">
+                <i class="fas fa-list-ol text-primary fs-4 me-2"></i>
+                <h4 class="fw-bold text-dark m-0">References / Foydalanilgan adabiyotlar</h4>
+            </div>
+            <div class="text-dark references-content" style="white-space: pre-line; line-height: 1.8; font-size: 1rem; color: #1e293b;">
+                {{ article.references }}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Tugmalar: O'qish va Yuklab olish -->
+        <div class="d-flex gap-3 justify-content-center mt-4">
+            <a href="{{ article.pdf_filename }}" class="btn btn-primary px-4 py-2 rounded-pill shadow-sm" target="_blank">
+                <i class="fas fa-book-open me-2"></i>PDF Faylni O'qish
+            </a>
+            <a href="/download/{{ article.id }}" class="btn btn-success px-4 py-2 rounded-pill shadow-sm" target="_blank">
+                <i class="fas fa-download me-2"></i>Yuklab olish
+            </a>
+            
+            {% if session.get('is_admin') %}
+            <form action="/article/delete/{{ article.id }}" method="POST" class="d-inline" onsubmit="return confirm('Haqiqatan ham ushbu maqolani oʻchirmoqchimisiz?');">
+                <button type="submit" class="btn btn-outline-danger px-4 py-2 rounded-pill shadow-sm">
+                    <i class="fas fa-trash-alt me-2"></i>O'chirish
+                </button>
+            </form>
+            {% endif %}
         </div>
     </div>
 
+    <!-- Footer -->
     <footer class="bg-dark text-white text-center py-4 mt-auto">
-        <div class="container"><p class="mb-0 small">&copy; 2026 Ilmiy Maqolalar Portali.</p></div>
+        <div class="container"><p class="mb-0 small">&copy; 2026 Ilmiy Maqolalar Portali. Barcha huquqlar himoyalangan.</p></div>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
