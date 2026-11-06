@@ -23,11 +23,39 @@
     <nav class="navbar navbar-expand-lg navbar-dark shadow-sm py-3">
         <div class="container">
             <a class="navbar-brand fw-bold fs-4" href="/"><i class="fas fa-book-open me-2 text-primary"></i>SciPortal</a>
-            <div class="ms-auto">
-                <a href="/admin/add" class="btn btn-outline-light btn-sm px-3 rounded-pill fw-semibold"><i class="fas fa-plus-circle me-1"></i> Admin Panel</a>
+            
+            <div class="ms-auto d-flex align-items-center gap-2">
+                <!-- Foydalanuvchi tizimga kirgan yoki kirmaganini tekshirish -->
+                {% if session.get('user_id') %}
+                    <span class="text-light small me-2"><i class="fas fa-user me-1"></i> {{ session.get('username') }}</span>
+                    <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm px-3 rounded-pill fw-semibold">Chiqish</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-sm px-3 rounded-pill fw-semibold">Kirish</a>
+                    <a href="{{ url_for('register') }}" class="btn btn-primary btn-sm px-3 rounded-pill fw-semibold">Ro'yxatdan o'tish</a>
+                {% endif %}
+
+                <!-- Faqat admin kirgan bo'lsagina Admin Panel ko'rinadi -->
+                {% if session.get('is_admin') %}
+                    <a href="/admin/add" class="btn btn-warning btn-sm px-3 rounded-pill fw-semibold text-dark"><i class="fas fa-plus-circle me-1"></i> Admin Panel</a>
+                    <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-warning btn-sm px-2 rounded-pill" title="Admin chiqish"><i class="fas fa-sign-out-alt"></i></a>
+                {% endif %}
             </div>
         </div>
     </nav>
+
+    <!-- Flash xabarlarni chiqarish uchun qism -->
+    <div class="container mt-3">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'danger' else ('success' if category == 'success' else 'info') }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
 
     <div class="hero-section text-center">
         <div class="container">
@@ -83,7 +111,7 @@
                             </div>
                             <div class="d-flex gap-2">
                                 <a href="/article/{{ article.id }}" class="btn btn-outline-primary btn-sm px-3 rounded-pill">Batafsil</a>
-                                <a href="/download/{{ article.id }}" class="btn btn-success btn-sm px-3 rounded-pill"><i class="fas fa-file-pdf"></i></a>
+                                <a href="/download/{{ article.id }}" class="btn btn-success btn-sm px-3 rounded-pill" title="Yuklab olish"><i class="fas fa-file-pdf"></i></a>
                             </div>
                         </div>
                     </div>
@@ -103,7 +131,7 @@
 
     <footer class="bg-dark text-white text-center py-4 mt-auto">
         <div class="container">
-            <p class="mb-0 small text-white-55">&copy; 2026 Ilmiy Maqolalar Portali. Barcha huquqlar himoyalangan.</p>
+            <p class="mb-0 small text-white-50">&copy; 2026 Ilmiy Maqolalar Portali. Barcha huquqlar himoyalangan.</p>
         </div>
     </footer>
 
