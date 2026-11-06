@@ -9,7 +9,10 @@ from firebase_admin import credentials, storage
 from functools import wraps
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///scholar_db.sqlite')
+db_url = os.getenv('DATABASE_URL', 'sqlite:///scholar_db.sqlite')
+if db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
+app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = os.getenv('SECRET_KEY', 'super_maxfiy_kalit')
 
