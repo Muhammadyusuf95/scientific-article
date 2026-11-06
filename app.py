@@ -17,13 +17,20 @@ app.secret_key = os.getenv('SECRET_KEY', 'super_maxfiy_kalit')
 ADMIN_USERNAME = 'Muhammadyusuf'
 ADMIN_PASSWORD = 'Muhammadyusuf95'
 
-FIREBASE_KEY_PATH = os.getenv('FIREBASE_KEY_PATH', 'firebase_key.json')
+# --- FIREBASE SOZLAMALARI ---
 FIREBASE_BUCKET = 'scientific-article-22107.firebasestorage.app'
+
+# Render tizimidagi maxfiy fayl manzilini tekshirish
+if os.path.exists('/etc/secrets/firebase_key.json'):
+    FIREBASE_KEY_PATH = '/etc/secrets/firebase_key.json'
+else:
+    FIREBASE_KEY_PATH = 'firebase_key.json'
 
 if not firebase_admin._apps:
     try:
         cred = credentials.Certificate(FIREBASE_KEY_PATH)
         firebase_admin.initialize_app(cred, {'storageBucket': FIREBASE_BUCKET})
+        print("Firebase muvaffaqiyatli ishga tushdi!")
     except Exception as e:
         print(f"Firebase ulanishida xatolik: {e}")
 
