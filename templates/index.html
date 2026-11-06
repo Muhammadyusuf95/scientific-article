@@ -72,11 +72,12 @@
                                 {% endif %}
                             </div>
 
+                            <!-- Sarlavha bosilganda maqolaning batafsil sahifasiga (/article/ID) o'tadi -->
                             <h5 class="fw-bold mb-2">
-    <a href="{{ article.pdf_filename }}" class="text-dark text-decoration-none hover-primary" target="_blank">
-        {{ article.title_uz }}
-    </a>
-</h5>
+                                <a href="/article/{{ article.id }}" class="text-dark text-decoration-none hover-primary">
+                                    {{ article.title_uz }}
+                                </a>
+                            </h5>
 
                             {% if article.title_en %}
                             <h6 class="text-muted fst-italic small mb-3">{{ article.title_en }}</h6>
@@ -93,8 +94,8 @@
                                     {% endfor %}
                                 </div>
                                 <div class="d-flex gap-2 mt-2 mt-sm-0">
-                                    <!-- O'qish tugmasi to'g'ridan-to'g'ri PDF faylni ochadi -->
-                                    <a href="{{ article.pdf_filename }}" class="btn btn-outline-primary btn-sm rounded-pill px-3" target="_blank">
+                                    <!-- O'qish tugmasi maqolaning batafsil sahifasiga (/article/ID) o'tadi -->
+                                    <a href="/article/{{ article.id }}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
                                         <i class="fas fa-book-open me-1"></i> O'qish
                                     </a>
                                     <a href="/download/{{ article.id }}" class="btn btn-success btn-sm rounded-pill px-3" target="_blank">
