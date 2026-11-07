@@ -21,12 +21,19 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm py-3">
         <div class="container">
             <a class="navbar-brand fw-bold" href="/"><i class="fas fa-graduation-cap me-2"></i>Ilmiy Portali</a>
-            <div class="ms-auto d-flex gap-2">
+            <div class="ms-auto d-flex gap-2 align-items-center">
                 {% if session.get('is_admin') %}
+                    <!-- Agar admin bo'lsa -->
                     <a href="{{ url_for('add_article') }}" class="btn btn-primary btn-sm rounded-pill px-3"><i class="fas fa-plus me-1"></i> Maqola qo'shish</a>
-                    <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger btn-sm rounded-pill px-3">Chiqish</a>
+                    <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger btn-sm rounded-pill px-3">Admin Chiqish</a>
+                {% elif session.get('user_id') %}
+                    <!-- Agar oddiy tizimga kirgan foydalanuvchi bo'lsa -->
+                    <span class="text-light small me-2"><i class="fas fa-user me-1"></i> {{ session.get('username') }}</span>
+                    <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm rounded-pill px-3">Chiqish</a>
                 {% else %}
-                    <a href="{{ url_for('admin_login') }}" class="btn btn-outline-light btn-sm rounded-pill px-3">Admin Kirish</a>
+                    <!-- Agar tizimga KIRMAGAN bo'lsa (Mehmon / Oddiy foydalanuvchi) -->
+                    <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-sm rounded-pill px-3">Kirish</a>
+                    <a href="{{ url_for('register') }}" class="btn btn-primary btn-sm rounded-pill px-3">Ro'yxatdan o'tish</a>
                 {% endif %}
             </div>
         </div>
@@ -72,7 +79,6 @@
                                 {% endif %}
                             </div>
 
-                            <!-- Sarlavha bosilganda maqolaning batafsil sahifasiga (/article/ID) o'tadi -->
                             <h5 class="fw-bold mb-2">
                                 <a href="/article/{{ article.id }}" class="text-dark text-decoration-none hover-primary">
                                     {{ article.title_uz }}
@@ -94,7 +100,6 @@
                                     {% endfor %}
                                 </div>
                                 <div class="d-flex gap-2 mt-2 mt-sm-0">
-                                    <!-- O'qish tugmasi maqolaning batafsil sahifasiga (/article/ID) o'tadi -->
                                     <a href="/article/{{ article.id }}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
                                         <i class="fas fa-book-open me-1"></i> O'qish
                                     </a>
