@@ -94,6 +94,11 @@ def article_detail(article_id):
 
 @app.route('/download/<int:article_id>')
 def download_article(article_id):
+    # Agar foydalanuvchi tizimga kirmagan bo'lsa (na oddiy foydalanuvchi, na admin)
+    if not session.get('user_id') and not session.get('is_admin'):
+        flash("Maqolani yuklab olish uchun iltimos tizimga kiring yoki ro'yxatdan o'ting!", "warning")
+        return redirect(url_for('login'))
+        
     article = Article.query.get_or_404(article_id)
     article.downloads_count += 1
     db.session.commit()
