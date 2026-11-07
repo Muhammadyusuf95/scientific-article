@@ -18,23 +18,28 @@
 </head>
 <body>
     <!-- Navbar -->
+   <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm py-3">
         <div class="container">
             <a class="navbar-brand fw-bold" href="/"><i class="fas fa-graduation-cap me-2"></i>Ilmiy Portali</a>
             <div class="ms-auto d-flex gap-2 align-items-center">
+                
+                <!-- 1. Faqat ADMIN kirganda ko'rinadigan qism -->
                 {% if session.get('is_admin') %}
-                    <!-- Agar siz admin sifatida kirgan bo'lsangiz -->
                     <a href="{{ url_for('add_article') }}" class="btn btn-primary btn-sm rounded-pill px-3"><i class="fas fa-plus me-1"></i> Maqola qo'shish</a>
                     <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger btn-sm rounded-pill px-3"><i class="fas fa-sign-out-alt me-1"></i> Admin Chiqish</a>
+
+                <!-- 2. Oddiy ro'yxatdan o'tgan foydalanuvchi kirganda ko'rinadigan qism -->
                 {% elif session.get('user_id') %}
-                    <!-- Agar oddiy tizimga kirgan foydalanuvchi bo'lsa -->
                     <span class="text-light small me-2"><i class="fas fa-user me-1"></i> {{ session.get('username') }}</span>
                     <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm rounded-pill px-3"><i class="fas fa-sign-out-alt me-1"></i> Chiqish</a>
+
+                <!-- 3. Tizimga kirmagan mehmonlar uchun (Faqat Kirish va Ro'yxatdan o'tish) -->
                 {% else %}
-                    <!-- Mehmonlar uchun (Faqat Kirish va Ro'yxatdan o'tish, admin haqida iz yo'q) -->
                     <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-sm rounded-pill px-3"><i class="fas fa-sign-in-alt me-1"></i> Kirish</a>
                     <a href="{{ url_for('register') }}" class="btn btn-primary btn-sm rounded-pill px-3"><i class="fas fa-user-plus me-1"></i> Ro'yxatdan o'tish</a>
                 {% endif %}
+
             </div>
         </div>
     </nav>
