@@ -99,11 +99,10 @@ def download_article(article_id):
     db.session.commit()
     return redirect(article.pdf_filename)
 
-from flask import send_from_directory
-
+# --- GOOGLE SEARCH CONSOLE TASDIQLASH ---
 @app.route('/google35a149858ebe2d59.html')
 def google_verification():
-    return send_from_directory('.', 'google35a149858ebe2d59.html')
+    return "google-site-verification: google35a149858ebe2d59.html"
 
 # --- MAQOLANI O'CHIRISH (Faqat Admin uchun) ---
 @app.route('/article/delete/<int:article_id>', methods=['POST'])
