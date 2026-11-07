@@ -25,15 +25,16 @@
                 {% if session.get('is_admin') %}
                     <!-- Agar admin bo'lsa -->
                     <a href="{{ url_for('add_article') }}" class="btn btn-primary btn-sm rounded-pill px-3"><i class="fas fa-plus me-1"></i> Maqola qo'shish</a>
-                    <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger btn-sm rounded-pill px-3">Admin Chiqish</a>
+                    <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger btn-sm rounded-pill px-3"><i class="fas fa-sign-out-alt me-1"></i> Admin Chiqish</a>
                 {% elif session.get('user_id') %}
                     <!-- Agar oddiy tizimga kirgan foydalanuvchi bo'lsa -->
                     <span class="text-light small me-2"><i class="fas fa-user me-1"></i> {{ session.get('username') }}</span>
-                    <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm rounded-pill px-3">Chiqish</a>
+                    <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm rounded-pill px-3"><i class="fas fa-sign-out-alt me-1"></i> Chiqish</a>
                 {% else %}
-                    <!-- Agar tizimga KIRMAGAN bo'lsa (Mehmon / Oddiy foydalanuvchi) -->
-                    <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-sm rounded-pill px-3">Kirish</a>
-                    <a href="{{ url_for('register') }}" class="btn btn-primary btn-sm rounded-pill px-3">Ro'yxatdan o'tish</a>
+                    <!-- Agar tizimga KIRMAGAN bo'lsa (Mehmonlar uchun) -->
+                    <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-sm rounded-pill px-3"><i class="fas fa-sign-in-alt me-1"></i> Kirish</a>
+                    <a href="{{ url_for('register') }}" class="btn btn-primary btn-sm rounded-pill px-3"><i class="fas fa-user-plus me-1"></i> Ro'yxatdan o'tish</a>
+                    <a href="{{ url_for('admin_login') }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">Admin Kirish</a>
                 {% endif %}
             </div>
         </div>
