@@ -23,6 +23,46 @@ app.secret_key = os.getenv('SECRET_KEY', 'super_maxfiy_kalit')
 ADMIN_USERNAME = 'Muhammadyusuf'
 ADMIN_PASSWORD = 'Muhammadyusuf95'
 
+import requests
+
+@app.route('/migrate-old-articles')
+def migrate_old_articles():
+    try:
+        articles = Article.query.all()
+        count = 0
+        for article in articles:
+            old_url = article.pdf_filename
+            
+            # Agar allaqachon R2 ga o'tgan bo'lsa, o'tkazib yuboramiz
+            if "r2.dev" in old_url:
+                continue
+                
+            filename = old_url.split('/')[-1].split('?')[0]
+            if not filename:
+                continue
+            
+            # Eski Firebase havolasidan faylni yuklab olamiz
+            response = requests.get(old_url)
+            if response.status_code == 200:
+                file_bytes = response.content
+                
+                # Cloudflare R2 ga yuklaymiz
+                s3_client.put_object(
+                    Bucket=R2_BUCKET_NAME,
+                    Key=filename,
+                    Body=file_bytes,
+                    ContentType='application/pdf'
+                )
+                
+                # Ma'lumotlar bazasidagi havolani yangi R2 manziliga o'zgartiramiz
+                article.pdf_filename = f"https://pub-21eece65689f4ee39fbe5b16812adb10.r2.dev/{filename}"
+                db.session.commit()
+                count += 1
+                
+        return f"Muvaffaqiyatli! Jami {count} ta eski maqola Cloudflare R2 ga ko'chirildi va baza yangilandi."
+    except Exception as e:
+        return f"Xatolik yuz berdi: {str(e)}"
+
 # --- CLOUDFLARE R2 SOZLAMALARI ---
 R2_ENDPOINT_URL = os.getenv('R2_ENDPOINT_URL', 'https://b828117b95ed9d61c82ed59a87d6290e.r2.cloudflarestorage.com')
 R2_ACCESS_KEY_ID = os.getenv('R2_ACCESS_KEY_ID', 'ac38a96c402e0c4e919cdd96554cfa6b')
