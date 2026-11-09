@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <title>Konferensiya maqolasini yuklash</title>
+</head>
+<body>
+    <h2>Yangi konferensiya maqolasini qo'shish</h2>
+    <form action="/upload" method="POST" enctype="multipart/form-data">
+        <label>Maqola sarlavhasi:</label><br>
+        <input type="text" name="title" required style="width: 300px;"><br><br>
+        
+        <label>Mualliflar:</label><br>
+        <input type="text" name="authors" required style="width: 300px;"><br><br>
+        
+        <label>PDF faylni tanlang:</label><br>
+        <input type="file" name="pdf_file" accept=".pdf" required><br><br>
+        
+        <button type="submit">Maqolani yuklash va saqlash</button>
+    </form>
+</body>
+</html>
