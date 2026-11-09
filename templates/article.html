@@ -8,11 +8,25 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         
     <!-- Google Scholar uchun Meta Ma'lumotlar -->
-    <meta name="citation_title" content="{{ article.title_uz }}">
-    <meta name="citation_author" content="Ikromov Maxamadyusub Tursunali o‘g‘li">
-    <meta name="citation_publication_date" content="{{ article.year }}">
-    <meta name="citation_pdf_url" content="{{ article.pdf_filename }}">
-
+   <meta name="citation_title" content="{{ article.title }}">
+{% for a in article.authors %}
+<meta name="citation_author" content="{{ a }}">
+{% endfor %}
+<meta name="citation_publication_date" content="{{ article.year }}">
+<meta name="citation_conference_title" content="{{ collection.title }}">
+<meta name="citation_volume" content="{{ article.volume }}">
+<meta name="citation_issue" content="{{ article.issue }}">
+<meta name="citation_firstpage" content="{{ article.first_page }}">
+<meta name="citation_lastpage" content="{{ article.last_page }}">
+<meta name="citation_doi" content="{{ article.doi }}">
+<meta name="citation_language" content="uz">
+{% for k in article.keywords %}
+<meta name="citation_keywords" content="{{ k }}">
+{% endfor %}
+<meta name="citation_abstract_html_url" content="{{ request.url }}">
+<meta name="citation_pdf_url" content="{{ url_for('pdf', id=article.id, _external=True) }}">
+<link rel="canonical" href="{{ request.base_url }}">
+<meta name="description" content="{{ article.abstract[:160] }}">
     <style>
         body { background-color: #f8fafc; font-family: 'Inter', system-ui, sans-serif; color: #334155; }
         .article-hero { background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); color: white; padding: 3rem 1rem; border-radius: 0 0 2rem 2rem; margin-bottom: 2rem; }
