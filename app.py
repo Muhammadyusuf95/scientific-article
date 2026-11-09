@@ -258,7 +258,7 @@ def add_article():
             # R2 dagi fayl uchun ochiq havola
             # Eslatma: Agar R2 uchun Custom Domain ulagan bo'lsangiz, shu yerdagi havolani o'zgartirishingiz mumkin.
             # Hozircha standart R2 dev / endpoint havolasi yoki to'g'ridan-to'g'ri URL shakllantiriladi:
-            public_url = f"{R2_ENDPOINT_URL}/{R2_BUCKET_NAME}/{filename}"
+            public_url = f"https://pub-21eece65689f4ee39fbe5b16812adb10.r2.dev/{filename}"
             
             new_article = Article(
                 collection_id=collection_id,
