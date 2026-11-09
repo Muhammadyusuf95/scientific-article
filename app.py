@@ -1,11 +1,10 @@
 import os
 import time
+import boto3
 from flask import Flask, request, render_template, redirect, url_for, flash, make_response, session
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 from models import db, Article, Author, User, Collection
-import firebase_admin
-from firebase_admin import credentials, storage
 from functools import wraps
 from sqlalchemy import text
 
@@ -24,20 +23,20 @@ app.secret_key = os.getenv('SECRET_KEY', 'super_maxfiy_kalit')
 ADMIN_USERNAME = 'Muhammadyusuf'
 ADMIN_PASSWORD = 'Muhammadyusuf95'
 
-FIREBASE_BUCKET = 'scientific-article-22107.firebasestorage.app'
+# --- CLOUDFLARE R2 SOZLAMALARI ---
+R2_ENDPOINT_URL = os.getenv('R2_ENDPOINT_URL', 'https://b828117b95ed9d61c82ed59a87d6290e.r2.cloudflarestorage.com')
+R2_ACCESS_KEY_ID = os.getenv('R2_ACCESS_KEY_ID', 'ac38a96c402e0c4e919cdd96554cfa6b')
+R2_SECRET_ACCESS_KEY = os.getenv('R2_SECRET_ACCESS_KEY', 'b218b5c0d690c92f0d2ef49cde3b182be3b83be1fff97059b99ab0d221ab606e')
+R2_BUCKET_NAME = os.getenv('R2_BUCKET_NAME', 'scientific-article')
 
-if os.path.exists('/etc/secrets/firebase_key.json'):
-    FIREBASE_KEY_PATH = '/etc/secrets/firebase_key.json'
-else:
-    FIREBASE_KEY_PATH = 'firebase_key.json'
-
-if not firebase_admin._apps:
-    try:
-        cred = credentials.Certificate(FIREBASE_KEY_PATH)
-        firebase_admin.initialize_app(cred, {'storageBucket': FIREBASE_BUCKET})
-        print("Firebase muvaffaqiyatli ishga tushdi!")
-    except Exception as e:
-        print(f"Firebase ulanishida xatolik: {e}")
+# S3 client ni sozlash (Cloudflare R2 uchun)
+s3_client = boto3.client(
+    's3',
+    endpoint_url=R2_ENDPOINT_URL,
+    aws_access_key_id=R2_ACCESS_KEY_ID,
+    aws_secret_access_key=R2_SECRET_ACCESS_KEY,
+    region_name='auto'
+)
 
 db.init_app(app)
 
@@ -94,7 +93,6 @@ def article_detail(article_id):
 
 @app.route('/download/<int:article_id>')
 def download_article(article_id):
-    # Agar foydalanuvchi tizimga kirmagan bo'lsa (na oddiy foydalanuvchi, na admin)
     if not session.get('user_id') and not session.get('is_admin'):
         flash("Maqolani yuklab olish uchun iltimos tizimga kiring yoki ro'yxatdan o'ting!", "warning")
         return redirect(url_for('login'))
@@ -249,11 +247,18 @@ def add_article():
 
             filename = f"{int(time.time())}_{secure_filename(pdf_file.filename)}"
             
-            bucket = storage.bucket()
-            blob = bucket.blob(f"articles/{filename}")
-            blob.upload_from_string(pdf_file.read(), content_type='application/pdf')
-            blob.make_public()
-            public_url = blob.public_url
+            # --- CLOUDFLARE R2 GA YUKLASH ---
+            s3_client.upload_fileobj(
+                pdf_file,
+                R2_BUCKET_NAME,
+                filename,
+                ExtraArgs={'ContentType': 'application/pdf'}
+            )
+            
+            # R2 dagi fayl uchun ochiq havola
+            # Eslatma: Agar R2 uchun Custom Domain ulagan bo'lsangiz, shu yerdagi havolani o'zgartirishingiz mumkin.
+            # Hozircha standart R2 dev / endpoint havolasi yoki to'g'ridan-to'g'ri URL shakllantiriladi:
+            public_url = f"{R2_ENDPOINT_URL}/{R2_BUCKET_NAME}/{filename}"
             
             new_article = Article(
                 collection_id=collection_id,
