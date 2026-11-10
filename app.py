@@ -3,10 +3,7 @@ import time
 import boto3
 from flask import Flask, request, render_template, redirect, url_for, flash, make_response, session, Response, stream_with_context
 from werkzeug.utils import secure_filename
-from werkzeug.security import generate_password_hash, check_password_hash
 from flask_wtf.csrf import CSRFProtect
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
 from models import db, Article, Author, User, Collection
 from functools import wraps
 from sqlalchemy import text
@@ -25,14 +22,6 @@ app.secret_key = os.getenv('SECRET_KEY', 'super_maxfiy_kalit_uchun_tasodifiy_sat
 # CSRF himoyasini yoqish
 csrf = CSRFProtect(app)
 
-# Rate Limiting (Hujumlar va skanerlashdan himoya)
-limiter = Limiter(
-    get_remote_address,
-    app=app,
-    default_limits=["200 per day", "50 per hour"],
-    storage_uri="memory://"
-)
-
 ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', 'Muhammadyusuf')
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'Muhammadyusuf95')
 
@@ -45,7 +34,6 @@ def set_security_headers(response):
     response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
     response.headers['Permissions-Policy'] = 'geolocation=(), microphone=(), camera=()'
-    # CSP: Bootstrap, FontAwesome va Google Fonts CDN lariga ruxsat berish
     response.headers['Content-Security-Policy'] = (
         "default-src 'self'; "
         "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
@@ -120,7 +108,6 @@ def is_bot():
 
 # --- 4. ASOSIY MARSHRUTLAR ---
 @app.route('/')
-@limiter.exempt
 def index():
     query = request.args.get('q', '')
     collections = Collection.query.order_by(Collection.created_at.desc()).all()
@@ -137,7 +124,6 @@ def index():
     return render_template('index.html', articles=articles, collections=collections, query=query)
 
 @app.route('/collection/<int:collection_id>')
-@limiter.exempt
 def collection_detail(collection_id):
     collection = Collection.query.get_or_404(collection_id)
     articles = Article.query.filter_by(collection_id=collection.id).order_by(Article.year.desc()).all()
@@ -145,7 +131,6 @@ def collection_detail(collection_id):
     return render_template('collection.html', collection=collection, articles=articles, collections=collections)
 
 @app.route('/article/<int:id>')
-@limiter.exempt
 def article_detail(id):
     article = Article.query.get_or_404(id)
     try:
@@ -163,7 +148,6 @@ def article_detail(id):
 
 # --- 5. OQIMLI (STREAMING) PDF O'QISH VA YUKLAB OLISH ---
 @app.route('/pdf/<int:id>.pdf')
-@limiter.exempt
 def serve_pdf(id):
     article = Article.query.get_or_404(id)
     filename = article.pdf_filename.split('/')[-1].split('?')[0]
@@ -189,13 +173,12 @@ def serve_pdf(id):
     if 'Content-Range' in s3_obj:
         response.headers['Content-Range'] = s3_obj['Content-Range']
     if 'Accept-Ranges' in s3_obj:
-        response.headers['Accept-Ranges'] = s3_obj['Accept-Ranges']
+        response.headers['Accept-Ranges'] = s3_obj['Content-Length']
     response.headers['Content-Length'] = s3_obj['ContentLength']
     
     return response
 
 @app.route('/download/<int:id>')
-@limiter.limit("20 per minute")
 def download_article(id):
     article = Article.query.get_or_404(id)
     
@@ -314,7 +297,6 @@ def delete_article(article_id):
     return redirect(url_for('index'))
 
 @app.route('/admin/login', methods=['GET', 'POST'])
-@limiter.limit("5 per minute")
 def admin_login():
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
@@ -376,7 +358,6 @@ def add_article():
                 flash("Iltimos, PDF faylni biriktiring!", "danger")
                 return redirect(url_for('add_article'))
 
-            # PDF MIME va haqiqiy sarlavha tekshiruvi
             header = pdf_file.stream.read(1024)
             pdf_file.stream.seek(0)
             if not header.startswith(b'%PDF-'):
@@ -425,7 +406,6 @@ def add_article():
 
 # --- 7. SEO: ROBOTS.TXT, SITEMAP.XML VA XATOLAR HANDLERI ---
 @app.route('/robots.txt')
-@limiter.exempt
 def robots_txt():
     content = (
         "User-agent: *\n"
@@ -435,16 +415,12 @@ def robots_txt():
         "Allow: /pdf/\n"
         "Disallow: /admin/\n"
         "Disallow: /admin/login\n"
-        "Disallow: /register\n"
-        "Disallow: /login\n"
-        "Disallow: /forgot-password\n"
         "Disallow: /*?q=*\n\n"
         "Sitemap: https://scientific-article.onrender.com/sitemap.xml"
     )
     return response_with_type(content, "text/plain")
 
 @app.route('/sitemap.xml')
-@limiter.exempt
 def sitemap():
     base_url = "https://scientific-article.onrender.com"
     xml_content = '<?xml version="1.0" encoding="UTF-8"?>\n'
@@ -475,11 +451,6 @@ def response_with_type(content, ctype):
     response = make_response(content)
     response.headers["Content-Type"] = ctype
     return response
-
-@app.route('/google35a149858ebe2d59.html')
-@limiter.exempt
-def google_verification():
-    return "google-site-verification: google35a149858ebe2d59.html"
 
 @app.errorhandler(404)
 def page_not_found(e):
