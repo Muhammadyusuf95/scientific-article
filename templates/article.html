@@ -235,16 +235,21 @@
                     <div class="tab-content" id="citeTabsContent">
                         
                         <!-- 1. APA Formati -->
-                        <div class="tab-pane fade show active" id="apa-content" role="tabpanel">
-                            <label class="form-label fw-semibold small text-muted">APA (7th edition) stili:</label>
-                            <div class="input-group">
-                                <input type="text" id="apaText" class="form-control form-control-sm bg-light font-monospace" 
-                                       value="{% for author in article.authors %}{{ author.full_name }}{% if not loop.last %}, {% endif %}{% endfor %} ({{ article.year }}). {{ article.title_uz }}. Ilmiy Maqolalar Portali, {{ article.volume }}({{ article.issue }}){% if article.pages %}, {{ article.pages }}{% endif %}. {% if article.doi %}https://doi.org/{{ article.doi }}{% endif %}" readonly>
-                                <button class="btn btn-outline-primary btn-sm" type="button" onclick="copyToClipboard('apaText', this)">
-                                    <i class="fas fa-copy"></i> Nusxalash
-                                </button>
-                            </div>
-                        </div>
+                       <!-- APA Formati -->
+<input type="text" id="apaText" class="form-control form-control-sm bg-light font-monospace" 
+       value="{% for author in article.authors %}{{ author.full_name }}{% if not loop.last %}, {% endif %}{% endfor %} ({{ article.year }}). {{ article.title_uz }}. {% if collection %}{{ collection.name }}{% else %}Ilmiy Maqolalar Portali{% endif %}, {{ article.volume }}({{ article.issue }}){% if article.pages %}, {{ article.pages }}{% endif %}. https://doi.org/{{ article.doi | clean_doi }}" readonly>
+
+<!-- BibTeX Formati -->
+<textarea id="bibtexText" class="form-control form-control-sm bg-light font-monospace" rows="4" readonly>@article{article{{ article.id }},
+  author = { {% for author in article.authors %}{{ author.full_name }}{% if not loop.last %} and {% endif %}{% endfor %} },
+  title = {{{ article.title_uz }}},
+  journal = {{ "{% if collection %}" }}{{ collection.name }}{% else %}Ilmiy Maqolalar Portali{% endif %},
+  year = {{{ article.year }}},
+  volume = {{{ article.volume }}},
+  number = {{{ article.issue }}},
+  pages = {{{ article.pages }}},
+  doi = {{{ article.doi | clean_doi }}}
+}</textarea>
 
                         <!-- 2. MLA Formati -->
                         <div class="tab-pane fade" id="mla-content" role="tabpanel">
