@@ -8,7 +8,7 @@
     <!-- Canonical URL -->
     <link rel="canonical" href="{{ request.url }}">
     
-    <!-- Meta Description (Annotatsiyaning dastlabki 160 belgisi) -->
+    <!-- Meta Description -->
     <meta name="description" content="{{ article.abstract_uz[:160] }}...">
 
     <!-- Google Fonts & Bootstrap -->
@@ -22,15 +22,12 @@
     <meta name="citation_title" content="{{ article.title_uz }}">
     
     {% for author in article.authors %}
-    <!-- Format: Familiya, Ism (Sharqona qo'shimchalarsiz) -->
     <meta name="citation_author" content="{{ author.full_name }}">
     <meta name="citation_author_institution" content="{{ article.institution | default('O\'zbekiston Milliy Universiteti') }}">
     {% endfor %}
 
-    <!-- Sana formati: YYYY/MM/DD (01/01 to'g'rilandi) -->
     <meta name="citation_publication_date" content="{{ article.year }}/{{ '%02d' | format(article.issue | int) if article.issue else '01' }}/01">
     
-    <!-- Konferensiya materiallari uchun maxsus teglar -->
     {% if collection %}
     <meta name="citation_conference_title" content="{{ collection.name }}">
     {% endif %}
@@ -45,7 +42,6 @@
     {% endif %}
     
     <meta name="citation_pdf_url" content="{{ article.pdf_filename }}">
-    <!-- DOI to'g'ridan-to'g'ri prefikssiz uzatiladi -->
     <meta name="citation_doi" content="{{ article.doi | clean_doi }}">
     <meta name="citation_abstract_html_url" content="{{ request.url }}">
     <meta name="citation_language" content="uz">
@@ -117,6 +113,8 @@
     }
     </script>
 </head>
+<body class="bg-light d-flex flex-column min-vh-100">
+
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm py-3">
         <div class="container">
@@ -131,7 +129,7 @@
     </nav>
 
     <!-- Maqola Sarlavhasi Banneri -->
-    <div class="hero-section text-center">
+    <div class="hero-section text-center py-5 bg-dark text-white mb-4">
         <div class="container" style="max-width: 900px;">
             {% if collection %}
             <a href="/collection/{{ collection.id }}" class="badge bg-warning text-dark text-decoration-none mb-3 px-3 py-2">
@@ -153,7 +151,7 @@
 
     <!-- Asosiy Tarkib -->
     <div class="container mb-5" style="max-width: 900px;">
-        <div class="card content-card p-4 p-md-5 mb-4">
+        <div class="card content-card p-4 p-md-5 mb-4 shadow-sm border-0">
             
             <!-- Mualliflar -->
             <div class="mb-4 pb-3 border-bottom">
@@ -188,7 +186,6 @@
                     <a href="/download/{{ article.id }}" class="btn btn-outline-success rounded-pill px-4" target="_blank">
                         <i class="fas fa-download me-2"></i> Yuklab olish
                     </a>
-                    <!-- Iqtibos keltirish tugmasi -->
                     <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#citeModal">
                         <i class="fas fa-quote-right me-2"></i> Iqtibos keltirish (Cite)
                     </button>
@@ -201,7 +198,7 @@
         </div>
     </div>
 
-    <!-- Cite Modal Oynasi (5 ta mashhur stil bilan) -->
+    <!-- Cite Modal Oynasi -->
     <div class="modal fade" id="citeModal" tabindex="-1" aria-labelledby="citeModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content border-0 rounded-4 shadow">
@@ -213,7 +210,7 @@
                 </div>
                 <div class="modal-body">
                     
-                    <!-- Nav Tabs uchun tugmalar -->
+                    <!-- Nav Tabs -->
                     <ul class="nav nav-pills mb-3 gap-2" id="citeTabs" role="tablist">
                         <li class="nav-item" role="presentation">
                             <button class="nav-link active btn-sm rounded-pill px-3" id="apa-tab" data-bs-toggle="pill" data-bs-target="#apa-content" type="button" role="tab">APA</button>
@@ -235,22 +232,16 @@
                     <div class="tab-content" id="citeTabsContent">
                         
                         <!-- 1. APA Formati -->
-                       <!-- APA Formati -->
-<input type="text" id="apaText" class="form-control form-control-sm bg-light font-monospace" 
-       value="{% for author in article.authors %}{{ author.full_name }}{% if not loop.last %}, {% endif %}{% endfor %} ({{ article.year }}). {{ article.title_uz }}. {% if collection %}{{ collection.name }}{% else %}Ilmiy Maqolalar Portali{% endif %}, {{ article.volume }}({{ article.issue }}){% if article.pages %}, {{ article.pages }}{% endif %}. https://doi.org/{{ article.doi | clean_doi }}" readonly>
-
-<!-- BibTeX Formati -->
-<textarea id="bibtexText" class="form-control form-control-sm bg-light font-monospace" rows="4" readonly>@article{article{{ article.id }},
-  author = { {% for author in article.authors %}{{ author.full_name }}{% if not loop.last %} and {% endif %}{% endfor %} },
-  title = <!-- To'g'ri holat: -->
-title = "{{ article.title_uz }}",
-  journal = {{ "{% if collection %}" }}{{ collection.name }}{% else %}Ilmiy Maqolalar Portali{% endif %},
-  year = {{{ article.year }}},
-  volume = {{{ article.volume }}},
-  number = {{{ article.issue }}},
-  pages = {{{ article.pages }}},
-  doi = {{{ article.doi | clean_doi }}}
-}</textarea>
+                        <div class="tab-pane fade show active" id="apa-content" role="tabpanel">
+                            <label class="form-label fw-semibold small text-muted">APA stili:</label>
+                            <div class="input-group">
+                                <input type="text" id="apaText" class="form-control form-control-sm bg-light font-monospace" 
+                                       value="{% for author in article.authors %}{{ author.full_name }}{% if not loop.last %}, {% endif %}{% endfor %} ({{ article.year }}). {{ article.title_uz }}. {% if collection %}{{ collection.name }}{% else %}Ilmiy Maqolalar Portali{% endif %}, {{ article.volume }}({{ article.issue }}){% if article.pages %}, {{ article.pages }}{% endif %}. https://doi.org/{{ article.doi | clean_doi }}" readonly>
+                                <button class="btn btn-outline-primary btn-sm" type="button" onclick="copyToClipboard('apaText', this)">
+                                    <i class="fas fa-copy"></i> Nusxalash
+                                </button>
+                            </div>
+                        </div>
 
                         <!-- 2. MLA Formati -->
                         <div class="tab-pane fade" id="mla-content" role="tabpanel">
@@ -289,25 +280,30 @@ title = "{{ article.title_uz }}",
                         </div>
 
                         <!-- 5. BibTeX Formati -->
-                       <!-- 5. BibTeX Formati -->
-<div class="tab-pane fade" id="bibtex-content" role="tabpanel">
-    <label class="form-label fw-semibold small text-muted">BibTeX stili (LaTeX uchun):</label>
-    <div class="input-group">
-        <textarea id="bibtexText" class="form-control form-control-sm bg-light font-monospace" rows="4" readonly>@article{article{{ article.id }},
+                        <div class="tab-pane fade" id="bibtex-content" role="tabpanel">
+                            <label class="form-label fw-semibold small text-muted">BibTeX stili (LaTeX uchun):</label>
+                            <div class="input-group">
+                                <textarea id="bibtexText" class="form-control form-control-sm bg-light font-monospace" rows="4" readonly>@article{article{{ article.id }},
   author = { {% for author in article.authors %}{{ author.full_name }}{% if not loop.last %} and {% endif %}{% endfor %} },
-  title = {{ "{{ article.title_uz }}" }},
-  journal = {Ilmiy Maqolalar Portali},
+  title = "{{ article.title_uz }}",
+  journal = "{% if collection %}{{ collection.name }}{% else %}Ilmiy Maqolalar Portali{% endif %}",
   year = {{ article.year }},
   volume = {{ article.volume }},
   number = {{ article.issue }},
-  pages = {{ "{{ article.pages }}" }},
-  doi = {{ "{{ article.doi }}" }}
+  pages = "{{ article.pages }}",
+  doi = "{{ article.doi | clean_doi }}"
 }</textarea>
-        <button class="btn btn-outline-primary btn-sm" type="button" onclick="copyToClipboard('bibtexText', this)">
-            <i class="fas fa-copy"></i> Nusxalash
-        </button>
+                                <button class="btn btn-outline-primary btn-sm" type="button" onclick="copyToClipboard('bibtexText', this)">
+                                    <i class="fas fa-copy"></i> Nusxalash
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-</div>
 
     <!-- Nusxalash uchun JavaScript -->
     <script>
