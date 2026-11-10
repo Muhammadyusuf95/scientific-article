@@ -4,24 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ilmiy Maqolalar Portali - Bosh sahifa</title>
+    <!-- Google Fonts: Inter va Merriweather -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { background-color: #f8fafc; font-family: 'Inter', system-ui, sans-serif; color: #334155; }
+        h1, h2, h3, .article-title, .portal-title { font-family: 'Merriweather', serif; }
         .hero-section { background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); color: white; padding: 4rem 1rem; border-radius: 0 0 2rem 2rem; margin-bottom: 2rem; }
         .article-card { transition: transform 0.2s, box-shadow 0.2s; border: none; border-radius: 1rem; background: white; position: relative; }
         .article-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); }
         .collection-pill { transition: all 0.2s; }
         .collection-pill:hover { background-color: #2563eb !important; color: white !important; }
         .hover-primary:hover { color: #2563eb !important; }
+        .navbar-brand { font-weight: 700; color: #ffffff !important; }
     </style>
 </head>
 <body>
     <!-- Navbar -->
-   <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm py-3">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="/"><i class="fas fa-graduation-cap me-2"></i>Ilmiy Portali</a>
+            <a class="navbar-brand fw-bold" href="/"><i class="fas fa-graduation-cap me-2 text-primary"></i>Ilmiy Maqolalar Portali</a>
             <div class="ms-auto d-flex gap-2 align-items-center">
                 
                 <!-- 1. Faqat ADMIN kirganda ko'rinadigan qism -->
@@ -34,7 +37,7 @@
                     <span class="text-light small me-2"><i class="fas fa-user me-1"></i> {{ session.get('username') }}</span>
                     <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm rounded-pill px-3"><i class="fas fa-sign-out-alt me-1"></i> Chiqish</a>
 
-                <!-- 3. Tizimga kirmagan mehmonlar uchun (Faqat Kirish va Ro'yxatdan o'tish) -->
+                <!-- 3. Tizimga kirmagan mehmonlar uchun (Faqat Kirish va Ro'yxatdan o'tish - Admin havolasi yashirildi) -->
                 {% else %}
                     <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-sm rounded-pill px-3"><i class="fas fa-sign-in-alt me-1"></i> Kirish</a>
                     <a href="{{ url_for('register') }}" class="btn btn-primary btn-sm rounded-pill px-3"><i class="fas fa-user-plus me-1"></i> Ro'yxatdan o'tish</a>
@@ -47,7 +50,7 @@
     <!-- Qidiruv va Banner -->
     <div class="hero-section text-center">
         <div class="container" style="max-width: 700px;">
-            <h1 class="fw-bold mb-3">Ilmiy Maqolalar va Tadqiqotlar Bazasi</h1>
+            <h1 class="fw-bold mb-3 portal-title">Ilmiy Maqolalar va Tadqiqotlar Bazasi</h1>
             <p class="text-slate-300 mb-4">O'zbek, ingliz va rus tillaridagi ilmiy ishlar, konferensiya materiallari va jurnallar to'plami.</p>
             <form action="/" method="GET" class="input-group shadow-lg rounded-pill overflow-hidden bg-white p-1">
                 <input type="text" name="q" value="{{ query }}" class="form-control border-0 px-4 py-3 shadow-none" placeholder="Maqola sarlavhasi bo'yicha qidirish...">
