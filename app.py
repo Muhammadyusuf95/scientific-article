@@ -22,7 +22,6 @@ app.config.update(
 def clean_doi(doi_str):
     if not doi_str:
         return ""
-    # Agar DOI to'liq URL shaklida kiritilgan bo'lsa, prefikslarni tozalab tashlaymiz
     doi_str = doi_str.strip()
     for prefix in ['https://doi.org/', 'http://doi.org/', 'doi:']:
         if doi_str.lower().startswith(prefix):
