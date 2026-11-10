@@ -137,6 +137,79 @@ def download_article(article_id):
 @app.route('/google35a149858ebe2d59.html')
 def google_verification():
     return "google-site-verification: google35a149858ebe2d59.html"
+    # --- MAQOLANI TAHRIRLASH (Edit) ---
+@app.route('/article/edit/<int:article_id>', methods=['GET', 'POST'])
+@admin_required
+def edit_article(article_id):
+    article = Article.query.get_or_404(article_id)
+    collections = Collection.query.all()
+    
+    if request.method == 'POST':
+        try:
+            article.title_uz = request.form.get('title_uz')
+            article.title_en = request.form.get('title_en')
+            article.title_ru = request.form.get('title_ru')
+            
+            article.abstract_uz = request.form.get('abstract_uz')
+            article.abstract_en = request.form.get('abstract_en')
+            article.abstract_ru = request.form.get('abstract_ru')
+            
+            article.keywords_uz = request.form.get('keywords_uz')
+            article.keywords_en = request.form.get('keywords_en')
+            article.keywords_ru = request.form.get('keywords_ru')
+            
+            article.references = request.form.get('references')
+            article.doi = request.form.get('doi')
+            article.year = request.form.get('year', type=int) or 2026
+            article.volume = request.form.get('volume', type=int) or 1
+            article.issue = request.form.get('issue', type=int) or 1
+            article.pages = request.form.get('pages')
+            
+            collection_name = request.form.get('collection_name', '').strip()
+            if collection_name:
+                collection = Collection.query.filter_by(name=collection_name).first()
+                if not collection:
+                    collection = Collection(name=collection_name)
+                    db.session.add(collection)
+                    db.session.commit()
+                article.collection_id = collection.id
+            
+            # Yangi PDF yuklansa, R2 ga yangilaymiz
+            pdf_file = request.files.get('pdf_file')
+            if pdf_file and pdf_file.filename != '':
+                filename = f"{int(time.time())}_{secure_filename(pdf_file.filename)}"
+                s3_client.upload_fileobj(
+                    pdf_file,
+                    R2_BUCKET_NAME,
+                    filename,
+                    ExtraArgs={'ContentType': 'application/pdf'}
+                )
+                article.pdf_filename = f"https://pub-21eece65689f4ee39fbe5b16812adb10.r2.dev/{filename}"
+
+            db.session.commit()
+            flash("Maqola muvaffaqiyatli tahrirlandi!", "success")
+            return redirect(url_for('article_detail', id=article.id))
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Tahrirlashda xatolik: {str(e)}", "danger")
+            
+    return render_template('admin_edit.html', article=article, collections=collections)
+
+# --- TO'PLAMNI O'CHIRISH (Delete Collection) ---
+@app.route('/collection/delete/<int:collection_id>', methods=['POST'])
+@admin_required
+def delete_collection(collection_id):
+    collection = Collection.query.get_or_404(collection_id)
+    try:
+        # To'plamga tegishli maqolalarning collection_id sini NULL qilamiz yoki o'chiramiz
+        Article.query.filter_by(collection_id=collection.id).update({'collection_id': None})
+        db.session.delete(collection)
+        db.session.commit()
+        flash("To'plam muvaffaqiyatli o'chirildi!", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"To'plamni o'chirishda xatolik: {str(e)}", "danger")
+    return redirect(url_for('index'))
 
 # --- MAQOLANI O'CHIRISH (Faqat Admin uchun) ---
 @app.route('/article/delete/<int:article_id>', methods=['POST'])
