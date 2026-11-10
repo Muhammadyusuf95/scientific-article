@@ -9,6 +9,20 @@ from functools import wraps
 from sqlalchemy import text
 
 app = Flask(__name__)
+# Cookie xavfsizligi
+app.config.update(
+    SESSION_COOKIE_SECURE=True,      # Faqat HTTPS orqali ishlaydi
+    SESSION_COOKIE_HTTPONLY=True,    # JavaScript orqali o'g'irlashdan saqlaydi
+    SESSION_COOKIE_SAMESITE='Lax',
+)
+
+# Xavfsizlik sarlavhalari (Security Headers)
+@app.after_request
+def set_security_headers(response):
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    return response
 
 db_url = os.getenv('DATABASE_URL', 'sqlite:///scholar_db.sqlite')
 if db_url.startswith("postgres://"):
