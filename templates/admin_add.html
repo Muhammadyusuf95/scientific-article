@@ -30,7 +30,7 @@
         <div class="row justify-content-center">
             <div class="col-md-9">
                 <div class="card shadow border-0 rounded-4 p-4 p-md-5 bg-white">
-                    <h1 class="fw-bold mb-4 text-primary portal-title fs-3"><i class="fas fa-upload me-2" aria-hidden="true"></i>Yangi Ilmiy Maqola Qo'shish</h1>
+                    <h1 class="fw-bold mb-4 text-primary portal-title fs-3"><i class="fas fa-upload me-2" aria-hidden="true"></i>Yangi Ilmiy Ish Qo'shish</h1>
                     
                     {% with messages = get_flashed_messages(with_categories=true) %}
                         {% if messages %}
@@ -44,11 +44,72 @@
                     {% endwith %}
 
                     <form method="POST" enctype="multipart/form-data">
+                        <!-- CSRF Token -->
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                        <!-- ILMIY ISH TURI VA DINAMIK PANELLAR -->
+                        <div class="card bg-light border-primary border-2 p-3 mb-4 rounded-3 shadow-sm">
+                            <label for="item_type" class="fw-bold text-dark mb-2"><i class="fas fa-layer-group text-primary me-2" aria-hidden="true"></i>Ilmiy ish turini tanlang</label>
+                            <select name="item_type" id="item_type" class="form-select mb-3" onchange="toggleItemFields()" required>
+                                <option value="jurnal">Jurnal maqolasi</option>
+                                <option value="darslik">Darslik</option>
+                                <option value="oquv_qollanma">O'quv-qo'llanma</option>
+                                <option value="konferensiya_maqola">Konferensiya maqolasi</option>
+                                <option value="konferensiya_tezis">Konferensiya tezisi</option>
+                            </select>
+
+                            <!-- Dinamik Panel: Darslik va O'quv-qo'llanma uchun -->
+                            <div id="panel-book" class="p-3 border rounded-3 bg-white mb-2" style="display: none;">
+                                <h6 class="fw-bold text-secondary mb-3"><i class="fas fa-book me-1"></i> Darslik va O'quv-qo'llanma rekvizitlari</h6>
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-semibold">ISBN</label>
+                                        <input type="text" name="isbn" class="form-control" placeholder="978-9943-...">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-semibold">BBK</label>
+                                        <input type="text" name="bbk" class="form-control" placeholder="BBK raqami">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-semibold">UDK</label>
+                                        <input type="text" name="udk_b" class="form-control" placeholder="UDK raqami">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Dinamik Panel: Jurnal maqolasi uchun -->
+                            <div id="panel-journal" class="p-3 border rounded-3 bg-white mb-2">
+                                <h6 class="fw-bold text-secondary mb-3"><i class="fas fa-newspaper me-1"></i> Jurnal rasmiy ma'lumotlari</h6>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold">Jurnal nomi</label>
+                                        <input type="text" name="journal_name" class="form-control" placeholder="Masalan: O'zbek tili va adabiyoti">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small fw-semibold">UDK</label>
+                                        <input type="text" name="udk" class="form-control" placeholder="UDK">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small fw-semibold">Haqiqiy ISSN (agar bo'lsa)</label>
+                                        <input type="text" name="issn" class="form-control" placeholder="XXXX-XXXX">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Dinamik Panel: Konferensiya maqolasi va tezisi uchun -->
+                            <div id="panel-conf" class="p-3 border rounded-3 bg-white mb-2" style="display: none;">
+                                <h6 class="fw-bold text-secondary mb-3"><i class="fas fa-university me-1"></i> Konferensiya ma'lumotlari</h6>
+                                <div class="mb-2">
+                                    <label class="form-label small fw-semibold">Konferensiya o'tkazilgan tashkilot / Muassasa</label>
+                                    <input type="text" name="conference_org" class="form-control" placeholder="Masalan: O'zR FA O'zbek tili, adabiyoti va folklori instituti">
+                                </div>
+                            </div>
+                        </div>
                         
                         <!-- To'plam / Konferensiya nomi -->
                         <div class="card bg-light border-warning border-2 p-3 mb-4 rounded-3 shadow-sm">
-                            <label for="collection_name" class="fw-bold text-dark mb-2"><i class="fas fa-folder-open text-warning me-2" aria-hidden="true"></i>To'plam yoki Konferensiya nomi</label>
-                            <p class="small text-muted mb-2">Agar bu maqola biror konferensiya materialiga tegishli bo'lsa, nomini kiriting (yoki ro'yxatdan tanlang). Agar mustaqil maqola bo'lsa, bo'sh qoldiring.</p>
+                            <label for="collection_name" class="fw-bold text-dark mb-2"><i class="fas fa-folder-open text-warning me-2" aria-hidden="true"></i>To'plam yoki Konferensiya to'plami nomi</label>
+                            <p class="small text-muted mb-2">Agar bu maqola maxsus to'plamga tegishli bo'lsa, nomini kiriting (yoki ro'yxatdan tanlang). Agar mustaqil bo'lsa, bo'sh qoldiring.</p>
                             <input type="text" id="collection_name" name="collection_name" class="form-control" list="collectionList" placeholder="Masalan: Tilshunoslikning dolzarb masalalari" aria-label="To'plam yoki konferensiya nomi">
                             <datalist id="collectionList">
                                 {% for collection in collections %}
@@ -60,7 +121,7 @@
                         <!-- Mualliflar va DOI -->
                         <div class="row mb-3">
                             <div class="col-md-8">
-                                <label for="authors" class="form-label fw-semibold">Mualliflar (vergul bilan ajrating)</label>
+                                <label for="authors" class="form-label fw-semibold">Mualliflar (vergul bilan ajrating) *</label>
                                 <input type="text" id="authors" name="authors" class="form-control" required placeholder="Masalan: Alisher Navoiy, Bobur Mirzo" aria-label="Mualliflar">
                             </div>
                             <div class="col-md-4">
@@ -93,12 +154,12 @@
                         <div class="card bg-light border-0 p-3 mb-3 rounded-3">
                             <h2 class="fw-bold text-primary mb-3 fs-6">🇺🇿 O'zbek tilidagi ma'lumotlar</h2>
                             <div class="mb-3">
-                                <label for="title_uz" class="form-label small fw-semibold">Maqola Sarlavhasi (Uz)</label>
+                                <label for="title_uz" class="form-label small fw-semibold">Maqola Sarlavhasi (Uz) *</label>
                                 <input type="text" id="title_uz" name="title_uz" class="form-control" required placeholder="Maqola nomi..." aria-label="O'zbekcha sarlavha">
                             </div>
                             <div class="mb-3">
                                 <label for="abstract_uz" class="form-label small fw-semibold">Annotatsiya (Uz)</label>
-                                <textarea id="abstract_uz" name="abstract_uz" class="form-control" rows="3" required placeholder="Qisqacha mazmuni..." aria-label="O'zbekcha annotatsiya"></textarea>
+                                <textarea id="abstract_uz" name="abstract_uz" class="form-control" rows="3" placeholder="Qisqacha mazmuni..." aria-label="O'zbekcha annotatsiya"></textarea>
                             </div>
                             <div>
                                 <label for="keywords_uz" class="form-label small fw-semibold">Kalit so'zlar (Uz)</label>
@@ -148,7 +209,7 @@
                         </div>
 
                         <div class="mb-4">
-                            <label for="pdf_file" class="form-label fw-semibold">PDF Faylni Yuklash</label>
+                            <label for="pdf_file" class="form-label fw-semibold">PDF Faylni Yuklash *</label>
                             <input type="file" id="pdf_file" name="pdf_file" class="form-control" accept=".pdf" required aria-label="PDF fayl yuklash">
                         </div>
 
@@ -159,32 +220,43 @@
         </div>
     </main>
 
-    <!-- Avtomatik raqamlovchi JavaScript -->
+    <!-- Dinamik Panellar va Avtomatik raqamlovchi JS -->
     <script>
-    document.getElementById('references').addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            
-            const textarea = this;
-            const cursorPos = textarea.selectionStart;
-            const text = textarea.value;
-            
-            const lines = text.substring(0, cursorPos).split('\n');
-            const currentLine = lines[lines.length - 1];
-            
-            let nextNum = 1;
-            const match = currentLine.match(/^(\d+)\./);
-            if (match) {
-                nextNum = parseInt(match[1]) + 1;
-            } else {
-                nextNum = text.split('\n').filter(l => l.trim().length > 0).length + 1;
-            }
-            
-            const addition = `\n${nextNum}. `;
-            textarea.value = text.substring(0, cursorPos) + addition + text.substring(cursorPos);
-            textarea.selectionStart = textarea.selectionEnd = cursorPos + addition.length;
+        function toggleItemFields() {
+            const type = document.getElementById('item_type').value;
+            const bookPanel = document.getElementById('panel-book');
+            const journalPanel = document.getElementById('panel-journal');
+            const confPanel = document.getElementById('panel-conf');
+
+            bookPanel.style.display = (type === 'darslik' || type === 'oquv_qollanma') ? 'block' : 'none';
+            journalPanel.style.display = (type === 'jurnal') ? 'block' : 'none';
+            confPanel.style.display = (type === 'konferensiya_maqola' || type === 'konferensiya_tezis') ? 'block' : 'none';
         }
-    });
+
+        document.getElementById('references').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                
+                const textarea = this;
+                const cursorPos = textarea.selectionStart;
+                const text = textarea.value;
+                
+                const lines = text.substring(0, cursorPos).split('\n');
+                const currentLine = lines[lines.length - 1];
+                
+                let nextNum = 1;
+                const match = currentLine.match(/^(\d+)\./);
+                if (match) {
+                    nextNum = parseInt(match[1]) + 1;
+                } else {
+                    nextNum = text.split('\n').filter(l => l.trim().length > 0).length + 1;
+                }
+                
+                const addition = `\n${nextNum}. `;
+                textarea.value = text.substring(0, cursorPos) + addition + text.substring(cursorPos);
+                textarea.selectionStart = textarea.selectionEnd = cursorPos + addition.length;
+            }
+        });
     </script>
 
     <footer class="bg-dark text-white text-center py-4 mt-auto">
