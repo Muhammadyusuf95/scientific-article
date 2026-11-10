@@ -3,74 +3,146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Maqolani Tahrirlash - Ilmiy Maqolalar Portali</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Maqolani Tahrirlash — Ilmiy Maqolalar Portali</title>
+    <!-- Google Fonts: Inter va Merriweather -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <style>
+        body { background-color: #f8fafc; font-family: 'Inter', system-ui, sans-serif; color: #334155; }
+        h1, h2, h3, .portal-title { font-family: 'Merriweather', serif; }
+    </style>
 </head>
-<body class="bg-light">
-    <div class="container py-5" style="max-width: 800px;">
-        <div class="card shadow border-0 rounded-4 p-4">
+<body class="bg-light d-flex flex-column min-vh-100">
+    <main class="container py-5 my-auto" style="max-width: 850px;">
+        <div class="card shadow border-0 rounded-4 p-4 p-md-5 bg-white">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h3 class="fw-bold mb-0">Maqolani Tahrirlash</h3>
-                <a href="{{ url_for('article_detail', id=article.id) }}" class="btn btn-outline-secondary btn-sm rounded-pill">Orqaga</a>
+                <h1 class="fw-bold mb-0 text-primary fs-3 portal-title">Maqolani Tahrirlash</h1>
+                <a href="{{ url_for('article_detail', id=article.id) }}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">Orqaga</a>
             </div>
 
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Yopish"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
             <form method="POST" enctype="multipart/form-data">
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Sarlavha (O'zbekcha):</label>
-                    <input type="text" name="title_uz" class="form-control" value="{{ article.title_uz }}" required>
-                </div>
                 
+                <!-- To'plam nomi -->
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">Sarlavha (Inglizcha):</label>
-                    <input type="text" name="title_en" class="form-control" value="{{ article.title_en or '' }}">
+                    <label for="collection_name" class="form-label fw-semibold">To'plam / Konferensiya nomi:</label>
+                    <input type="text" id="collection_name" name="collection_name" class="form-control" value="{{ article.collection.name if article.collection else '' }}" aria-label="To'plam yoki konferensiya nomi">
                 </div>
 
+                <!-- DOI -->
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">Annotatsiya (O'zbekcha):</label>
-                    <textarea name="abstract_uz" class="form-control" rows="4" required>{{ article.abstract_uz }}</textarea>
+                    <label for="doi" class="form-label fw-semibold">DOI raqami:</label>
+                    <input type="text" id="doi" name="doi" class="form-control" value="{{ article.doi | clean_doi }}" aria-label="DOI raqami">
+                </div>
+
+                <!-- O'ZBEKCHA -->
+                <div class="card bg-light border-0 p-3 mb-3 rounded-3">
+                    <h2 class="fw-bold text-primary mb-3 fs-6">🇺🇿 O'zbek tilidagi ma'lumotlar</h2>
+                    <div class="mb-3">
+                        <label for="title_uz" class="form-label small fw-semibold">Sarlavha (O'zbekcha):</label>
+                        <input type="text" id="title_uz" name="title_uz" class="form-control" value="{{ article.title_uz }}" required aria-label="O'zbekcha sarlavha">
+                    </div>
+                    <div class="mb-3">
+                        <label for="abstract_uz" class="form-label small fw-semibold">Annotatsiya (O'zbekcha):</label>
+                        <textarea id="abstract_uz" name="abstract_uz" class="form-control" rows="4" required aria-label="O'zbekcha annotatsiya">{{ article.abstract_uz }}</textarea>
+                    </div>
+                    <div>
+                        <label for="keywords_uz" class="form-label small fw-semibold">Kalit so'zlar (O'zbekcha):</label>
+                        <input type="text" id="keywords_uz" name="keywords_uz" class="form-control" value="{{ article.keywords_uz or '' }}" aria-label="O'zbekcha kalit so'zlar">
+                    </div>
+                </div>
+
+                <!-- INGLIZCHA -->
+                <div class="card bg-light border-0 p-3 mb-3 rounded-3">
+                    <h2 class="fw-bold text-primary mb-3 fs-6">🇬🇧 Ingliz tilidagi ma'lumotlar (English)</h2>
+                    <div class="mb-3">
+                        <label for="title_en" class="form-label small fw-semibold">Title (En):</label>
+                        <input type="text" id="title_en" name="title_en" class="form-control" value="{{ article.title_en or '' }}" aria-label="Inglizcha sarlavha">
+                    </div>
+                    <div class="mb-3">
+                        <label for="abstract_en" class="form-label small fw-semibold">Abstract (En):</label>
+                        <textarea id="abstract_en" name="abstract_en" class="form-control" rows="3" aria-label="Inglizcha annotatsiya">{{ article.abstract_en or '' }}</textarea>
+                    </div>
+                    <div>
+                        <label for="keywords_en" class="form-label small fw-semibold">Keywords (En):</label>
+                        <input type="text" id="keywords_en" name="keywords_en" class="form-control" value="{{ article.keywords_en or '' }}" aria-label="Inglizcha kalit so'zlar">
+                    </div>
+                </div>
+
+                <!-- RUSCHA -->
+                <div class="card bg-light border-0 p-3 mb-3 rounded-3">
+                    <h2 class="fw-bold text-primary mb-3 fs-6">🇷🇺 Rus tilidagi ma'lumotlar (Русский)</h2>
+                    <div class="mb-3">
+                        <label for="title_ru" class="form-label small fw-semibold">Название (Ru):</label>
+                        <input type="text" id="title_ru" name="title_ru" class="form-control" value="{{ article.title_ru or '' }}" aria-label="Ruscha sarlavha">
+                    </div>
+                    <div class="mb-3">
+                        <label for="abstract_ru" class="form-label small fw-semibold">Аннотация (Ru):</label>
+                        <textarea id="abstract_ru" name="abstract_ru" class="form-control" rows="3" aria-label="Ruscha annotatsiya">{{ article.abstract_ru or '' }}</textarea>
+                    </div>
+                    <div>
+                        <label for="keywords_ru" class="form-label small fw-semibold">Ключевые слова (Ru):</label>
+                        <input type="text" id="keywords_ru" name="keywords_ru" class="form-control" value="{{ article.keywords_ru or '' }}" aria-label="Ruscha kalit so'zlar">
+                    </div>
+                </div>
+
+                <!-- BIBLIOGRAFIK MANBALAR -->
+                <div class="card bg-light border-0 p-3 mb-3 rounded-3">
+                    <label for="references" class="fw-bold text-primary mb-2 fs-6"><i class="fas fa-list-ul me-2" aria-hidden="true"></i>Bibliografik manbalar (References):</label>
+                    <textarea id="references" name="references" class="form-control font-monospace" rows="4" aria-label="Bibliografik manbalar">{{ article.references or '' }}</textarea>
                 </div>
 
                 <div class="row">
                     <div class="col-md-4 mb-3">
-                        <label class="form-label fw-semibold">Yil:</label>
-                        <input type="number" name="year" class="form-control" value="{{ article.year }}" required>
+                        <label for="year" class="form-label fw-semibold">Yil:</label>
+                        <input type="number" id="year" name="year" class="form-control" value="{{ article.year }}" required aria-label="Yil">
                     </div>
                     <div class="col-md-4 mb-3">
-                        <label class="form-label fw-semibold">Tom (Volume):</label>
-                        <input type="number" name="volume" class="form-control" value="{{ article.volume }}">
+                        <label for="volume" class="form-label fw-semibold">Tom (Volume):</label>
+                        <input type="number" id="volume" name="volume" class="form-control" value="{{ article.volume }}" aria-label="Tom">
                     </div>
                     <div class="col-md-4 mb-3">
-                        <label class="form-label fw-semibold">Son (Issue):</label>
-                        <input type="number" name="issue" class="form-control" value="{{ article.issue }}">
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-semibold">Sahifalar (masalan: 12-18):</label>
-                        <input type="text" name="pages" class="form-control" value="{{ article.pages or '' }}">
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-semibold">DOI:</label>
-                        <input type="text" name="doi" class="form-control" value="{{ article.doi | clean_doi }}">
+                        <label for="issue" class="form-label fw-semibold">Son (Issue):</label>
+                        <input type="number" id="issue" name="issue" class="form-control" value="{{ article.issue }}" aria-label="Son">
                     </div>
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">To'plam nomi:</label>
-                    <input type="text" name="collection_name" class="form-control" value="{{ article.collection.name if article.collection else '' }}">
+                    <label for="pages" class="form-label fw-semibold">Sahifalar (masalan: 12-18):</label>
+                    <input type="text" id="pages" name="pages" class="form-control" value="{{ article.pages or '' }}" aria-label="Sahifalar">
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Yangi PDF Fayl (Agar almashtirmoqchi bo'lsangiz):</label>
-                    <input type="file" name="pdf_file" class="form-control" accept=".pdf">
-                    <small class="text-muted">Hozirgi fayl: <a href="{{ article.pdf_filename }}" target="_blank">Ko'rish</a></small>
+                <div class="mb-4">
+                    <label for="pdf_file" class="form-label fw-semibold">Yangi PDF Fayl (Agar almashtirmoqchi bo'lsangiz):</label>
+                    <input type="file" id="pdf_file" name="pdf_file" class="form-control" accept=".pdf" aria-label="Yangi PDF fayl yuklash">
+                    <small class="text-muted mt-1 d-block">Hozirgi fayl: <a href="{{ article.pdf_filename }}" target="_blank" rel="noopener noreferrer">Ko'rish</a></small>
                 </div>
 
-                <button type="submit" class="btn btn-primary w-100 rounded-pill py-2">O'zgarishlarni Saqlash</button>
+                <button type="submit" class="btn btn-primary w-100 rounded-pill py-3 fw-bold shadow-sm">O'zgarishlarni Saqlash</button>
             </form>
         </div>
-    </div>
+    </main>
+
+    <footer class="bg-dark text-white text-center py-4 mt-auto">
+        <div class="container">
+            <p class="mb-1 small">&copy; 2026 Ilmiy Maqolalar Portali. Barcha huquqlar himoyalangan.</p>
+            <p class="mb-0 small text-muted">Litsenziya: <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer" class="text-reset text-decoration-underline">CC BY 4.0</a></p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
 </body>
 </html>
