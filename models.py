@@ -9,6 +9,12 @@ class Collection(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), nullable=False, unique=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)  # <-- SHUNI QO'SHASIZ
+    
+    articles = db.relationship('Article', backref='collection', lazy=True)
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), nullable=False, unique=True)
     articles = db.relationship('Article', backref='collection', lazy=True)
 
 
