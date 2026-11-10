@@ -17,19 +17,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- ========================================== -->
-    <!-- GOOGLE SCHOLAR & HIGHWIRE PRESS META TAGS -->
-    <!-- ========================================== -->
-    <meta name="citation_title" content="{{ article.title_uz }}">
-    
-    {% for author in article.authors %}
-    <meta name="citation_author" content="{{ author.full_name }}">
-    <meta name="citation_author_institution" content="{{ article.institution | default('O\'zbekiston Milliy Universiteti') }}">
-    {% endfor %}
-    <!-- ========================================== -->
     <!-- GOOGLE SCHOLAR & MULTILINGUAL META TAGS -->
     <!-- ========================================== -->
     
-    <!-- Asosiy (O'zbekcha) sarlavha va annotatsiya -->
+    <!-- Asosiy (O'zbekcha) ma'lumotlar -->
     <meta name="citation_title" content="{{ article.title_uz }}">
     <meta name="citation_abstract" content="{{ article.abstract_uz }}">
     <meta name="citation_keywords" content="{{ article.keywords_uz | replace('.', '') }}">
@@ -49,18 +40,18 @@
     <meta name="citation_keywords_ru" content="{{ article.keywords_ru | replace('.', '') }}">
     {% endif %}
 
-    <!-- PDF va DOI -->
-    <meta name="citation_pdf_url" content="{{ url_for('serve_pdf', id=article.id, _external=True) }}">
-    <meta name="citation_doi" content="{{ article.doi | clean_doi }}">
-    <meta name="citation_publisher" content="{{ article.publisher | default('Ilmiy Maqolalar Portali') }}">
-    <meta name="citation_issn" content="{{ article.issn | default('0000-0000') }}">
-    
+    <!-- Mualliflar -->
     {% for author in article.authors %}
     <meta name="citation_author" content="{{ author.full_name }}">
     <meta name="citation_author_institution" content="{{ article.institution | default('O\'zbek tilshunosligi kafedrasi') }}">
     {% endfor %}
 
+    <!-- Nashr ma'lumotlari -->
     <meta name="citation_publication_date" content="{{ article.year }}/{{ '%02d' | format(article.issue | int) if article.issue else '01' }}/01">
+    {% if collection %}
+    <meta name="citation_conference_title" content="{{ collection.name }}">
+    {% endif %}
+    <meta name="citation_publisher" content="{{ article.publisher | default('Ilmiy Maqolalar Portali') }}">
     <meta name="citation_volume" content="{{ article.volume }}">
     <meta name="citation_issue" content="{{ article.issue }}">
     
@@ -69,26 +60,9 @@
     <meta name="citation_lastpage" content="{{ article.pages.split('-')[-1] }}">
     {% endif %}
 
-    <meta name="citation_publication_date" content="{{ article.year }}/{{ '%02d' | format(article.issue | int) if article.issue else '01' }}/01">
-    
-    {% if collection %}
-    <meta name="citation_conference_title" content="{{ collection.name }}">
-    {% endif %}
-    <meta name="citation_publisher" content="{{ article.publisher | default('Ilmiy Maqolalar Portali') }}">
-    
-    <meta name="citation_volume" content="{{ article.volume }}">
-    <meta name="citation_issue" content="{{ article.issue }}">
-    
-    {% if article.pages %}
-    <meta name="citation_firstpage" content="{{ article.pages.split('-')[0] }}">
-    <meta name="citation_lastpage" content="{{ article.pages.split('-')[-1] }}">
-    {% endif %}
-    
-   <meta name="citation_pdf_url" content="{{ url_for('serve_pdf', id=article.id, _external=True) }}">
+    <meta name="citation_pdf_url" content="{{ url_for('serve_pdf', id=article.id, _external=True) }}">
     <meta name="citation_doi" content="{{ article.doi | clean_doi }}">
     <meta name="citation_abstract_html_url" content="{{ request.url }}">
-    <meta name="citation_language" content="uz">
-    <meta name="citation_keywords" content="{{ article.keywords_uz | replace('.', '') }}">
     <meta name="citation_issn" content="{{ article.issn | default('0000-0000') }}">
 
     <!-- ========================================== -->
@@ -130,7 +104,7 @@
           "name": "{{ author.full_name }}",
           "affiliation": {
             "@type": "Organization",
-            "name": "{{ article.institution | default('O\'zbek tilishunosligi kafedrasi') }}"
+            "name": "{{ article.institution | default('O\'zbek tilshunosligi kafedrasi') }}"
           }
         }{% if not loop.last %},{% endif %}
         {% endfor %}
@@ -150,7 +124,7 @@
       },
       "encoding": {
         "@type": "MediaObject",
-        "contentUrl": "{{ article.pdf_filename }}",
+        "contentUrl": "{{ url_for('serve_pdf', id=article.id, _external=True) }}",
         "encodingFormat": "application/pdf"
       }
     }
@@ -226,6 +200,10 @@
             <div class="mb-4">
                 <h5 class="fw-bold text-dark mb-3"><i class="fas fa-align-left text-primary me-2"></i>Annotatsiya</h5>
                 <p class="text-secondary lh-lg" style="text-align: justify;">{{ article.abstract_uz }}</p>
+                
+                {% if article.abstract_en %}
+                <p class="text-secondary lh-lg mt-3" style="text-align: justify;"><em>{{ article.abstract_en }}</em></p>
+                {% endif %}
             </div>
 
             {% if article.keywords_uz %}
@@ -233,13 +211,16 @@
             <div class="mb-4 pb-3 border-bottom">
                 <h6 class="fw-bold text-dark mb-2"><i class="fas fa-tags text-warning me-2"></i>Kalit so'zlar:</h6>
                 <p class="text-muted small mb-0">{{ article.keywords_uz }}</p>
+                {% if article.keywords_en %}
+                <p class="text-muted small mb-0 mt-1"><em>Keywords: {{ article.keywords_en }}</em></p>
+                {% endif %}
             </div>
             {% endif %}
 
             <!-- Yuklab olish, O'qish va Cite tugmalari -->
             <div class="d-flex flex-wrap gap-3 align-items-center justify-content-between pt-2">
                 <div class="d-flex flex-wrap gap-2">
-                    <a href="{{ article.pdf_filename }}" class="btn btn-primary rounded-pill px-4" target="_blank">
+                    <a href="{{ url_for('serve_pdf', id=article.id) }}" class="btn btn-primary rounded-pill px-4" target="_blank">
                         <i class="fas fa-book-reader me-2"></i> Onlayn O'qish (PDF)
                     </a>
                     <a href="/download/{{ article.id }}" class="btn btn-outline-success rounded-pill px-4" target="_blank">
