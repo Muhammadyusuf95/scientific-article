@@ -25,6 +25,49 @@
     <meta name="citation_author" content="{{ author.full_name }}">
     <meta name="citation_author_institution" content="{{ article.institution | default('O\'zbekiston Milliy Universiteti') }}">
     {% endfor %}
+    <!-- ========================================== -->
+    <!-- GOOGLE SCHOLAR & MULTILINGUAL META TAGS -->
+    <!-- ========================================== -->
+    
+    <!-- Asosiy (O'zbekcha) sarlavha va annotatsiya -->
+    <meta name="citation_title" content="{{ article.title_uz }}">
+    <meta name="citation_abstract" content="{{ article.abstract_uz }}">
+    <meta name="citation_keywords" content="{{ article.keywords_uz | replace('.', '') }}">
+    <meta name="citation_language" content="uz">
+
+    <!-- Inglizcha tarjimasi mavjud bo'lsa -->
+    {% if article.title_en %}
+    <meta name="citation_title_en" content="{{ article.title_en }}">
+    <meta name="citation_abstract_en" content="{{ article.abstract_en }}">
+    <meta name="citation_keywords_en" content="{{ article.keywords_en | replace('.', '') }}">
+    {% endif %}
+
+    <!-- Ruscha tarjimasi mavjud bo'lsa -->
+    {% if article.title_ru %}
+    <meta name="citation_title_ru" content="{{ article.title_ru }}">
+    <meta name="citation_abstract_ru" content="{{ article.abstract_ru }}">
+    <meta name="citation_keywords_ru" content="{{ article.keywords_ru | replace('.', '') }}">
+    {% endif %}
+
+    <!-- PDF va DOI -->
+    <meta name="citation_pdf_url" content="{{ url_for('serve_pdf', id=article.id, _external=True) }}">
+    <meta name="citation_doi" content="{{ article.doi | clean_doi }}">
+    <meta name="citation_publisher" content="{{ article.publisher | default('Ilmiy Maqolalar Portali') }}">
+    <meta name="citation_issn" content="{{ article.issn | default('0000-0000') }}">
+    
+    {% for author in article.authors %}
+    <meta name="citation_author" content="{{ author.full_name }}">
+    <meta name="citation_author_institution" content="{{ article.institution | default('O\'zbek tilshunosligi kafedrasi') }}">
+    {% endfor %}
+
+    <meta name="citation_publication_date" content="{{ article.year }}/{{ '%02d' | format(article.issue | int) if article.issue else '01' }}/01">
+    <meta name="citation_volume" content="{{ article.volume }}">
+    <meta name="citation_issue" content="{{ article.issue }}">
+    
+    {% if article.pages %}
+    <meta name="citation_firstpage" content="{{ article.pages.split('-')[0] }}">
+    <meta name="citation_lastpage" content="{{ article.pages.split('-')[-1] }}">
+    {% endif %}
 
     <meta name="citation_publication_date" content="{{ article.year }}/{{ '%02d' | format(article.issue | int) if article.issue else '01' }}/01">
     
