@@ -462,3 +462,20 @@ def internal_server_error(e):
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=False)
+
+# --- STATIK AXBOROT SAHIFALARI ---
+@app.route('/about')
+def about():
+    return render_template('about.html')
+
+@app.route('/editorial-board')
+def editorial_board():
+    return render_template('editorial_board.html')
+
+@app.route('/ethics')
+def ethics():
+    return render_template('ethics.html')
+
+@app.route('/contact')
+def contact():
+    return render_template('contact.html')
