@@ -141,17 +141,19 @@ def collection_detail(collection_id):
 @app.route('/article/<int:article_id>')
 def article_detail(article_id):
     article = Article.query.get_or_404(article_id)
+    # Ko'rishlar sonini avtomatik oshiramiz (login talab qilinmaydi)
     article.views_count += 1
     db.session.commit()
     return render_template('article.html', article=article, collection=article.collection)
 
 @app.route('/download/<int:article_id>')
 def download_article(article_id):
-    # Login talabini olib tashladik, chunki Google Scholar botlari PDF ni to'g'ridan-to'g'ri o'qiy olishi kerak.
-    # Istasangiz, faqat statistikani oshirib yuboramiz:
     article = Article.query.get_or_404(article_id)
+    # Yuklab olishlar sonini oshiramiz
     article.downloads_count += 1
     db.session.commit()
+    
+    # Faylni foydalanuvchiga yoki botga to'g'ridan-to'g'ri ochib beramiz (R2 havolasi yoki local path)
     return redirect(article.pdf_filename)
         
     article = Article.query.get_or_404(article_id)
