@@ -194,6 +194,81 @@ def edit_article(article_id):
             
     return render_template('admin_edit.html', article=article, collections=collections)
 
+from flask import Response, stream_with_context
+
+def is_bot():
+    user_agent = request.headers.get('User-Agent', '').lower()
+    bots = ['googlebot', 'bingbot', 'yandexbot', 'baiduspider', 'duckduckbot', 'slurp', 'crawler', 'spider', 'bot', 'uptimerobot']
+    return any(b in user_agent for b in bots)
+
+@app.route('/pdf/<int:id>.pdf')
+def serve_pdf(id):
+    article = Article.query.get_or_404(id)
+    
+    # Bot bo'lmasa va IP takrorlanmasa views_count ni oshiramiz (Atomar tarzda)
+    if not is_bot():
+        client_ip = request.remote_addr
+        # So'nggi 30 daqiqada shu IP dan qilingan murojaatni tekshirish uchun sessiya yoki vaqtinchalik mantiq ishlatish mumkin
+        session_key = f"viewed_article_{id}"
+        if not session.get(session_key):
+            Article.query.filter_by(id=id).update({"views_count": Article.views_count + 1})
+            db.session.commit()
+            session[session_key] = True
+
+    filename = article.pdf_filename.split('/')[-1].split('?')[0]
+    
+    range_header = request.headers.get('Range')
+    kwargs = {}
+    if range_header:
+        kwargs['Range'] = range_header
+
+    try:
+        s3_obj = s3_client.get_object(Bucket=R2_BUCKET_NAME, Key=filename, **kwargs)
+    except Exception:
+        return "Fayl topilmadi", 404
+
+    response = Response(
+        stream_with_context(s3_obj['Body'].iter_chunks()),
+        status=s3_obj.get('ResponseMetadata', {}).get('HTTPStatusCode', 200),
+        content_type='application/pdf',
+        direct_passthrough=True
+    )
+    
+    response.headers['Content-Disposition'] = f'inline; filename="{filename}"'
+    if 'Content-Range' in s3_obj:
+        response.headers['Content-Range'] = s3_obj['Content-Range']
+    if 'Accept-Ranges' in s3_obj:
+        response.headers['Accept-Ranges'] = s3_obj['Accept-Ranges']
+    response.headers['Content-Length'] = s3_obj['ContentLength']
+    
+    return response
+
+@app.route('/download/<int:id>')
+def download_article(id):
+    article = Article.query.get_or_404(id)
+    
+    if not is_bot():
+        Article.query.filter_by(id=id).update({"downloads_count": Article.downloads_count + 1})
+        db.session.commit()
+
+    filename = article.pdf_filename.split('/')[-1].split('?')[0]
+    
+    try:
+        s3_obj = s3_client.get_object(Bucket=R2_BUCKET_NAME, Key=filename)
+    except Exception:
+        return "Fayl topilmadi", 404
+
+    response = Response(
+        stream_with_context(s3_obj['Body'].iter_chunks()),
+        status=200,
+        content_type='application/pdf',
+        direct_passthrough=True
+    )
+    response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
+    response.headers['Content-Length'] = s3_obj['ContentLength']
+    
+    return response
+
 # --- TO'PLAMNI O'CHIRISH (Delete Collection) ---
 @app.route('/collection/delete/<int:collection_id>', methods=['POST'])
 @admin_required
