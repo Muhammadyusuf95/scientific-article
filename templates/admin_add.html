@@ -3,9 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel - Maqola Qo'shish</title>
+    <title>Admin Panel - Maqola Qo'shish - Ilmiy Maqolalar Portali</title>
+    <!-- Google Fonts: Inter va Merriweather -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #f8fafc; font-family: 'Inter', system-ui, sans-serif; color: #334155; }
+        h1, h2, h3, .portal-title { font-family: 'Merriweather', serif; }
+        .navbar-brand { font-weight: 700; color: #ffffff !important; }
+    </style>
 </head>
 <body class="bg-light">
     <nav class="navbar navbar-dark bg-dark shadow-sm py-3">
@@ -21,7 +28,7 @@
         <div class="row justify-content-center">
             <div class="col-md-9">
                 <div class="card shadow border-0 rounded-4 p-4 p-md-5 bg-white">
-                    <h2 class="fw-bold mb-4 text-primary"><i class="fas fa-upload me-2"></i>Yangi Ilmiy Maqola Qo'shish</h2>
+                    <h2 class="fw-bold mb-4 text-primary portal-title"><i class="fas fa-upload me-2"></i>Yangi Ilmiy Maqola Qo'shish</h2>
                     
                     {% with messages = get_flashed_messages(with_categories=true) %}
                         {% if messages %}
@@ -131,7 +138,7 @@
                             </div>
                         </div>
 
-                        <!-- BIBLIOGRAFIK MANBALAR (Google Scholar talabi uchun) -->
+                        <!-- BIBLIOGRAFIK MANBALAR -->
                         <div class="card bg-light border-0 p-3 mb-3 rounded-3">
                             <h6 class="fw-bold text-primary mb-2"><i class="fas fa-list-ul me-2"></i>Bibliografik manbalar (References)</h6>
                             <p class="small text-muted mb-2">Har bir manbani yangi qatordan kiriting. Enter bosganda raqamlar avtomatik qo'shiladi.</p>
