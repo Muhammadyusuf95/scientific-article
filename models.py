@@ -15,9 +15,14 @@ class Collection(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     articles = db.relationship('Article', backref='collection', lazy=True)
 
+# Modelga yangi ustunlar (agar hali qo'shilmagan bo'lsa)
 class Article(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    collection_id = db.Column(db.Integer, db.ForeignKey('collection.id'), nullable=True)
+    title_uz = db.Column(db.String(500), nullable=False)
+    # ... boshqa maydonlar ...
+    publisher = db.Column(db.String(255), default="Ilmiy Maqolalar Portali")  # Nashriyotchi
+    institution = db.Column(db.String(255), default="O'zbek tilishunosligi kafedrasi")  # Muallif ish joyi (Universitet/Kafedra)
+    issn = db.Column(db.String(50), default="0000-0000")  # Jurnal/To'plam ISSN yoki ISBN
     
     # Sarlavhalar
     title_uz = db.Column(db.String(500), nullable=False)
