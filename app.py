@@ -117,6 +117,21 @@ with app.app_context():
     except Exception as e:
         print(f"Baza yaratishda xatolik: {e}")
 
+from sqlalchemy import text
+
+with app.app_context():
+    db.create_all()
+    # Bazada yetishmayotgan ustunlarni avtomatik qo'shish (Migration)
+    try:
+        db.session.execute(text("ALTER TABLE article ADD COLUMN IF NOT EXISTS publisher VARCHAR(255) DEFAULT 'Ilmiy Maqolalar Portali';"))
+        db.session.execute(text("ALTER TABLE article ADD COLUMN IF NOT EXISTS institution VARCHAR(255) DEFAULT 'O''zbek tilishunosligi kafedrasi';"))
+        db.session.execute(text("ALTER TABLE article ADD COLUMN IF NOT EXISTS issn VARCHAR(50) DEFAULT '0000-0000';"))
+        db.session.execute(text("ALTER TABLE collection ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;"))
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print("Migratsiya xatosi:", e)
+
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
