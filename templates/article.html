@@ -1,187 +1,42 @@
-<!DOCTYPE html>
-<html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ article.title_uz }} - Ilmiy Portali</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-        
-    <!-- Google Scholar uchun Meta Ma'lumotlar -->
-   <meta name="citation_title" content="{{ article.title }}">
-{% for a in article.authors %}
-<meta name="citation_author" content="{{ a }}">
-{% endfor %}
-<meta name="citation_publication_date" content="{{ article.year }}">
-<meta name="citation_conference_title" content="{{ collection.title }}">
-<meta name="citation_volume" content="{{ article.volume }}">
-<meta name="citation_issue" content="{{ article.issue }}">
-<meta name="citation_firstpage" content="{{ article.first_page }}">
-<meta name="citation_lastpage" content="{{ article.last_page }}">
-<meta name="citation_doi" content="{{ article.doi }}">
-<meta name="citation_language" content="uz">
-{% for k in article.keywords %}
-<meta name="citation_keywords" content="{{ k }}">
-{% endfor %}
-<meta name="citation_abstract_html_url" content="{{ request.url }}">
-<meta name="citation_pdf_url" content="{{ article.pdf_filename }}">
-<link rel="canonical" href="{{ request.base_url }}">
-<meta name="description" content="{{ article.abstract_uz[:160] }}">
-    <style>
-        body { background-color: #f8fafc; font-family: 'Inter', system-ui, sans-serif; color: #334155; }
-        .article-hero { background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); color: white; padding: 3rem 1rem; border-radius: 0 0 2rem 2rem; margin-bottom: 2rem; }
-        
-        /* PDF Reader konteyneri stili */
-        #pdfContainer {
-            transition: all 0.3s ease-in-out;
-            height: 550px;
-        }
-        #pdfContainer.fullscreen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            z-index: 9999;
-            background: white;
-            padding: 15px;
-            border-radius: 0 !important;
-        }
-    </style>
+    <title>{{ article.title_uz }}</title>
+    
+    <!-- Google Scholar & Highwire Press Meta Tags -->
+    <meta name="citation_title" content="{{ article.title_uz }}">
+    {% for author in article.authors %}
+    <meta name="citation_author" content="{{ author.full_name }}">
+    {% endfor %}
+    <meta name="citation_publication_date" content="{{ article.year }}/{{ article.issue or '01' }}/01">
+    <meta name="citation_journal_title" content="{{ collection.name if collection else 'Ilmiy Maqolalar Portali' }}">
+    <meta name="citation_volume" content="{{ article.volume }}">
+    <meta name="citation_issue" content="{{ article.issue }}">
+    <meta name="citation_firstpage" content="{{ article.pages.split('-')[0] if article.pages else '1' }}">
+    <meta name="citation_lastpage" content="{{ article.pages.split('-')[-1] if article.pages else '1' }}">
+    <meta name="citation_pdf_url" content="{{ article.pdf_filename }}">
+    <meta name="citation_doi" content="{{ article.doi }}">
+    <meta name="citation_abstract_html_url" content="{{ request.url }}">
+    <meta name="citation_language" content="uz">
+    <meta name="citation_keywords" content="{{ article.keywords_uz }}">
 </head>
-<body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm py-3">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="/"><i class="fas fa-arrow-left me-2"></i>Bosh sahifaga qaytish</a>
-            <div class="ms-auto d-flex gap-2">
-                <a href="/admin/add" class="btn btn-primary btn-sm rounded-pill px-3"><i class="fas fa-plus me-1"></i> Maqola qo'shish</a>
-                <a href="/admin/logout" class="btn btn-outline-danger btn-sm rounded-pill px-3">Chiqish</a>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Maqola Sarlavhasi va Asosiy Ma'lumotlar -->
-    <div class="article-hero text-center">
-        <div class="container" style="max-width: 800px;">
-            {% if article.collection %}
-            <a href="/collection/{{ article.collection.id }}" class="badge bg-warning text-dark text-decoration-none mb-3 px-3 py-2">
-                <i class="fas fa-folder me-1"></i>{{ article.collection.name }}
-            </a>
-            {% endif %}
-            <h1 class="fw-bold mb-3 fs-3">{{ article.title_uz }}</h1>
-            {% if article.title_en %}
-            <h5 class="text-slate-300 fst-italic mb-3">{{ article.title_en }}</h5>
-            {% endif %}
-            <div class="text-slate-300 small">
-                <span class="me-3"><i class="fas fa-calendar-alt me-1"></i> Yil: {{ article.year }}</span>
-                <span class="me-3"><i class="fas fa-book me-1"></i> Tom: {{ article.volume }}, Son: {{ article.issue }}</span>
-                {% if article.pages %}
-                <span><i class="fas fa-file-alt me-1"></i> Sahifalar: {{ article.pages }}</span>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-
-    <!-- Tarkib -->
-    <div class="container mb-5" style="max-width: 800px;">
-
-        <!-- 📄 ONLINE PDF O'QISH PLAYERI -->
-        <div class="card border-0 shadow-sm p-3 rounded-4 mb-4 bg-white" id="pdfContainer">
-            <div class="d-flex align-items-center justify-content-between mb-2 pb-2 border-bottom">
-                <span class="fw-bold text-primary small"><i class="fas fa-book-reader me-2"></i>Maqolani Onlayn O'qish</span>
-                <button onclick="toggleFullscreen()" id="fsBtn" class="btn btn-sm btn-outline-secondary rounded-pill px-3" title="Kengaytirish / Kichraytirish">
-                    <i class="fas fa-expand" id="fsIcon"></i> <span id="fsText">Butun ekran</span>
-                </button>
-            </div>
-            <!-- PDF Viewer iframe (Bazadagi dinamik R2 havolasi) -->
-            <iframe src="{{ article.pdf_filename }}" class="w-100 h-100 border-0 rounded-3" id="pdfFrame"></iframe>
-        </div>
-
-        <!-- Mualliflar -->
-        <div class="card border-0 shadow-sm p-4 rounded-4 mb-4 bg-white">
-            <h6 class="text-muted text-uppercase small fw-bold mb-2">Mualliflar:</h6>
-            <div class="fw-semibold text-dark">
-                {% for author in article.authors %}
-                <span class="badge bg-light text-primary border px-3 py-2 me-2 mb-2 fs-6">
-                    <i class="fas fa-user-graduate me-1"></i>{{ author.full_name }}
-                </span>
-                {% endfor %}
-            </div>
-        </div>
-
-        <!-- Annotatsiya (Abstract) -->
-        {% if article.abstract_uz %}
-        <div class="card border-0 shadow-sm p-4 rounded-4 mb-4 bg-white">
-            <h5 class="fw-bold text-dark mb-3"><i class="fas fa-align-left text-primary me-2"></i>Annotatsiya</h5>
-            <p class="text-muted mb-0" style="line-height: 1.7;">{{ article.abstract_uz }}</p>
-        </div>
-        {% endif %}
-        
-        <!-- Kalit so'zlar -->
-        {% if article.keywords_uz %}
-        <div class="card border-0 shadow-sm p-4 rounded-4 mb-4 bg-white">
-            <h6 class="fw-bold text-dark mb-2"><i class="fas fa-tags text-primary me-2"></i>Kalit so'zlar:</h6>
-            <p class="text-muted mb-0">{{ article.keywords_uz }}</p>
-        </div>
-        {% endif %}
-
-        <!-- Foydalanilgan adabiyotlar (References) -->
-        {% if article.references %}
-        <div class="card border-0 shadow-sm p-4 rounded-4 mb-4 bg-white">
-            <div class="d-flex align-items-center mb-3 border-bottom pb-3">
-                <i class="fas fa-list-ol text-primary fs-4 me-2"></i>
-                <h4 class="fw-bold text-dark m-0">References / Foydalanilgan adabiyotlar</h4>
-            </div>
-            <div class="text-dark references-content" style="white-space: pre-line; line-height: 1.8; font-size: 1rem; color: #1e293b;">
-                {{ article.references }}
-            </div>
-        </div>
-        {% endif %}
-        
-        <!-- Tugmalar: O'qish va Yuklab olish -->
-        <div class="d-flex gap-3 justify-content-center mt-4">
-            <a href="{{ article.pdf_filename }}" class="btn btn-primary px-4 py-2 rounded-pill shadow-sm" target="_blank">
-                <i class="fas fa-book-open me-2"></i>PDF Faylni O'qish
-            </a>
-            <a href="/download/{{ article.id }}" class="btn btn-success px-4 py-2 rounded-pill shadow-sm">
-                <i class="fas fa-download me-2"></i>Yuklab olish
-            </a>
-            
-            <form action="/article/delete/{{ article.id }}" method="POST" class="d-inline" onsubmit="return confirm('Haqiqatan ham ushbu maqolani oʻchirmoqchimisiz?');">
-                <button type="submit" class="btn btn-outline-danger px-4 py-2 rounded-pill shadow-sm">
-                    <i class="fas fa-trash-alt me-2"></i>O'chirish
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Footer -->
-    <footer class="bg-dark text-white text-center py-4 mt-auto">
-        <div class="container"><p class="mb-0 small">&copy; 2026 Ilmiy Maqolalar Portali. Barcha huquqlar himoyalangan.</p></div>
-    </footer>
-
-    <!-- JavaScript funksiyalari -->
-    <script>
-    function toggleFullscreen() {
-        const container = document.getElementById('pdfContainer');
-        const icon = document.getElementById('fsIcon');
-        const text = document.getElementById('fsText');
-        
-        container.classList.toggle('fullscreen');
-        
-        if (container.classList.contains('fullscreen')) {
-            icon.classList.remove('fa-expand');
-            icon.classList.add('fa-compress');
-            text.innerText = "Kichraytirish";
-        } else {
-            icon.classList.remove('fa-compress');
-            icon.classList.add('fa-expand');
-            text.innerText = "Butun ekran";
-        }
-    }
-    </script>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+<head>
+    <meta charset="UTF-8">
+    <title>{{ article.title_uz }}</title>
+    
+    <!-- Google Scholar & Highwire Press Meta Tags -->
+    <meta name="citation_title" content="{{ article.title_uz }}">
+    {% for author in article.authors %}
+    <meta name="citation_author" content="{{ author.full_name }}">
+    {% endfor %}
+    <meta name="citation_publication_date" content="{{ article.year }}/{{ article.issue or '01' }}/01">
+    <meta name="citation_journal_title" content="{{ collection.name if collection else 'Ilmiy Maqolalar Portali' }}">
+    <meta name="citation_volume" content="{{ article.volume }}">
+    <meta name="citation_issue" content="{{ article.issue }}">
+    <meta name="citation_firstpage" content="{{ article.pages.split('-')[0] if article.pages else '1' }}">
+    <meta name="citation_lastpage" content="{{ article.pages.split('-')[-1] if article.pages else '1' }}">
+    <meta name="citation_pdf_url" content="{{ article.pdf_filename }}">
+    <meta name="citation_doi" content="{{ article.doi }}">
+    <meta name="citation_abstract_html_url" content="{{ request.url }}">
+    <meta name="citation_language" content="uz">
+    <meta name="citation_keywords" content="{{ article.keywords_uz }}">
+</head>
