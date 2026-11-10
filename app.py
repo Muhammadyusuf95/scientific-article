@@ -133,9 +133,12 @@ def article_detail(article_id):
 
 @app.route('/download/<int:article_id>')
 def download_article(article_id):
-    if not session.get('user_id') and not session.get('is_admin'):
-        flash("Maqolani yuklab olish uchun iltimos tizimga kiring yoki ro'yxatdan o'ting!", "warning")
-        return redirect(url_for('login'))
+    # Login talabini olib tashladik, chunki Google Scholar botlari PDF ni to'g'ridan-to'g'ri o'qiy olishi kerak.
+    # Istasangiz, faqat statistikani oshirib yuboramiz:
+    article = Article.query.get_or_404(article_id)
+    article.downloads_count += 1
+    db.session.commit()
+    return redirect(article.pdf_filename)
         
     article = Article.query.get_or_404(article_id)
     article.downloads_count += 1
