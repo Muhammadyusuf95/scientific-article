@@ -65,6 +65,19 @@ def migrate_old_articles():
             filename = old_url.split('/')[-1].split('?')[0]
             if not filename:
                 continue
+                @app.route('/article/<int:id>')
+def article_detail(id):
+    article = Article.query.get_or_404(id)
+    
+    # Ko'rishlar sonini (views_count) har safar ochganda 1 taga oshirish (ixtiyoriy, lekin foydali)
+    try:
+        article.views_count = (article.views_count or 0) + 1
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+
+    collection = article.collection if hasattr(article, 'collection') else None
+    return render_template('article.html', article=article, collection=collection)
             
             # Eski Firebase havolasidan faylni yuklab olamiz
             response = requests.get(old_url)
