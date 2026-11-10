@@ -3,81 +3,152 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ilmiy Maqolalar Portali — Bosh sahifa</title>
+    <title>Ilmiy Maqolalar Portali — Ochiq Ilmiy Tadqiqotlar Bazasi</title>
     <!-- Google Fonts: Inter va Merriweather -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer">
     <style>
-        body { background-color: #f8fafc; font-family: 'Inter', system-ui, sans-serif; color: #334155; }
-        h1, h2, h3, .article-title, .portal-title { font-family: 'Merriweather', serif; }
-        .hero-section { background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); color: white; padding: 4rem 1rem; border-radius: 0 0 2rem 2rem; margin-bottom: 2rem; }
-        .article-card { transition: transform 0.2s, box-shadow 0.2s; border: none; border-radius: 1rem; background: white; position: relative; }
-        .article-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); }
-        .collection-pill { transition: all 0.2s; }
-        .collection-pill:hover { background-color: #2563eb !important; color: white !important; }
-        .hover-primary:hover { color: #2563eb !important; }
-        .navbar-brand { font-weight: 700; color: #ffffff !important; }
+        :root {
+            --primary-color: #1e3a8a;
+            --accent-color: #2563eb;
+            --bg-body: #f8fafc;
+            --text-main: #1e293b;
+        }
+        body { background-color: var(--bg-body); font-family: 'Inter', system-ui, sans-serif; color: var(--text-main); }
+        h1, h2, h3, .portal-title { font-family: 'Merriweather', serif; }
+        
+        /* Hero Header */
+        .hero-section {
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+            color: white;
+            padding: 5rem 1rem;
+            border-radius: 0 0 2.5rem 2.5rem;
+            margin-bottom: 2.5rem;
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.2);
+        }
+        
+        /* Search Box */
+        .search-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 0.5rem;
+            border-radius: 3rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Article Card */
+        .article-card {
+            transition: all 0.3s ease;
+            border: 1px solid #e2e8f0;
+            border-radius: 1.25rem;
+            background: white;
+            position: relative;
+        }
+        .article-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.08);
+            border-color: #cbd5e1;
+        }
+        
+        /* Sidebar Collections */
+        .sidebar-card {
+            border: none;
+            border-radius: 1.25rem;
+            background: white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+        }
+        .collection-item {
+            transition: all 0.2s;
+            border-radius: 0.75rem;
+        }
+        .collection-item:hover {
+            background-color: #eff6ff !important;
+            color: var(--accent-color) !important;
+        }
+
+        .navbar-brand { font-weight: 700; letter-spacing: -0.5px; }
     </style>
 </head>
 <body class="bg-light d-flex flex-column min-vh-100">
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm py-3" aria-label="Asosiy navigatsiya">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="/"><i class="fas fa-graduation-cap me-2 text-primary" aria-hidden="true"></i>Ilmiy Maqolalar Portali</a>
-            <div class="ms-auto d-flex gap-2 align-items-center">
+            <a class="navbar-brand fw-bold text-white d-flex align-items-center gap-2" href="/">
+                <i class="fas fa-graduation-cap text-primary fa-lg" aria-hidden="true"></i>
+                <span>Ilmiy Maqolalar Portali</span>
+            </a>
+            
+            <div class="ms-auto d-flex align-items-center gap-3">
+                <div class="d-none d-md-flex align-items-center text-light small bg-secondary bg-opacity-25 px-3 py-1.5 rounded-pill border border-secondary border-opacity-25">
+                    <i class="fas fa-globe-americas text-info me-2" aria-hidden="true"></i>
+                    <span>Open Access (Ochiq Kirish)</span>
+                </div>
                 
                 {% if session.get('is_admin') %}
-                    <a href="{{ url_for('add_article') }}" class="btn btn-primary btn-sm rounded-pill px-3"><i class="fas fa-plus me-1" aria-hidden="true"></i> Maqola qo'shish</a>
-                    <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger btn-sm rounded-pill px-3"><i class="fas fa-sign-out-alt me-1" aria-hidden="true"></i> Chiqish</a>
-                {% else %}
-                    <!-- Oddiy o'quvchilar uchun hech qanday kirish talab etilmaydi -->
-                    <span class="text-light small"><i class="fas fa-book-reader me-1 text-primary" aria-hidden="true"></i> Ochiq foydalanish (Open Access)</span>
+                    <div class="d-flex gap-2">
+                        <a href="{{ url_for('add_article') }}" class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold shadow-sm">
+                            <i class="fas fa-plus me-1" aria-hidden="true"></i> Maqola qo'shish
+                        </a>
+                        <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger btn-sm rounded-pill px-3">
+                            <i class="fas fa-sign-out-alt me-1" aria-hidden="true"></i> Chiqish
+                        </a>
+                    </div>
                 {% endif %}
-
             </div>
         </div>
     </nav>
 
-    <!-- Qidiruv va Banner -->
+    <!-- Hero Banner & Search -->
     <header class="hero-section text-center">
-        <div class="container" style="max-width: 700px;">
-            <h1 class="fw-bold mb-3 portal-title">Ilmiy Maqolalar va Tadqiqotlar Bazasi</h1>
-            <p class="text-slate-300 mb-4">O'zbek, ingliz va rus tillaridagi ilmiy ishlar, konferensiya materiallari va jurnallar to'plami.</p>
-            <form action="/" method="GET" class="input-group shadow-lg rounded-pill overflow-hidden bg-white p-1" role="search">
-                <input type="text" name="q" value="{{ query }}" class="form-control border-0 px-4 py-3 shadow-none" placeholder="Maqola sarlavhasi bo'yicha qidirish..." aria-label="Maqola qidirish">
-                <button class="btn btn-primary px-4 rounded-pill fw-semibold" type="submit"><i class="fas fa-search me-2" aria-hidden="true"></i>Qidirish</button>
+        <div class="container" style="max-width: 750px;">
+            <h1 class="fw-bold mb-3 portal-title display-6">Ilmiy Tadqiqotlar va Maqolalar Bazasi</h1>
+            <p class="text-light opacity-75 mb-4 lead fs-6">O'zbek, ingliz va rus tillaridagi ilmiy ishlar, konferensiya materiallari hamda akademik jurnallar to'plami.</p>
+            
+            <form action="/" method="GET" class="search-container shadow-lg d-flex align-items-center bg-white p-2" role="search">
+                <div class="input-group">
+                    <span class="input-group-text bg-transparent border-0 ps-3 text-muted">
+                        <i class="fas fa-search" aria-hidden="true"></i>
+                    </span>
+                    <input type="text" name="q" value="{{ query }}" class="form-control border-0 px-2 py-2 shadow-none bg-transparent" placeholder="Maqola sarlavhasi, muallif yoki kalit so'z bo'yicha qidirish..." aria-label="Maqola qidirish">
+                    <button class="btn btn-primary px-4 rounded-pill fw-semibold shadow-sm" type="submit">Qidirish</button>
+                </div>
             </form>
         </div>
     </header>
 
-    <!-- Asosiy Tarkib -->
-    <main class="container mb-5">
-        <div class="row">
-            <!-- Chap tomon: Maqolalar ro'yxati -->
-            <div class="col-lg-8 mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h2 class="fw-bold text-dark m-0 fs-4"><i class="fas fa-file-alt text-primary me-2" aria-hidden="true"></i>So'nggi Maqolalar</h2>
-                    <span class="badge bg-secondary px-3 py-2">Jami: {{ articles|length }} ta</span>
+    <!-- Main Content -->
+    <main class="container mb-5 flex-grow-1">
+        <div class="row g-4">
+            <!-- Left: Articles List -->
+            <div class="col-lg-8">
+                <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded-4 shadow-sm border">
+                    <h2 class="fw-bold text-dark m-0 fs-5 d-flex align-items-center gap-2">
+                        <i class="fas fa-file-alt text-primary" aria-hidden="true"></i>
+                        <span>So'nggi Ilmiy Nashrlar</span>
+                    </h2>
+                    <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill fw-semibold">Jami: {{ articles|length }} ta maqola</span>
                 </div>
 
                 {% if articles %}
                     <div class="d-flex flex-column gap-3">
                         {% for article in articles %}
-                        <article class="card article-card p-4 shadow-sm">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <div>
+                        <article class="card article-card p-4">
+                            <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+                                <div class="d-flex flex-wrap gap-2 align-items-center">
                                     {% if article.collection %}
-                                    <a href="/collection/{{ article.collection.id }}" class="badge bg-warning text-dark text-decoration-none mb-2 position-relative" style="z-index: 3;">
-                                        <i class="fas fa-folder me-1" aria-hidden="true"></i>{{ article.collection.name }}
+                                    <a href="/collection/{{ article.collection.id }}" class="badge bg-warning bg-opacity-10 text-dark text-decoration-none border border-warning px-2.5 py-1.5 rounded-pill position-relative" style="z-index: 3;">
+                                        <i class="fas fa-folder text-warning me-1" aria-hidden="true"></i>{{ article.collection.name }}
                                     </a>
                                     {% endif %}
-                                    <span class="badge bg-light text-muted border mb-2 ms-1">Yil: {{ article.year }} | Tom: {{ article.volume }}, Son: {{ article.issue }}</span>
+                                    <span class="badge bg-light text-secondary border px-2.5 py-1.5 rounded-pill">
+                                        <i class="far fa-calendar-alt me-1"></i>{{ article.year }} | Tom {{ article.volume }}, Son {{ article.issue }}
+                                    </span>
                                 </div>
                                 {% if article.doi %}
-                                <span class="text-muted small">DOI: <a href="https://doi.org/{{ article.doi | clean_doi }}" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-primary">{{ article.doi | clean_doi }}</a></span>
+                                <span class="text-muted small font-monospace bg-light px-2 py-1 rounded">DOI: <a href="https://doi.org/{{ article.doi | clean_doi }}" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-primary fw-semibold">{{ article.doi | clean_doi }}</a></span>
                                 {% endif %}
                             </div>
 
@@ -91,22 +162,25 @@
                             <h4 class="text-muted fst-italic small mb-3 fs-6">{{ article.title_en }}</h4>
                             {% endif %}
 
-                            <p class="text-muted small mb-3" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                            <p class="text-secondary small mb-3 line-clamp-2" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.6;">
                                 {{ article.abstract_uz }}
                             </p>
 
-                            <div class="d-flex flex-wrap justify-content-between align-items-center pt-3 border-top position-relative" style="z-index: 3;">
-                                <div class="small text-dark fw-semibold">
-                                    {% for author in article.authors %}
-                                        <i class="fas fa-user-graduate text-primary me-1" aria-hidden="true"></i>{{ author.full_name }}{% if not loop.last %}, {% endif %}
-                                    {% endfor %}
+                            <div class="d-flex flex-wrap justify-content-between align-items-center pt-3 border-top mt-2 position-relative" style="z-index: 3;">
+                                <div class="small text-dark fw-semibold d-flex align-items-center gap-1">
+                                    <i class="fas fa-user-graduate text-primary" aria-hidden="true"></i>
+                                    <span>
+                                        {% for author in article.authors %}
+                                            {{ author.full_name }}{% if not loop.last %}, {% endif %}
+                                        {% endfor %}
+                                    </span>
                                 </div>
                                 <div class="d-flex gap-2 mt-2 mt-sm-0">
-                                    <a href="/article/{{ article.id }}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                                    <a href="/article/{{ article.id }}" class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-semibold">
                                         <i class="fas fa-book-open me-1" aria-hidden="true"></i> O'qish
                                     </a>
-                                    <a href="/download/{{ article.id }}" class="btn btn-success btn-sm rounded-pill px-3" target="_blank" rel="noopener noreferrer">
-                                        <i class="fas fa-download me-1" aria-hidden="true"></i> PDF
+                                    <a href="/download/{{ article.id }}" class="btn btn-success btn-sm rounded-pill px-3 fw-semibold shadow-sm" target="_blank" rel="noopener noreferrer">
+                                        <i class="fas fa-download me-1" aria-hidden="true"></i> PDF Yuklab olish
                                     </a>
                                 </div>
                             </div>
@@ -114,26 +188,31 @@
                         {% endfor %}
                     </div>
                 {% else %}
-                    <div class="text-center py-5 bg-white rounded-4 shadow-sm">
-                        <i class="fas fa-search fa-3x text-muted mb-3" aria-hidden="true"></i>
-                        <h5 class="text-muted">Hech qanday maqola topilmadi.</h5>
+                    <div class="text-center py-5 bg-white rounded-4 shadow-sm border">
+                        <i class="fas fa-search fa-3x text-muted opacity-50 mb-3" aria-hidden="true"></i>
+                        <h5 class="text-dark fw-semibold">Hech qanday maqola topilmadi</h5>
+                        <p class="text-muted small mb-0">Qidiruv so'zini o'zgartirib yana urinib ko'ring.</p>
                     </div>
                 {% endif %}
             </div>
 
-            <!-- O'ng tomon: To'plamlar -->
+            <!-- Right: Collections Sidebar -->
             <div class="col-lg-4">
-                <section class="card border-0 shadow-sm rounded-4 p-4 bg-white sticky-top" style="top: 2rem;">
-                    <h3 class="fw-bold text-dark mb-3 fs-5"><i class="fas fa-folder-open text-warning me-2" aria-hidden="true"></i>To'plamlar va Konferensiyalar</h3>
+                <section class="card sidebar-card p-4 border sticky-top" style="top: 2rem;">
+                    <h3 class="fw-bold text-dark mb-3 fs-5 d-flex align-items-center gap-2 border-bottom pb-3">
+                        <i class="fas fa-folder-open text-warning" aria-hidden="true"></i>
+                        <span>To'plamlar va Jurnallar</span>
+                    </h3>
                     {% if collections %}
                         <div class="d-flex flex-column gap-2">
                             {% for col in collections %}
-                            <div class="d-flex justify-content-between align-items-center p-3 rounded-3 bg-light border collection-pill">
-                                <a href="/collection/{{ col.id }}" class="text-decoration-none text-dark flex-grow-1 fw-semibold small">
-                                    <i class="fas fa-book text-primary me-2" aria-hidden="true"></i>{{ col.name }}
+                            <div class="d-flex justify-content-between align-items-center p-3 rounded-3 bg-light border collection-item">
+                                <a href="/collection/{{ col.id }}" class="text-decoration-none text-dark flex-grow-1 fw-semibold small d-flex align-items-center gap-2">
+                                    <i class="fas fa-book text-primary" aria-hidden="true"></i>
+                                    <span>{{ col.name }}</span>
                                 </a>
                                 <div class="d-flex align-items-center gap-2">
-                                    <span class="badge bg-primary rounded-pill">{{ col.articles|length }}</span>
+                                    <span class="badge bg-primary rounded-pill px-2.5 py-1">{{ col.articles|length }}</span>
                                     {% if session.get('is_admin') %}
                                     <form action="{{ url_for('delete_collection', collection_id=col.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Haqiqatan ham bu toʻplamni oʻchirmoqchimisiz?');">
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -147,7 +226,7 @@
                             {% endfor %}
                         </div>
                     {% else %}
-                        <p class="text-muted small mb-0">Hozircha maxsus to'plamlar kiritilmagan.</p>
+                        <p class="text-muted small mb-0 text-center py-3">Hozircha maxsus to'plamlar kiritilmagan.</p>
                     {% endif %}
                 </section>
             </div>
@@ -155,14 +234,26 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-dark text-white text-center py-4 mt-auto">
+    <footer class="bg-dark text-white py-5 mt-auto border-top border-secondary border-opacity-25">
         <div class="container">
-            <p class="mb-1 small">&copy; 2026 Ilmiy Maqolalar Portali. Barcha huquqlar himoyalangan.</p>
-            <p class="mb-2 small text-muted">Litsenziya: <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer" class="text-reset text-decoration-underline">CC BY 4.0</a></p>
-            <!-- Admin uchun yashirin/diskret havola -->
-            <p class="mb-0">
-                <a href="{{ url_for('admin_login') }}" class="text-secondary small text-decoration-none"><i class="fas fa-lock me-1"></i> Tahririyat uchun kirish</a>
-            </p>
+            <div class="row g-4 align-items-center">
+                <div class="col-md-6 text-center text-md-start">
+                    <h5 class="fw-bold mb-2">Ilmiy Maqolalar Portali</h5>
+                    <p class="text-secondary small mb-0">Ochiq foydalanish (Open Access) tamoyili asosidagi ilmiy-tadqiqot platformasi.</p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <ul class="list-inline mb-2 small">
+                        <li class="list-inline-item"><a href="/about" class="text-decoration-none text-secondary">Portal haqida</a></li>
+                        <li class="list-inline-item ms-3"><a href="/editorial-board" class="text-decoration-none text-secondary">Tahririyat hay'ati</a></li>
+                        <li class="list-inline-item ms-3"><a href="/ethics" class="text-decoration-none text-secondary">Nashr etikasi</a></li>
+                        <li class="list-inline-item ms-3"><a href="/contact" class="text-decoration-none text-secondary">Aloqa</a></li>
+                    </ul>
+                    <p class="text-muted small mb-1">&copy; 2026 Barcha huquqlar himoyalangan. Litsenziya: <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer" class="text-reset text-decoration-underline">CC BY 4.0</a></p>
+                    <p class="mb-0">
+                        <a href="{{ url_for('admin_login') }}" class="text-secondary opacity-50 small text-decoration-none hover-opacity-100" style="font-size: 0.8rem;"><i class="fas fa-lock me-1"></i> Tahririyat tizimi</a>
+                    </p>
+                </div>
+            </div>
         </div>
     </footer>
 
