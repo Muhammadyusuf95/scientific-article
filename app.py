@@ -1,41 +1,62 @@
 import os
 import time
 import boto3
-import requests
 from flask import Flask, request, render_template, redirect, url_for, flash, make_response, session, Response, stream_with_context
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_wtf.csrf import CSRFProtect
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from models import db, Article, Author, User, Collection
 from functools import wraps
 from sqlalchemy import text
 
 app = Flask(__name__)
 
-# Cookie xavfsizligi
+# --- 1. XAVFSIZLIK VA COOKIE SOZLAMALARI ---
 app.config.update(
     SESSION_COOKIE_SECURE=True,      # Faqat HTTPS orqali ishlaydi
     SESSION_COOKIE_HTTPONLY=True,    # JavaScript orqali o'g'irlashdan saqlaydi
     SESSION_COOKIE_SAMESITE='Lax',
 )
 
-@app.template_filter('clean_doi')
-def clean_doi(doi_str):
-    if not doi_str:
-        return ""
-    doi_str = doi_str.strip()
-    for prefix in ['https://doi.org/', 'http://doi.org/', 'doi:']:
-        if doi_str.lower().startswith(prefix):
-            doi_str = doi_str[len(prefix):]
-    return doi_str
-    
-# Xavfsizlik sarlavhalari (Security Headers)
+app.secret_key = os.getenv('SECRET_KEY', 'super_maxfiy_kalit_uchun_tasodifiy_satr')
+
+# CSRF himoyasini yoqish
+csrf = CSRFProtect(app)
+
+# Rate Limiting (Hujumlar va skanerlashdan himoya)
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["200 per day", "50 per hour"],
+    storage_uri="memory://"
+)
+
+ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', 'Muhammadyusuf')
+ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'Muhammadyusuf95')
+
+# --- 2. XAVFSIZLIK SARLAVHALARI (SECURITY HEADERS) ---
 @app.after_request
 def set_security_headers(response):
     response.headers['X-Content-Type-Options'] = 'nosniff'
     response.headers['X-Frame-Options'] = 'SAMEORIGIN'
     response.headers['X-XSS-Protection'] = '1; mode=block'
+    response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    response.headers['Permissions-Policy'] = 'geolocation=(), microphone=(), camera=()'
+    # CSP: Bootstrap, FontAwesome va Google Fonts CDN lariga ruxsat berish
+    response.headers['Content-Security-Policy'] = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
+        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; "
+        "font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; "
+        "img-src 'self' data: https:; "
+        "frame-src 'self';"
+    )
     return response
 
+# --- 3. DATABASE VA R2 SOZLAMALARI ---
 db_url = os.getenv('DATABASE_URL', 'sqlite:///scholar_db.sqlite')
 if db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql+psycopg2://", 1)
@@ -44,18 +65,12 @@ elif db_url.startswith("postgresql://"):
 
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.secret_key = os.getenv('SECRET_KEY', 'super_maxfiy_kalit')
 
-ADMIN_USERNAME = 'Muhammadyusuf'
-ADMIN_PASSWORD = 'Muhammadyusuf95'
-
-# --- CLOUDFLARE R2 SOZLAMALARI ---
 R2_ENDPOINT_URL = os.getenv('R2_ENDPOINT_URL', 'https://b828117b95ed9d61c82ed59a87d6290e.r2.cloudflarestorage.com')
 R2_ACCESS_KEY_ID = os.getenv('R2_ACCESS_KEY_ID', 'ac38a96c402e0c4e919cdd96554cfa6b')
 R2_SECRET_ACCESS_KEY = os.getenv('R2_SECRET_ACCESS_KEY', 'b218b5c0d690c92f0d2ef49cde3b182be3b83be1fff97059b99ab0d221ab606e')
 R2_BUCKET_NAME = os.getenv('R2_BUCKET_NAME', 'scientific-article')
 
-# S3 client ni sozlash (Cloudflare R2 uchun)
 s3_client = boto3.client(
     's3',
     endpoint_url=R2_ENDPOINT_URL,
@@ -66,20 +81,28 @@ s3_client = boto3.client(
 
 db.init_app(app)
 
-# Ma'lumotlar bazasi va migratsiyalar
 with app.app_context():
     try:
         db.create_all()
         db.session.execute(text('ALTER TABLE article ADD COLUMN IF NOT EXISTS "references" TEXT;'))
         db.session.execute(text("ALTER TABLE article ADD COLUMN IF NOT EXISTS publisher VARCHAR(255) DEFAULT 'Ilmiy Maqolalar Portali';"))
-        db.session.execute(text("ALTER TABLE article ADD COLUMN IF NOT EXISTS institution VARCHAR(255) DEFAULT 'O''zbek tilishunosligi kafedrasi';"))
+        db.session.execute(text("ALTER TABLE article ADD COLUMN IF NOT EXISTS institution VARCHAR(255) DEFAULT 'O''zbek tilshunosligi kafedrasi';"))
         db.session.execute(text("ALTER TABLE article ADD COLUMN IF NOT EXISTS issn VARCHAR(50) DEFAULT '0000-0000';"))
         db.session.execute(text("ALTER TABLE collection ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;"))
         db.session.commit()
-        print("Ma'lumotlar bazasi jadvallari muvaffaqiyatli tekshirildi/yaratildi!")
     except Exception as e:
         db.session.rollback()
-        print(f"Baza yaratish yoki migratsiya xatosi: {e}")
+        print(f"Migratsiya xatosi: {e}")
+
+@app.template_filter('clean_doi')
+def clean_doi(doi_str):
+    if not doi_str:
+        return ""
+    doi_str = doi_str.strip()
+    for prefix in ['https://doi.org/', 'http://doi.org/', 'doi:']:
+        if doi_str.lower().startswith(prefix):
+            doi_str = doi_str[len(prefix):]
+    return doi_str
 
 def admin_required(f):
     @wraps(f)
@@ -95,7 +118,9 @@ def is_bot():
     bots = ['googlebot', 'bingbot', 'yandexbot', 'baiduspider', 'duckduckbot', 'slurp', 'crawler', 'spider', 'bot', 'uptimerobot']
     return any(b in user_agent for b in bots)
 
+# --- 4. ASOSIY MARSHRUTLAR ---
 @app.route('/')
+@limiter.exempt
 def index():
     query = request.args.get('q', '')
     collections = Collection.query.order_by(Collection.created_at.desc()).all()
@@ -112,6 +137,7 @@ def index():
     return render_template('index.html', articles=articles, collections=collections, query=query)
 
 @app.route('/collection/<int:collection_id>')
+@limiter.exempt
 def collection_detail(collection_id):
     collection = Collection.query.get_or_404(collection_id)
     articles = Article.query.filter_by(collection_id=collection.id).order_by(Article.year.desc()).all()
@@ -119,6 +145,7 @@ def collection_detail(collection_id):
     return render_template('collection.html', collection=collection, articles=articles, collections=collections)
 
 @app.route('/article/<int:id>')
+@limiter.exempt
 def article_detail(id):
     article = Article.query.get_or_404(id)
     try:
@@ -134,11 +161,11 @@ def article_detail(id):
     collection = article.collection if hasattr(article, 'collection') else None
     return render_template('article.html', article=article, collection=collection)
 
-# --- OQIMLI (STREAMING) PDF O'QISH ---
+# --- 5. OQIMLI (STREAMING) PDF O'QISH VA YUKLAB OLISH ---
 @app.route('/pdf/<int:id>.pdf')
+@limiter.exempt
 def serve_pdf(id):
     article = Article.query.get_or_404(id)
-    
     filename = article.pdf_filename.split('/')[-1].split('?')[0]
     
     range_header = request.headers.get('Range')
@@ -167,8 +194,8 @@ def serve_pdf(id):
     
     return response
 
-# --- OQIMLI (STREAMING) YUKLAB OLISH ---
 @app.route('/download/<int:id>')
+@limiter.limit("20 per minute")
 def download_article(id):
     article = Article.query.get_or_404(id)
     
@@ -197,7 +224,7 @@ def download_article(id):
     
     return response
 
-# --- MAQOLANI TAHRIRLASH (Edit) ---
+# --- 6. ADMIN VA MAQOLA BOSHQARUVI ---
 @app.route('/article/edit/<int:article_id>', methods=['GET', 'POST'])
 @admin_required
 def edit_article(article_id):
@@ -236,6 +263,12 @@ def edit_article(article_id):
             
             pdf_file = request.files.get('pdf_file')
             if pdf_file and pdf_file.filename != '':
+                header = pdf_file.stream.read(1024)
+                pdf_file.stream.seek(0)
+                if not header.startswith(b'%PDF-'):
+                    flash("Yuklangan fayl haqiqiy PDF emas!", "danger")
+                    return redirect(request.url)
+
                 filename = f"{int(time.time())}_{secure_filename(pdf_file.filename)}"
                 s3_client.upload_fileobj(
                     pdf_file,
@@ -254,7 +287,6 @@ def edit_article(article_id):
             
     return render_template('admin_edit.html', article=article, collections=collections)
 
-# --- TO'PLAMNI O'CHIRISH (Delete Collection) ---
 @app.route('/collection/delete/<int:collection_id>', methods=['POST'])
 @admin_required
 def delete_collection(collection_id):
@@ -266,10 +298,9 @@ def delete_collection(collection_id):
         flash("To'plam muvaffaqiyatli o'chirildi!", "success")
     except Exception as e:
         db.session.rollback()
-        flash(f"To'plamni o'chirishda xatolik: {str(e)}", "danger")
+        flash(f"Xatolik: {str(e)}", "danger")
     return redirect(url_for('index'))
 
-# --- MAQOLANI O'CHIRISH (Faqat Admin uchun) ---
 @app.route('/article/delete/<int:article_id>', methods=['POST'])
 @admin_required
 def delete_article(article_id):
@@ -279,15 +310,11 @@ def delete_article(article_id):
         db.session.commit()
         flash("Maqola muvaffaqiyatli o'chirildi!", "success")
     except Exception as e:
-        flash(f"O'chirishda xatolik: {str(e)}", "danger")
+        flash(f"Xatolik: {str(e)}", "danger")
     return redirect(url_for('index'))
 
-# --- GOOGLE SEARCH CONSOLE TASDIQLASH ---
-@app.route('/google35a149858ebe2d59.html')
-def google_verification():
-    return "google-site-verification: google35a149858ebe2d59.html"
-
 @app.route('/admin/login', methods=['GET', 'POST'])
+@limiter.limit("5 per minute")
 def admin_login():
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
@@ -305,68 +332,6 @@ def admin_login():
 def admin_logout():
     session.pop('is_admin', None)
     flash("Admin tizimidan chiqildi.", "info")
-    return redirect(url_for('index'))
-
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        
-        user_exists = User.query.filter_by(username=username).first()
-        if user_exists:
-            flash("Bu foydalanuvchi nomi band qilingan!", "danger")
-            return redirect(url_for('register'))
-            
-        hashed_password = generate_password_hash(password)
-        new_user = User(username=username, password=hashed_password)
-        db.session.add(new_user)
-        db.session.commit()
-        
-        flash("Muvaffaqiyatli ro'yxatdan o'tdingiz! Endi kiring.", "success")
-        return redirect(url_for('login'))
-        
-    return render_template('register.html')
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        
-        user = User.query.filter_by(username=username).first()
-        if user and check_password_hash(user.password, password):
-            session['user_id'] = user.id
-            session['username'] = user.username
-            flash("Tizimga muvaffaqiyatli kirdingiz!", "success")
-            return redirect(url_for('index'))
-        else:
-            flash("Login yoki parol xato!", "danger")
-            
-    return render_template('login.html')
-
-@app.route('/forgot-password', methods=['GET', 'POST'])
-def forgot_password():
-    if request.method == 'POST':
-        username = request.form.get('username')
-        new_password = request.form.get('new_password')
-        
-        user = User.query.filter_by(username=username).first()
-        if user:
-            user.password = generate_password_hash(new_password)
-            db.session.commit()
-            flash("Parolingiz muvaffaqiyatli yangilandi! Yangi parol bilan kiring.", "success")
-            return redirect(url_for('login'))
-        else:
-            flash("Bunday foydalanuvchi topilmadi!", "danger")
-            
-    return render_template('forgot_password.html')
-
-@app.route('/logout')
-def logout():
-    session.pop('user_id', None)
-    session.pop('username', None)
-    flash("Tizimdan chiqdingiz.", "info")
     return redirect(url_for('index'))
 
 @app.route('/admin/add', methods=['GET', 'POST'])
@@ -398,7 +363,6 @@ def add_article():
             keywords_ru = request.form.get('keywords_ru')
             
             references_text = request.form.get('references')
-            
             doi = request.form.get('doi')
             year = request.form.get('year', type=int) or 2026
             volume = request.form.get('volume', type=int) or 1
@@ -412,8 +376,14 @@ def add_article():
                 flash("Iltimos, PDF faylni biriktiring!", "danger")
                 return redirect(url_for('add_article'))
 
+            # PDF MIME va haqiqiy sarlavha tekshiruvi
+            header = pdf_file.stream.read(1024)
+            pdf_file.stream.seek(0)
+            if not header.startswith(b'%PDF-'):
+                flash("Yuklangan fayl haqiqiy PDF emas!", "danger")
+                return redirect(url_for('add_article'))
+
             filename = f"{int(time.time())}_{secure_filename(pdf_file.filename)}"
-            
             s3_client.upload_fileobj(
                 pdf_file,
                 R2_BUCKET_NAME,
@@ -447,20 +417,38 @@ def add_article():
             return redirect(url_for('add_article'))
             
         except Exception as e:
-            print(f"Maqola qo'shish xatoligi: {str(e)}")
             flash(f"Xatolik yuz berdi: {str(e)}", "danger")
             return redirect(url_for('add_article'))
             
     collections = Collection.query.all()
     return render_template('admin_add.html', collections=collections)
 
+# --- 7. SEO: ROBOTS.TXT, SITEMAP.XML VA XATOLAR HANDLERI ---
+@app.route('/robots.txt')
+@limiter.exempt
+def robots_txt():
+    content = (
+        "User-agent: *\n"
+        "Allow: /\n"
+        "Allow: /article/\n"
+        "Allow: /collection/\n"
+        "Allow: /pdf/\n"
+        "Disallow: /admin/\n"
+        "Disallow: /admin/login\n"
+        "Disallow: /register\n"
+        "Disallow: /login\n"
+        "Disallow: /forgot-password\n"
+        "Disallow: /*?q=*\n\n"
+        "Sitemap: https://scientific-article.onrender.com/sitemap.xml"
+    )
+    return response_with_type(content, "text/plain")
+
 @app.route('/sitemap.xml')
+@limiter.exempt
 def sitemap():
     base_url = "https://scientific-article.onrender.com"
-    
     xml_content = '<?xml version="1.0" encoding="UTF-8"?>\n'
     xml_content += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-    
     xml_content += f'  <url>\n    <loc>{base_url}/</loc>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>\n'
     
     try:
@@ -481,10 +469,25 @@ def sitemap():
         print(f"Sitemap xatoligi: {e}")
         
     xml_content += '</urlset>'
-    
-    response = make_response(xml_content)
-    response.headers["Content-Type"] = "application/xml"
+    return response_with_type(xml_content, "application/xml")
+
+def response_with_type(content, ctype):
+    response = make_response(content)
+    response.headers["Content-Type"] = ctype
     return response
 
+@app.route('/google35a149858ebe2d59.html')
+@limiter.exempt
+def google_verification():
+    return "google-site-verification: google35a149858ebe2d59.html"
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
+
+@app.errorhandler(500)
+def internal_server_error(e):
+    return render_template('500.html'), 500
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=False)
