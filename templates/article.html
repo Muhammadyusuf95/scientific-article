@@ -12,7 +12,7 @@
     {% if article.title_ru %}<link rel="alternate" hreflang="ru" href="{{ request.url }}">{% endif %}
     
     <!-- Meta Description -->
-    <meta name="description" content="{{ article.abstract_uz[:160] }}...">
+    <meta name="description" content="{{ article.abstract_uz[:160] if article.abstract_uz else '' }}...">
 
     <!-- Google Fonts & Bootstrap -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -21,36 +21,43 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer">
     
-    <!-- Google Scholar & Multilingual Meta Tags -->
+    <!-- Google Scholar & Highwire Press Metadata -->
     <meta name="citation_title" content="{{ article.title_uz }}">
+    {% if article.abstract_uz %}
     <meta name="citation_abstract" content="{{ article.abstract_uz }}">
+    {% endif %}
+    {% if article.keywords_uz %}
     <meta name="citation_keywords" content="{{ article.keywords_uz | replace('.', '') }}">
+    {% endif %}
     <meta name="citation_language" content="uz">
 
     {% if article.title_en %}
-    <meta name="citation_title_en" content="{{ article.title_en }}">
-    <meta name="citation_abstract_en" content="{{ article.abstract_en }}">
-    <meta name="citation_keywords_en" content="{{ article.keywords_en | replace('.', '') }}">
-    {% endif %}
-
-    {% if article.title_ru %}
-    <meta name="citation_title_ru" content="{{ article.title_ru }}">
-    <meta name="citation_abstract_ru" content="{{ article.abstract_ru }}">
-    <meta name="citation_keywords_ru" content="{{ article.keywords_ru | replace('.', '') }}">
+    <meta name="citation_title" content="{{ article.title_en }}">
+    {% if article.abstract_en %}<meta name="citation_abstract" content="{{ article.abstract_en }}">{% endif %}
+    {% if article.keywords_en %}<meta name="citation_keywords" content="{{ article.keywords_en | replace('.', '') }}">{% endif %}
     {% endif %}
 
     {% for author in article.authors %}
     <meta name="citation_author" content="{{ author.full_name }}">
-    <meta name="citation_author_institution" content="{{ article.institution | default('O\'zbekiston Milliy Universiteti') }}">
+    <meta name="citation_author_institution" content="{{ article.institution | default('O\'zbek tilshunosligi kafedrasi') }}">
     {% endfor %}
 
     <meta name="citation_publication_date" content="{{ article.year }}/{{ '%02d' | format(article.issue | int) if article.issue else '01' }}/01">
-    {% if collection %}
+    
+    {% if article.journal_name %}
+    <meta name="citation_journal_title" content="{{ article.journal_name }}">
+    {% elif collection %}
     <meta name="citation_conference_title" content="{{ collection.name }}">
     {% endif %}
+
     <meta name="citation_publisher" content="{{ article.publisher | default('Ilmiy Maqolalar Portali') }}">
+    
+    {% if article.volume %}
     <meta name="citation_volume" content="{{ article.volume }}">
+    {% endif %}
+    {% if article.issue %}
     <meta name="citation_issue" content="{{ article.issue }}">
+    {% endif %}
     
     {% if article.pages %}
     <meta name="citation_firstpage" content="{{ article.pages.split('-')[0] }}">
@@ -58,53 +65,66 @@
     {% endif %}
 
     <meta name="citation_pdf_url" content="{{ url_for('serve_pdf', id=article.id, _external=True) }}">
+    
+    {% if article.doi %}
     <meta name="citation_doi" content="{{ article.doi | clean_doi }}">
+    {% endif %}
+    
     <meta name="citation_abstract_html_url" content="{{ request.url }}">
-    <meta name="citation_issn" content="{{ article.issn | default('0000-0000') }}">
+
+    <!-- Faqat haqiqiy ISSN yoki ISBN mavjud bo'lsagina chiqariladi (soxta 0000-0000 olib tashlandi) -->
+    {% if article.issn %}
+    <meta name="citation_issn" content="{{ article.issn }}">
+    {% endif %}
+    {% if article.isbn %}
+    <meta name="citation_isbn" content="{{ article.isbn }}">
+    {% endif %}
 
     <!-- Open Graph & Twitter -->
     <meta property="og:type" content="article">
     <meta property="og:title" content="{{ article.title_uz }}">
-    <meta property="og:description" content="{{ article.abstract_uz[:160] }}...">
+    <meta property="og:description" content="{{ article.abstract_uz[:160] if article.abstract_uz else '' }}...">
     <meta property="og:url" content="{{ request.url }}">
     <meta property="og:site_name" content="Ilmiy Maqolalar Portali">
     
-    <!-- JSON-LD -->
+    <!-- Xavfsiz JSON-LD (Python |tojson yordamida har qanday maxsus belgi va qo'shtirnoqlardan himoyalangan) -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "ScholarlyArticle",
-      "name": "{{ article.title_uz }}",
-      "headline": "{{ article.title_uz }}",
+      "name": {{ article.title_uz | tojson }},
+      "headline": {{ article.title_uz | tojson }},
       "inLanguage": "uz",
-      "abstract": "{{ article.abstract_uz }}",
-      "keywords": "{{ article.keywords_uz }}",
+      "abstract": {{ article.abstract_uz | tojson }},
+      "keywords": {{ article.keywords_uz | tojson }},
       "datePublished": "{{ article.year }}-01-01",
-      "url": "{{ request.url }}",
+      "url": {{ request.url | tojson }},
+      {% if article.doi %}
       "identifier": {
         "@type": "PropertyValue",
         "propertyID": "DOI",
-        "value": "{{ article.doi | clean_doi }}"
+        "value": {{ article.doi | clean_doi | tojson }}
       },
+      {% endif %}
       "author": [
         {% for author in article.authors %}
         {
           "@type": "Person",
-          "name": "{{ author.full_name }}",
+          "name": {{ author.full_name | tojson }},
           "affiliation": {
             "@type": "Organization",
-            "name": "{{ article.institution | default('O\'zbek tilshunosligi kafedrasi') }}"
+            "name": {{ article.institution | default("O'zbek tilshunosligi kafedrasi") | tojson }}
           }
         }{% if not loop.last %},{% endif %}
         {% endfor %}
       ],
       "publisher": {
         "@type": "Organization",
-        "name": "{{ article.publisher | default('Ilmiy Maqolalar Portali') }}"
+        "name": {{ article.publisher | default("Ilmiy Maqolalar Portali") | tojson }}
       },
       "encoding": {
         "@type": "MediaObject",
-        "contentUrl": "{{ url_for('serve_pdf', id=article.id, _external=True) }}",
+        "contentUrl": {{ url_for('serve_pdf', id=article.id, _external=True) | tojson }},
         "encodingFormat": "application/pdf"
       }
     }
@@ -152,7 +172,7 @@
                 <span><i class="fas fa-calendar-alt me-1" aria-hidden="true"></i> Yil: {{ article.year }}</span>
                 <span><i class="fas fa-book me-1" aria-hidden="true"></i> Tom: {{ article.volume }}, Son: {{ article.issue }}</span>
                 {% if article.pages %}<span><i class="fas fa-file-alt me-1" aria-hidden="true"></i> Sahifalar: {{ article.pages }}</span>{% endif %}
-                {% if article.doi %}<span><i class="fas fa-fingerprint me-1" aria-hidden="true"></i> DOI: <a href="https://doi.org/{{ article.doi | clean_doi }}" target="_blank" rel="noopener noreferrer" class="text-warning text-decoration-none">10.5281/zenodo.{{ article.doi | clean_doi | replace('10.5281/zenodo.', '') }}</a></span>{% endif %}
+                {% if article.doi %}<span><i class="fas fa-fingerprint me-1" aria-hidden="true"></i> DOI: <a href="https://doi.org/{{ article.doi | clean_doi }}" target="_blank" rel="noopener noreferrer" class="text-warning text-decoration-none">{{ article.doi | clean_doi }}</a></span>{% endif %}
             </div>
         </div>
     </header>
@@ -168,6 +188,7 @@
                 <i class="fas fa-edit me-1" aria-hidden="true"></i> Tahrirlash
             </a>
             <form action="{{ url_for('delete_article', article_id=article.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Haqiqatan ham bu maqolani oʻchirmoqchimisiz?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="btn btn-danger btn-sm rounded-pill px-3">
                     <i class="fas fa-trash me-1" aria-hidden="true"></i> O'chirish
                 </button>
@@ -301,7 +322,7 @@
                             <label class="form-label fw-semibold small text-muted" for="apaText">APA stili:</label>
                             <div class="input-group">
                                 <input type="text" id="apaText" class="form-control form-control-sm bg-light font-monospace" 
-                                       value="{% for author in article.authors %}{{ author.full_name }}{% if not loop.last %}, {% endif %}{% endfor %} ({{ article.year }}). {{ article.title_uz }}. {% if collection %}{{ collection.name }}{% else %}Ilmiy Maqolalar Portali{% endif %}, {{ article.volume }}({{ article.issue }}){% if article.pages %}, {{ article.pages }}{% endif %}. https://doi.org/{{ article.doi | clean_doi }}" readonly>
+                                       value="{% for author in article.authors %}{{ author.full_name }}{% if not loop.last %}, {% endif %}{% endfor %} ({{ article.year }}). {{ article.title_uz }}. {% if collection %}{{ collection.name }}{% else %}Ilmiy Maqolalar Portali{% endif %}, {{ article.volume }}({{ article.issue }}){% if article.pages %}, {{ article.pages }}{% endif %}. {% if article.doi %}https://doi.org/{{ article.doi | clean_doi }}{% endif %}" readonly>
                                 <button class="btn btn-outline-primary btn-sm" type="button" onclick="copyToClipboard('apaText', this)">
                                     <i class="fas fa-copy" aria-hidden="true"></i> Nusxalash
                                 </button>
@@ -361,7 +382,7 @@
         </div>
     </div>
 
-    <!-- JavaScript funksiyalar: Zoom va Zaxira Nusxalash (Fallback execCommand bilan) -->
+    <!-- JavaScript funksiyalar: Zoom va Zaxira Nusxalash -->
     <script>
     let currentHeight = 600;
     function zoomPdf(amount) {
