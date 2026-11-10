@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maqolani Tahrirlash - Ilmiy Maqolalar Portali</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-light">
+    <div class="container py-5" style="max-width: 800px;">
+        <div class="card shadow border-0 rounded-4 p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="fw-bold mb-0">Maqolani Tahrirlash</h3>
+                <a href="{{ url_for('article_detail', id=article.id) }}" class="btn btn-outline-secondary btn-sm rounded-pill">Orqaga</a>
+            </div>
+
+            <form method="POST" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Sarlavha (O'zbekcha):</label>
+                    <input type="text" name="title_uz" class="form-control" value="{{ article.title_uz }}" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Sarlavha (Inglizcha):</label>
+                    <input type="text" name="title_en" class="form-control" value="{{ article.title_en or '' }}">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Annotatsiya (O'zbekcha):</label>
+                    <textarea name="abstract_uz" class="form-control" rows="4" required>{{ article.abstract_uz }}</textarea>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label fw-semibold">Yil:</label>
+                        <input type="number" name="year" class="form-control" value="{{ article.year }}" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label fw-semibold">Tom (Volume):</label>
+                        <input type="number" name="volume" class="form-control" value="{{ article.volume }}">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label fw-semibold">Son (Issue):</label>
+                        <input type="number" name="issue" class="form-control" value="{{ article.issue }}">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold">Sahifalar (masalan: 12-18):</label>
+                        <input type="text" name="pages" class="form-control" value="{{ article.pages or '' }}">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-semibold">DOI:</label>
+                        <input type="text" name="doi" class="form-control" value="{{ article.doi | clean_doi }}">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">To'plam nomi:</label>
+                    <input type="text" name="collection_name" class="form-control" value="{{ article.collection.name if article.collection else '' }}">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Yangi PDF Fayl (Agar almashtirmoqchi bo'lsangiz):</label>
+                    <input type="file" name="pdf_file" class="form-control" accept=".pdf">
+                    <small class="text-muted">Hozirgi fayl: <a href="{{ article.pdf_filename }}" target="_blank">Ko'rish</a></small>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 rounded-pill py-2">O'zgarishlarni Saqlash</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
