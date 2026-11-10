@@ -32,14 +32,8 @@
                 {% if session.get('is_admin') %}
                     <a href="{{ url_for('add_article') }}" class="btn btn-primary btn-sm rounded-pill px-3"><i class="fas fa-plus me-1" aria-hidden="true"></i> Maqola qo'shish</a>
                     <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger btn-sm rounded-pill px-3"><i class="fas fa-sign-out-alt me-1" aria-hidden="true"></i> Admin Chiqish</a>
-
-                {% elif session.get('user_id') %}
-                    <span class="text-light small me-2"><i class="fas fa-user me-1" aria-hidden="true"></i> {{ session.get('username') }}</span>
-                    <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm rounded-pill px-3"><i class="fas fa-sign-out-alt me-1" aria-hidden="true"></i> Chiqish</a>
-
                 {% else %}
-                    <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-sm rounded-pill px-3"><i class="fas fa-sign-in-alt me-1" aria-hidden="true"></i> Kirish</a>
-                    <a href="{{ url_for('register') }}" class="btn btn-primary btn-sm rounded-pill px-3"><i class="fas fa-user-plus me-1" aria-hidden="true"></i> Ro'yxatdan o'tish</a>
+                    <a href="{{ url_for('admin_login') }}" class="btn btn-outline-light btn-sm rounded-pill px-3"><i class="fas fa-user-shield me-1" aria-hidden="true"></i> Admin Kirish</a>
                 {% endif %}
 
             </div>
