@@ -3,11 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ilmiy Maqolalar Portali - Bosh sahifa</title>
+    <title>Ilmiy Maqolalar Portali — Bosh sahifa</title>
     <!-- Google Fonts: Inter va Merriweather -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer">
     <style>
         body { background-color: #f8fafc; font-family: 'Inter', system-ui, sans-serif; color: #334155; }
         h1, h2, h3, .article-title, .portal-title { font-family: 'Merriweather', serif; }
@@ -20,27 +22,24 @@
         .navbar-brand { font-weight: 700; color: #ffffff !important; }
     </style>
 </head>
-<body>
+<body class="bg-light d-flex flex-column min-vh-100">
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm py-3">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm py-3" aria-label="Asosiy navigatsiya">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="/"><i class="fas fa-graduation-cap me-2 text-primary"></i>Ilmiy Maqolalar Portali</a>
+            <a class="navbar-brand fw-bold" href="/"><i class="fas fa-graduation-cap me-2 text-primary" aria-hidden="true"></i>Ilmiy Maqolalar Portali</a>
             <div class="ms-auto d-flex gap-2 align-items-center">
                 
-                <!-- 1. Faqat ADMIN kirganda ko'rinadigan qism -->
                 {% if session.get('is_admin') %}
-                    <a href="{{ url_for('add_article') }}" class="btn btn-primary btn-sm rounded-pill px-3"><i class="fas fa-plus me-1"></i> Maqola qo'shish</a>
-                    <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger btn-sm rounded-pill px-3"><i class="fas fa-sign-out-alt me-1"></i> Admin Chiqish</a>
+                    <a href="{{ url_for('add_article') }}" class="btn btn-primary btn-sm rounded-pill px-3"><i class="fas fa-plus me-1" aria-hidden="true"></i> Maqola qo'shish</a>
+                    <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger btn-sm rounded-pill px-3"><i class="fas fa-sign-out-alt me-1" aria-hidden="true"></i> Admin Chiqish</a>
 
-                <!-- 2. Oddiy ro'yxatdan o'tgan foydalanuvchi kirganda ko'rinadigan qism -->
                 {% elif session.get('user_id') %}
-                    <span class="text-light small me-2"><i class="fas fa-user me-1"></i> {{ session.get('username') }}</span>
-                    <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm rounded-pill px-3"><i class="fas fa-sign-out-alt me-1"></i> Chiqish</a>
+                    <span class="text-light small me-2"><i class="fas fa-user me-1" aria-hidden="true"></i> {{ session.get('username') }}</span>
+                    <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm rounded-pill px-3"><i class="fas fa-sign-out-alt me-1" aria-hidden="true"></i> Chiqish</a>
 
-                <!-- 3. Tizimga kirmagan mehmonlar uchun -->
                 {% else %}
-                    <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-sm rounded-pill px-3"><i class="fas fa-sign-in-alt me-1"></i> Kirish</a>
-                    <a href="{{ url_for('register') }}" class="btn btn-primary btn-sm rounded-pill px-3"><i class="fas fa-user-plus me-1"></i> Ro'yxatdan o'tish</a>
+                    <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-sm rounded-pill px-3"><i class="fas fa-sign-in-alt me-1" aria-hidden="true"></i> Kirish</a>
+                    <a href="{{ url_for('register') }}" class="btn btn-primary btn-sm rounded-pill px-3"><i class="fas fa-user-plus me-1" aria-hidden="true"></i> Ro'yxatdan o'tish</a>
                 {% endif %}
 
             </div>
@@ -48,53 +47,53 @@
     </nav>
 
     <!-- Qidiruv va Banner -->
-    <div class="hero-section text-center">
+    <header class="hero-section text-center">
         <div class="container" style="max-width: 700px;">
             <h1 class="fw-bold mb-3 portal-title">Ilmiy Maqolalar va Tadqiqotlar Bazasi</h1>
             <p class="text-slate-300 mb-4">O'zbek, ingliz va rus tillaridagi ilmiy ishlar, konferensiya materiallari va jurnallar to'plami.</p>
-            <form action="/" method="GET" class="input-group shadow-lg rounded-pill overflow-hidden bg-white p-1">
-                <input type="text" name="q" value="{{ query }}" class="form-control border-0 px-4 py-3 shadow-none" placeholder="Maqola sarlavhasi bo'yicha qidirish...">
-                <button class="btn btn-primary px-4 rounded-pill fw-semibold" type="submit"><i class="fas fa-search me-2"></i>Qidirish</button>
+            <form action="/" method="GET" class="input-group shadow-lg rounded-pill overflow-hidden bg-white p-1" role="search">
+                <input type="text" name="q" value="{{ query }}" class="form-control border-0 px-4 py-3 shadow-none" placeholder="Maqola sarlavhasi bo'yicha qidirish..." aria-label="Maqola qidirish">
+                <button class="btn btn-primary px-4 rounded-pill fw-semibold" type="submit"><i class="fas fa-search me-2" aria-hidden="true"></i>Qidirish</button>
             </form>
         </div>
-    </div>
+    </header>
 
     <!-- Asosiy Tarkib -->
-    <div class="container mb-5">
+    <main class="container mb-5">
         <div class="row">
             <!-- Chap tomon: Maqolalar ro'yxati -->
             <div class="col-lg-8 mb-4">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h4 class="fw-bold text-dark m-0"><i class="fas fa-file-alt text-primary me-2"></i>So'nggi Maqolalar</h4>
+                    <h2 class="fw-bold text-dark m-0 fs-4"><i class="fas fa-file-alt text-primary me-2" aria-hidden="true"></i>So'nggi Maqolalar</h2>
                     <span class="badge bg-secondary px-3 py-2">Jami: {{ articles|length }} ta</span>
                 </div>
 
                 {% if articles %}
                     <div class="d-flex flex-column gap-3">
                         {% for article in articles %}
-                        <div class="card article-card p-4 shadow-sm">
+                        <article class="card article-card p-4 shadow-sm">
                             <div class="d-flex justify-content-between align-items-start mb-2">
                                 <div>
                                     {% if article.collection %}
                                     <a href="/collection/{{ article.collection.id }}" class="badge bg-warning text-dark text-decoration-none mb-2 position-relative" style="z-index: 3;">
-                                        <i class="fas fa-folder me-1"></i>{{ article.collection.name }}
+                                        <i class="fas fa-folder me-1" aria-hidden="true"></i>{{ article.collection.name }}
                                     </a>
                                     {% endif %}
                                     <span class="badge bg-light text-muted border mb-2 ms-1">Yil: {{ article.year }} | Tom: {{ article.volume }}, Son: {{ article.issue }}</span>
                                 </div>
                                 {% if article.doi %}
-                                <span class="text-muted small">DOI: <a href="https://doi.org/{{ article.doi | clean_doi }}" target="_blank" class="text-decoration-none text-primary">{{ article.doi | clean_doi }}</a></span>
+                                <span class="text-muted small">DOI: <a href="https://doi.org/{{ article.doi | clean_doi }}" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-primary">{{ article.doi | clean_doi }}</a></span>
                                 {% endif %}
                             </div>
 
-                            <h5 class="fw-bold mb-2">
+                            <h3 class="fw-bold mb-2 fs-5">
                                 <a href="/article/{{ article.id }}" class="text-dark text-decoration-none hover-primary">
                                     {{ article.title_uz }}
                                 </a>
-                            </h5>
+                            </h3>
 
                             {% if article.title_en %}
-                            <h6 class="text-muted fst-italic small mb-3">{{ article.title_en }}</h6>
+                            <h4 class="text-muted fst-italic small mb-3 fs-6">{{ article.title_en }}</h4>
                             {% endif %}
 
                             <p class="text-muted small mb-3" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
@@ -104,24 +103,24 @@
                             <div class="d-flex flex-wrap justify-content-between align-items-center pt-3 border-top position-relative" style="z-index: 3;">
                                 <div class="small text-dark fw-semibold">
                                     {% for author in article.authors %}
-                                        <i class="fas fa-user-graduate text-primary me-1"></i>{{ author.full_name }}{% if not loop.last %}, {% endif %}
+                                        <i class="fas fa-user-graduate text-primary me-1" aria-hidden="true"></i>{{ author.full_name }}{% if not loop.last %}, {% endif %}
                                     {% endfor %}
                                 </div>
                                 <div class="d-flex gap-2 mt-2 mt-sm-0">
                                     <a href="/article/{{ article.id }}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
-                                        <i class="fas fa-book-open me-1"></i> O'qish
+                                        <i class="fas fa-book-open me-1" aria-hidden="true"></i> O'qish
                                     </a>
-                                    <a href="/download/{{ article.id }}" class="btn btn-success btn-sm rounded-pill px-3" target="_blank">
-                                        <i class="fas fa-download me-1"></i> PDF
+                                    <a href="/download/{{ article.id }}" class="btn btn-success btn-sm rounded-pill px-3" target="_blank" rel="noopener noreferrer">
+                                        <i class="fas fa-download me-1" aria-hidden="true"></i> PDF
                                     </a>
                                 </div>
                             </div>
-                        </div>
+                        </article>
                         {% endfor %}
                     </div>
                 {% else %}
                     <div class="text-center py-5 bg-white rounded-4 shadow-sm">
-                        <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                        <i class="fas fa-search fa-3x text-muted mb-3" aria-hidden="true"></i>
                         <h5 class="text-muted">Hech qanday maqola topilmadi.</h5>
                     </div>
                 {% endif %}
@@ -129,21 +128,21 @@
 
             <!-- O'ng tomon: To'plamlar -->
             <div class="col-lg-4">
-                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white sticky-top" style="top: 2rem;">
-                    <h5 class="fw-bold text-dark mb-3"><i class="fas fa-folder-open text-warning me-2"></i>To'plamlar va Konferensiyalar</h5>
+                <section class="card border-0 shadow-sm rounded-4 p-4 bg-white sticky-top" style="top: 2rem;">
+                    <h3 class="fw-bold text-dark mb-3 fs-5"><i class="fas fa-folder-open text-warning me-2" aria-hidden="true"></i>To'plamlar va Konferensiyalar</h3>
                     {% if collections %}
                         <div class="d-flex flex-column gap-2">
                             {% for col in collections %}
                             <div class="d-flex justify-content-between align-items-center p-3 rounded-3 bg-light border collection-pill">
                                 <a href="/collection/{{ col.id }}" class="text-decoration-none text-dark flex-grow-1 fw-semibold small">
-                                    <i class="fas fa-book text-primary me-2"></i>{{ col.name }}
+                                    <i class="fas fa-book text-primary me-2" aria-hidden="true"></i>{{ col.name }}
                                 </a>
                                 <div class="d-flex align-items-center gap-2">
                                     <span class="badge bg-primary rounded-pill">{{ col.articles|length }}</span>
                                     {% if session.get('is_admin') %}
                                     <form action="{{ url_for('delete_collection', collection_id=col.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Haqiqatan ham bu toʻplamni oʻchirmoqchimisiz?');">
-                                        <button type="submit" class="btn btn-outline-danger btn-sm p-1 lh-1 border-0" title="To'plamni o'chirish">
-                                            <i class="fas fa-trash fa-xs"></i>
+                                        <button type="submit" class="btn btn-outline-danger btn-sm p-1 lh-1 border-0" title="To'plamni o'chirish" aria-label="To'plamni o'chirish">
+                                            <i class="fas fa-trash fa-xs" aria-hidden="true"></i>
                                         </button>
                                     </form>
                                     {% endif %}
@@ -154,16 +153,19 @@
                     {% else %}
                         <p class="text-muted small mb-0">Hozircha maxsus to'plamlar kiritilmagan.</p>
                     {% endif %}
-                </div>
+                </section>
             </div>
         </div>
-    </div>
+    </main>
 
     <!-- Footer -->
     <footer class="bg-dark text-white text-center py-4 mt-auto">
-        <div class="container"><p class="mb-0 small">&copy; 2026 Ilmiy Maqolalar Portali. Barcha huquqlar himoyalangan.</p></div>
+        <div class="container">
+            <p class="mb-1 small">&copy; 2026 Ilmiy Maqolalar Portali. Barcha huquqlar himoyalangan.</p>
+            <p class="mb-0 small text-muted">Litsenziya: <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer" class="text-reset text-decoration-underline">CC BY 4.0</a></p>
+        </div>
     </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
 </body>
 </html>
