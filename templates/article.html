@@ -242,7 +242,8 @@
 <!-- BibTeX Formati -->
 <textarea id="bibtexText" class="form-control form-control-sm bg-light font-monospace" rows="4" readonly>@article{article{{ article.id }},
   author = { {% for author in article.authors %}{{ author.full_name }}{% if not loop.last %} and {% endif %}{% endfor %} },
-  title = {{{ article.title_uz }}},
+  title = <!-- To'g'ri holat: -->
+title = "{{ article.title_uz }}",
   journal = {{ "{% if collection %}" }}{{ collection.name }}{% else %}Ilmiy Maqolalar Portali{% endif %},
   year = {{{ article.year }}},
   volume = {{{ article.volume }}},
