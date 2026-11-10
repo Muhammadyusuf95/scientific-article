@@ -202,34 +202,25 @@
                         </div>
 
                         <!-- 5. BibTeX Formati -->
-                        <div class="tab-pane fade" id="bibtex-content" role="tabpanel">
-                            <label class="form-label fw-semibold small text-muted">BibTeX stili (LaTeX uchun):</label>
-                            <div class="input-group">
-                                <textarea id="bibtexText" class="form-control form-control-sm bg-light font-monospace" rows="4" readonly>@article{article{{ article.id }},
+                       <!-- 5. BibTeX Formati -->
+<div class="tab-pane fade" id="bibtex-content" role="tabpanel">
+    <label class="form-label fw-semibold small text-muted">BibTeX stili (LaTeX uchun):</label>
+    <div class="input-group">
+        <textarea id="bibtexText" class="form-control form-control-sm bg-light font-monospace" rows="4" readonly>@article{article{{ article.id }},
   author = { {% for author in article.authors %}{{ author.full_name }}{% if not loop.last %} and {% endif %}{% endfor %} },
-  title = {{{ article.title_uz }}},
+  title = {{ "{{ article.title_uz }}" }},
   journal = {Ilmiy Maqolalar Portali},
-  year = {{{ article.year }}},
-  volume = {{{ article.volume }}},
-  number = {{{ article.issue }}},
-  pages = {{{ article.pages }}},
-  doi = {{{ article.doi }}}
+  year = {{ article.year }},
+  volume = {{ article.volume }},
+  number = {{ article.issue }},
+  pages = {{ "{{ article.pages }}" }},
+  doi = {{ "{{ article.doi }}" }}
 }</textarea>
-                                <button class="btn btn-outline-primary btn-sm" type="button" onclick="copyToClipboard('bibtexText', this)">
-                                    <i class="fas fa-copy"></i> Nusxalash
-                                </button>
-                            </div>
-                        </div>
-
-                    </div>
-
-                </div>
-                <div class="modal-footer border-top-0">
-                    <button type="button" class="btn btn-secondary btn-sm rounded-pill px-4" data-bs-dismiss="modal">Yopish</button>
-                </div>
-            </div>
-        </div>
+        <button class="btn btn-outline-primary btn-sm" type="button" onclick="copyToClipboard('bibtexText', this)">
+            <i class="fas fa-copy"></i> Nusxalash
+        </button>
     </div>
+</div>
 
     <!-- Nusxalash uchun JavaScript -->
     <script>
