@@ -98,15 +98,19 @@
             </div>
             {% endif %}
 
-            <!-- Yuklab olish va O'qish tugmalari -->
+            <!-- Yuklab olish, O'qish va Cite tugmalari -->
             <div class="d-flex flex-wrap gap-3 align-items-center justify-content-between pt-2">
-                <div class="d-flex gap-2">
+                <div class="d-flex flex-wrap gap-2">
                     <a href="{{ article.pdf_filename }}" class="btn btn-primary rounded-pill px-4" target="_blank">
                         <i class="fas fa-book-reader me-2"></i> Onlayn O'qish (PDF)
                     </a>
                     <a href="/download/{{ article.id }}" class="btn btn-outline-success rounded-pill px-4" target="_blank">
                         <i class="fas fa-download me-2"></i> Yuklab olish
                     </a>
+                    <!-- Iqtibos keltirish tugmasi -->
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#citeModal">
+                        <i class="fas fa-quote-right me-2"></i> Iqtibos keltirish (Cite)
+                    </button>
                 </div>
                 <div class="text-muted small">
                     <span><i class="fas fa-eye me-1"></i> Ko'rishlar: {{ article.views_count }}</span> | 
@@ -115,6 +119,139 @@
             </div>
         </div>
     </div>
+
+    <!-- Cite Modal Oynasi (5 ta mashhur stil bilan) -->
+    <div class="modal fade" id="citeModal" tabindex="-1" aria-labelledby="citeModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 rounded-4 shadow">
+                <div class="modal-header border-bottom-0">
+                    <h5 class="modal-title fw-bold" id="citeModalLabel">
+                        <span class="fas fa-quote-right text-primary me-2"></span>Maqoladan iqtibos keltirish (Cite)
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    
+                    <!-- Nav Tabs uchun tugmalar -->
+                    <ul class="nav nav-pills mb-3 gap-2" id="citeTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active btn-sm rounded-pill px-3" id="apa-tab" data-bs-toggle="pill" data-bs-target="#apa-content" type="button" role="tab">APA</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link btn-sm rounded-pill px-3" id="mla-tab" data-bs-toggle="pill" data-bs-target="#mla-content" type="button" role="tab">MLA</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link btn-sm rounded-pill px-3" id="chicago-tab" data-bs-toggle="pill" data-bs-target="#chicago-content" type="button" role="tab">Chicago</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link btn-sm rounded-pill px-3" id="ieee-tab" data-bs-toggle="pill" data-bs-target="#ieee-content" type="button" role="tab">IEEE</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link btn-sm rounded-pill px-3" id="bibtex-tab" data-bs-toggle="pill" data-bs-target="#bibtex-content" type="button" role="tab">BibTeX</button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="citeTabsContent">
+                        
+                        <!-- 1. APA Formati -->
+                        <div class="tab-pane fade show active" id="apa-content" role="tabpanel">
+                            <label class="form-label fw-semibold small text-muted">APA (7th edition) stili:</label>
+                            <div class="input-group">
+                                <input type="text" id="apaText" class="form-control form-control-sm bg-light font-monospace" 
+                                       value="{% for author in article.authors %}{{ author.full_name }}{% if not loop.last %}, {% endif %}{% endfor %} ({{ article.year }}). {{ article.title_uz }}. Ilmiy Maqolalar Portali, {{ article.volume }}({{ article.issue }}){% if article.pages %}, {{ article.pages }}{% endif %}. {% if article.doi %}https://doi.org/{{ article.doi }}{% endif %}" readonly>
+                                <button class="btn btn-outline-primary btn-sm" type="button" onclick="copyToClipboard('apaText', this)">
+                                    <i class="fas fa-copy"></i> Nusxalash
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 2. MLA Formati -->
+                        <div class="tab-pane fade" id="mla-content" role="tabpanel">
+                            <label class="form-label fw-semibold small text-muted">MLA (9th edition) stili:</label>
+                            <div class="input-group">
+                                <input type="text" id="mlaText" class="form-control form-control-sm bg-light font-monospace" 
+                                       value="{% for author in article.authors %}{{ author.full_name }}{% if not loop.last %}, {% endif %}{% endfor %}. &quot;{{ article.title_uz }}.&quot; Ilmiy Maqolalar Portali, vol. {{ article.volume }}, no. {{ article.issue }}, {{ article.year }}, pp. {{ article.pages|default('N/A', true) }}{% if article.doi %}, doi:{{ article.doi }}{% endif %}." readonly>
+                                <button class="btn btn-outline-primary btn-sm" type="button" onclick="copyToClipboard('mlaText', this)">
+                                    <i class="fas fa-copy"></i> Nusxalash
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 3. Chicago Formati -->
+                        <div class="tab-pane fade" id="chicago-content" role="tabpanel">
+                            <label class="form-label fw-semibold small text-muted">Chicago (Notes and Bibliography) stili:</label>
+                            <div class="input-group">
+                                <input type="text" id="chicagoText" class="form-control form-control-sm bg-light font-monospace" 
+                                       value="{% for author in article.authors %}{{ author.full_name }}{% if not loop.last %}, {% endif %}{% endfor %}. {{ article.year }}. &quot;{{ article.title_uz }}.&quot; Ilmiy Maqolalar Portali {{ article.volume }}, no. {{ article.issue }}: {{ article.pages|default('', true) }}. {% if article.doi %}https://doi.org/{{ article.doi }}{% endif %}" readonly>
+                                <button class="btn btn-outline-primary btn-sm" type="button" onclick="copyToClipboard('chicagoText', this)">
+                                    <i class="fas fa-copy"></i> Nusxalash
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 4. IEEE Formati -->
+                        <div class="tab-pane fade" id="ieee-content" role="tabpanel">
+                            <label class="form-label fw-semibold small text-muted">IEEE stili:</label>
+                            <div class="input-group">
+                                <input type="text" id="ieeeText" class="form-control form-control-sm bg-light font-monospace" 
+                                       value="{% for author in article.authors %}{{ author.full_name }}{% if not loop.last %}, {% endif %}{% endfor %}, &quot;{{ article.title_uz }},&quot; Ilmiy Maqolalar Portali, vol. {{ article.volume }}, no. {{ article.issue }}, pp. {{ article.pages|default('N/A', true) }}, {{ article.year }}{% if article.doi %}, doi: {{ article.doi }}{% endif %}." readonly>
+                                <button class="btn btn-outline-primary btn-sm" type="button" onclick="copyToClipboard('ieeeText', this)">
+                                    <i class="fas fa-copy"></i> Nusxalash
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 5. BibTeX Formati -->
+                        <div class="tab-pane fade" id="bibtex-content" role="tabpanel">
+                            <label class="form-label fw-semibold small text-muted">BibTeX stili (LaTeX uchun):</label>
+                            <div class="input-group">
+                                <textarea id="bibtexText" class="form-control form-control-sm bg-light font-monospace" rows="4" readonly>@article{article{{ article.id }},
+  author = { {% for author in article.authors %}{{ author.full_name }}{% if not loop.last %} and {% endif %}{% endfor %} },
+  title = {{{ article.title_uz }}},
+  journal = {Ilmiy Maqolalar Portali},
+  year = {{{ article.year }}},
+  volume = {{{ article.volume }}},
+  number = {{{ article.issue }}},
+  pages = {{{ article.pages }}},
+  doi = {{{ article.doi }}}
+}</textarea>
+                                <button class="btn btn-outline-primary btn-sm" type="button" onclick="copyToClipboard('bibtexText', this)">
+                                    <i class="fas fa-copy"></i> Nusxalash
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+                <div class="modal-footer border-top-0">
+                    <button type="button" class="btn btn-secondary btn-sm rounded-pill px-4" data-bs-dismiss="modal">Yopish</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nusxalash uchun JavaScript -->
+    <script>
+    function copyToClipboard(elementId, btn) {
+        const textElement = document.getElementById(elementId);
+        textElement.select();
+        textElement.setSelectionRange(0, 99999);
+        
+        navigator.clipboard.writeText(textElement.value).then(() => {
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check text-success"></i> Nusxalandi!';
+            btn.classList.add('btn-success', 'text-white');
+            btn.classList.remove('btn-outline-primary');
+            
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.classList.remove('btn-success', 'text-white');
+                btn.classList.add('btn-outline-primary');
+            }, 2000);
+        });
+    }
+    </script>
 
     <!-- Footer -->
     <footer class="bg-dark text-white text-center py-4 mt-auto">
