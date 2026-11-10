@@ -66,10 +66,10 @@ def migrate_old_articles():
             if not filename:
                 continue
                 @app.route('/article/<int:id>')
+@app.route('/article/<int:id>')
 def article_detail(id):
     article = Article.query.get_or_404(id)
     
-    # Ko'rishlar sonini (views_count) har safar ochganda 1 taga oshirish (ixtiyoriy, lekin foydali)
     try:
         article.views_count = (article.views_count or 0) + 1
         db.session.commit()
