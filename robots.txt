@@ -1,8 +1,11 @@
 User-agent: *
 Allow: /
-
+Allow: /article/
+Allow: /collection/
+Allow: /download/
 Disallow: /admin/
-Disallow: /login/
-Disallow: /api/
+Disallow: /admin/add
+Disallow: /login
+Disallow: /register
 
 Sitemap: https://scientific-article.onrender.com/sitemap.xml
