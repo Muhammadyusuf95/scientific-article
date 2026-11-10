@@ -1,6 +1,7 @@
 import os
 import time
 import boto3
+import requests
 from flask import Flask, request, render_template, redirect, url_for, flash, make_response, session
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -9,6 +10,7 @@ from functools import wraps
 from sqlalchemy import text
 
 app = Flask(__name__)
+
 # Cookie xavfsizligi
 app.config.update(
     SESSION_COOKIE_SECURE=True,      # Faqat HTTPS orqali ishlaydi
@@ -48,59 +50,6 @@ app.secret_key = os.getenv('SECRET_KEY', 'super_maxfiy_kalit')
 ADMIN_USERNAME = 'Muhammadyusuf'
 ADMIN_PASSWORD = 'Muhammadyusuf95'
 
-import requests
-
-@app.route('/migrate-old-articles')
-def migrate_old_articles():
-    try:
-        articles = Article.query.all()
-        count = 0
-        for article in articles:
-            old_url = article.pdf_filename
-            
-            # Agar allaqachon R2 ga o'tgan bo'lsa, o'tkazib yuboramiz
-            if "r2.dev" in old_url:
-                continue
-                
-            filename = old_url.split('/')[-1].split('?')[0]
-            if not filename:
-                continue
-                @app.route('/article/<int:id>')
-@app.route('/article/<int:id>')
-def article_detail(id):
-    article = Article.query.get_or_404(id)
-    
-    try:
-        article.views_count = (article.views_count or 0) + 1
-        db.session.commit()
-    except Exception:
-        db.session.rollback()
-
-    collection = article.collection if hasattr(article, 'collection') else None
-    return render_template('article.html', article=article, collection=collection)
-            
-            # Eski Firebase havolasidan faylni yuklab olamiz
-            response = requests.get(old_url)
-            if response.status_code == 200:
-                file_bytes = response.content
-                
-                # Cloudflare R2 ga yuklaymiz
-                s3_client.put_object(
-                    Bucket=R2_BUCKET_NAME,
-                    Key=filename,
-                    Body=file_bytes,
-                    ContentType='application/pdf'
-                )
-                
-                # Ma'lumotlar bazasidagi havolani yangi R2 manziliga o'zgartiramiz
-                article.pdf_filename = f"https://pub-21eece65689f4ee39fbe5b16812adb10.r2.dev/{filename}"
-                db.session.commit()
-                count += 1
-                
-        return f"Muvaffaqiyatli! Jami {count} ta eski maqola Cloudflare R2 ga ko'chirildi va baza yangilandi."
-    except Exception as e:
-        return f"Xatolik yuz berdi: {str(e)}"
-
 # --- CLOUDFLARE R2 SOZLAMALARI ---
 R2_ENDPOINT_URL = os.getenv('R2_ENDPOINT_URL', 'https://b828117b95ed9d61c82ed59a87d6290e.r2.cloudflarestorage.com')
 R2_ACCESS_KEY_ID = os.getenv('R2_ACCESS_KEY_ID', 'ac38a96c402e0c4e919cdd96554cfa6b')
@@ -118,32 +67,20 @@ s3_client = boto3.client(
 
 db.init_app(app)
 
+# Ma'lumotlar bazasi va migratsiyalar
 with app.app_context():
     try:
         db.create_all()
-        try:
-            db.session.execute(text('ALTER TABLE article ADD COLUMN IF NOT EXISTS "references" TEXT;'))
-            db.session.commit()
-        except Exception:
-            db.session.rollback()
-        print("Ma'lumotlar bazasi jadvallari muvaffaqiyatli tekshirildi/yaratildi!")
-    except Exception as e:
-        print(f"Baza yaratishda xatolik: {e}")
-
-from sqlalchemy import text
-
-with app.app_context():
-    db.create_all()
-    # Bazada yetishmayotgan ustunlarni avtomatik qo'shish (Migration)
-    try:
+        db.session.execute(text('ALTER TABLE article ADD COLUMN IF NOT EXISTS "references" TEXT;'))
         db.session.execute(text("ALTER TABLE article ADD COLUMN IF NOT EXISTS publisher VARCHAR(255) DEFAULT 'Ilmiy Maqolalar Portali';"))
         db.session.execute(text("ALTER TABLE article ADD COLUMN IF NOT EXISTS institution VARCHAR(255) DEFAULT 'O''zbek tilishunosligi kafedrasi';"))
         db.session.execute(text("ALTER TABLE article ADD COLUMN IF NOT EXISTS issn VARCHAR(50) DEFAULT '0000-0000';"))
         db.session.execute(text("ALTER TABLE collection ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;"))
         db.session.commit()
+        print("Ma'lumotlar bazasi jadvallari muvaffaqiyatli tekshirildi/yaratildi!")
     except Exception as e:
         db.session.rollback()
-        print("Migratsiya xatosi:", e)
+        print(f"Baza yaratish yoki migratsiya xatosi: {e}")
 
 def admin_required(f):
     @wraps(f)
@@ -177,26 +114,22 @@ def collection_detail(collection_id):
     collections = Collection.query.order_by(Collection.created_at.desc()).all()
     return render_template('collection.html', collection=collection, articles=articles, collections=collections)
 
-@app.route('/article/<int:article_id>')
-def article_detail(article_id):
-    article = Article.query.get_or_404(article_id)
-    # Ko'rishlar sonini avtomatik oshiramiz (login talab qilinmaydi)
-    article.views_count += 1
-    db.session.commit()
-    return render_template('article.html', article=article, collection=article.collection)
+@app.route('/article/<int:id>')
+def article_detail(id):
+    article = Article.query.get_or_404(id)
+    try:
+        article.views_count = (article.views_count or 0) + 1
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+
+    collection = article.collection if hasattr(article, 'collection') else None
+    return render_template('article.html', article=article, collection=collection)
 
 @app.route('/download/<int:article_id>')
 def download_article(article_id):
     article = Article.query.get_or_404(article_id)
-    # Yuklab olishlar sonini oshiramiz
-    article.downloads_count += 1
-    db.session.commit()
-    
-    # Faylni foydalanuvchiga yoki botga to'g'ridan-to'g'ri ochib beramiz (R2 havolasi yoki local path)
-    return redirect(article.pdf_filename)
-        
-    article = Article.query.get_or_404(article_id)
-    article.downloads_count += 1
+    article.downloads_count = (article.downloads_count or 0) + 1
     db.session.commit()
     return redirect(article.pdf_filename)
 
@@ -353,9 +286,6 @@ def add_article():
                 ExtraArgs={'ContentType': 'application/pdf'}
             )
             
-            # R2 dagi fayl uchun ochiq havola
-            # Eslatma: Agar R2 uchun Custom Domain ulagan bo'lsangiz, shu yerdagi havolani o'zgartirishingiz mumkin.
-            # Hozircha standart R2 dev / endpoint havolasi yoki to'g'ridan-to'g'ri URL shakllantiriladi:
             public_url = f"https://pub-21eece65689f4ee39fbe5b16812adb10.r2.dev/{filename}"
             
             new_article = Article(
