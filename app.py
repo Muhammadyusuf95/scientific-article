@@ -10,6 +10,80 @@ from sqlalchemy import text
 
 app = Flask(__name__)
 
+from werkzeug.security import generate_password_hash, check_password_hash
+
+# --- 1. ODDDIY FOYDALANUVCHI (USER) AUTENTIFIKATSIYASI ---
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
+        
+        user = User.query.filter_by(username=username).first()
+        if user and check_password_hash(user.password, password):
+            session['user_id'] = user.id
+            session['username'] = user.username
+            flash("Tizimga muvaffaqiyatli kirdingiz!", "success")
+            return redirect(url_for('index'))
+        else:
+            flash("Login yoki parol noto'g'ri!", "danger")
+    return render_template('login.html')
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
+        
+        if User.query.filter_by(username=username).first():
+            flash("Bu foydalanuvchi nomi band!", "danger")
+            return redirect(url_for('register'))
+            
+        hashed_password = generate_password_hash(password)
+        new_user = User(username=username, password=hashed_password)
+        db.session.add(new_user)
+        db.session.commit()
+        
+        flash("Ro'yxatdan o'tish muvaffaqiyatli yakunlandi! Endi kirishingiz mumkin.", "success")
+        return redirect(url_for('login'))
+    return render_template('register.html')
+
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    if request.method == 'POST':
+        flash("Parolni tiklash bo'yicha ko'rsatma elektron pochtangizga yuborildi.", "info")
+        return redirect(url_for('login'))
+    return render_template('forgot_password.html')
+
+@app.route('/logout')
+def logout():
+    session.pop('user_id', None)
+    session.pop('username', None)
+    flash("Tizimdan chiqildi.", "info")
+    return redirect(url_for('index'))
+
+# --- 2. XAVFSIZ ADMIN (TAHRIRIYAT) KIRISHI ---
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
+        
+        # Doimiy xavfsiz admin tekshiruvi (Environment yoki default ma'lumotlar)
+        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+            session['is_admin'] = True
+            flash("Admin panelga xush kelibsiz!", "success")
+            return redirect(url_for('add_article'))
+        else:
+            flash("Admin login yoki paroli xato!", "danger")
+    return render_template('admin_login.html')
+
+@app.route('/admin/logout')
+def admin_logout():
+    session.pop('is_admin', None)
+    flash("Tahririyat tizimidan chiqildi.", "info")
+    return redirect(url_for('index'))
+
 # --- 1. XAVFSIZLIK VA COOKIE SOZLAMALARI ---
 app.config.update(
     SESSION_COOKIE_SECURE=True,      # Faqat HTTPS orqali ishlaydi
