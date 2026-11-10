@@ -16,6 +16,17 @@ app.config.update(
     SESSION_COOKIE_SAMESITE='Lax',
 )
 
+@app.template_filter('clean_doi')
+def clean_doi(doi_str):
+    if not doi_str:
+        return ""
+    # Agar DOI to'liq URL shaklida kiritilgan bo'lsa, prefikslarni tozalab tashlaymiz
+    doi_str = doi_str.strip()
+    for prefix in ['https://doi.org/', 'http://doi.org/', 'doi:']:
+        if doi_str.lower().startswith(prefix):
+            doi_str = doi_str[len(prefix):]
+    return doi_str
+    
 # Xavfsizlik sarlavhalari (Security Headers)
 @app.after_request
 def set_security_headers(response):
