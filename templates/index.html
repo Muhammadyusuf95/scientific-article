@@ -31,9 +31,10 @@
                 
                 {% if session.get('is_admin') %}
                     <a href="{{ url_for('add_article') }}" class="btn btn-primary btn-sm rounded-pill px-3"><i class="fas fa-plus me-1" aria-hidden="true"></i> Maqola qo'shish</a>
-                    <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger btn-sm rounded-pill px-3"><i class="fas fa-sign-out-alt me-1" aria-hidden="true"></i> Admin Chiqish</a>
+                    <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger btn-sm rounded-pill px-3"><i class="fas fa-sign-out-alt me-1" aria-hidden="true"></i> Chiqish</a>
                 {% else %}
-                    <a href="{{ url_for('admin_login') }}" class="btn btn-outline-light btn-sm rounded-pill px-3"><i class="fas fa-user-shield me-1" aria-hidden="true"></i> Admin Kirish</a>
+                    <!-- Oddiy o'quvchilar uchun hech qanday kirish talab etilmaydi -->
+                    <span class="text-light small"><i class="fas fa-book-reader me-1 text-primary" aria-hidden="true"></i> Ochiq foydalanish (Open Access)</span>
                 {% endif %}
 
             </div>
@@ -135,6 +136,7 @@
                                     <span class="badge bg-primary rounded-pill">{{ col.articles|length }}</span>
                                     {% if session.get('is_admin') %}
                                     <form action="{{ url_for('delete_collection', collection_id=col.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Haqiqatan ham bu toʻplamni oʻchirmoqchimisiz?');">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button type="submit" class="btn btn-outline-danger btn-sm p-1 lh-1 border-0" title="To'plamni o'chirish" aria-label="To'plamni o'chirish">
                                             <i class="fas fa-trash fa-xs" aria-hidden="true"></i>
                                         </button>
@@ -156,7 +158,11 @@
     <footer class="bg-dark text-white text-center py-4 mt-auto">
         <div class="container">
             <p class="mb-1 small">&copy; 2026 Ilmiy Maqolalar Portali. Barcha huquqlar himoyalangan.</p>
-            <p class="mb-0 small text-muted">Litsenziya: <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer" class="text-reset text-decoration-underline">CC BY 4.0</a></p>
+            <p class="mb-2 small text-muted">Litsenziya: <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer" class="text-reset text-decoration-underline">CC BY 4.0</a></p>
+            <!-- Admin uchun yashirin/diskret havola -->
+            <p class="mb-0">
+                <a href="{{ url_for('admin_login') }}" class="text-secondary small text-decoration-none"><i class="fas fa-lock me-1"></i> Tahririyat uchun kirish</a>
+            </p>
         </div>
     </footer>
 
