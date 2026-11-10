@@ -73,7 +73,7 @@
     </style>
 </head>
 <body class="bg-light d-flex flex-column min-vh-100">
-    <!-- Navbar -->
+<!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm py-3" aria-label="Asosiy navigatsiya">
         <div class="container">
             <a class="navbar-brand fw-bold text-white d-flex align-items-center gap-2" href="/">
@@ -82,18 +82,27 @@
             </a>
             
             <div class="ms-auto d-flex align-items-center gap-3">
-                <div class="d-none d-md-flex align-items-center text-light small bg-secondary bg-opacity-25 px-3 py-1.5 rounded-pill border border-secondary border-opacity-25">
-                    <i class="fas fa-globe-americas text-info me-2" aria-hidden="true"></i>
-                    <span>Open Access (Ochiq Kirish)</span>
-                </div>
-                
                 {% if session.get('is_admin') %}
-                    <div class="d-flex gap-2">
-                        <a href="{{ url_for('add_article') }}" class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold shadow-sm">
+                    <div class="d-flex gap-2 align-items-center">
+                        <a href="{{ url_for('add_article') }}" class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold">
                             <i class="fas fa-plus me-1" aria-hidden="true"></i> Maqola qo'shish
                         </a>
                         <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger btn-sm rounded-pill px-3">
-                            <i class="fas fa-sign-out-alt me-1" aria-hidden="true"></i> Chiqish
+                            <i class="fas fa-sign-out-alt me-1" aria-hidden="true"></i> Admin Chiqish
+                        </a>
+                    </div>
+                {% elif session.get('user_id') %}
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="text-light small"><i class="fas fa-user-circle me-1 text-primary"></i> {{ session.get('username') }}</span>
+                        <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm rounded-pill px-3">Chiqish</a>
+                    </div>
+                {% else %}
+                    <div class="d-flex align-items-center gap-2">
+                        <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-sm rounded-pill px-3">
+                            <i class="fas fa-sign-in-alt me-1"></i> Kirish
+                        </a>
+                        <a href="{{ url_for('register') }}" class="btn btn-primary btn-sm rounded-pill px-3">
+                            <i class="fas fa-user-plus me-1"></i> Ro'yxatdan o'tish
                         </a>
                     </div>
                 {% endif %}
