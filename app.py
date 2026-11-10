@@ -129,7 +129,7 @@ def article_detail(article_id):
     article = Article.query.get_or_404(article_id)
     article.views_count += 1
     db.session.commit()
-    return render_template('article.html', article=article)
+    return render_template('article.html', article=article, collection=article.collection)
 
 @app.route('/download/<int:article_id>')
 def download_article(article_id):
