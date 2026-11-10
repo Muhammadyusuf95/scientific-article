@@ -2,7 +2,7 @@ import os
 import time
 import boto3
 import requests
-from flask import Flask, request, render_template, redirect, url_for, flash, make_response, session
+from flask import Flask, request, render_template, redirect, url_for, flash, make_response, session, Response, stream_with_context
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 from models import db, Article, Author, User, Collection
@@ -90,6 +90,11 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+def is_bot():
+    user_agent = request.headers.get('User-Agent', '').lower()
+    bots = ['googlebot', 'bingbot', 'yandexbot', 'baiduspider', 'duckduckbot', 'slurp', 'crawler', 'spider', 'bot', 'uptimerobot']
+    return any(b in user_agent for b in bots)
+
 @app.route('/')
 def index():
     query = request.args.get('q', '')
@@ -117,26 +122,82 @@ def collection_detail(collection_id):
 def article_detail(id):
     article = Article.query.get_or_404(id)
     try:
-        article.views_count = (article.views_count or 0) + 1
-        db.session.commit()
+        if not is_bot():
+            session_key = f"viewed_article_{id}"
+            if not session.get(session_key):
+                article.views_count = (article.views_count or 0) + 1
+                db.session.commit()
+                session[session_key] = True
     except Exception:
         db.session.rollback()
 
     collection = article.collection if hasattr(article, 'collection') else None
     return render_template('article.html', article=article, collection=collection)
 
-@app.route('/download/<int:article_id>')
-def download_article(article_id):
-    article = Article.query.get_or_404(article_id)
-    article.downloads_count = (article.downloads_count or 0) + 1
-    db.session.commit()
-    return redirect(article.pdf_filename)
+# --- OQIMLI (STREAMING) PDF O'QISH ---
+@app.route('/pdf/<int:id>.pdf')
+def serve_pdf(id):
+    article = Article.query.get_or_404(id)
+    
+    filename = article.pdf_filename.split('/')[-1].split('?')[0]
+    
+    range_header = request.headers.get('Range')
+    kwargs = {}
+    if range_header:
+        kwargs['Range'] = range_header
 
-# --- GOOGLE SEARCH CONSOLE TASDIQLASH ---
-@app.route('/google35a149858ebe2d59.html')
-def google_verification():
-    return "google-site-verification: google35a149858ebe2d59.html"
-    # --- MAQOLANI TAHRIRLASH (Edit) ---
+    try:
+        s3_obj = s3_client.get_object(Bucket=R2_BUCKET_NAME, Key=filename, **kwargs)
+    except Exception:
+        return "Fayl topilmadi", 404
+
+    response = Response(
+        stream_with_context(s3_obj['Body'].iter_chunks()),
+        status=s3_obj.get('ResponseMetadata', {}).get('HTTPStatusCode', 200),
+        content_type='application/pdf',
+        direct_passthrough=True
+    )
+    
+    response.headers['Content-Disposition'] = f'inline; filename="{filename}"'
+    if 'Content-Range' in s3_obj:
+        response.headers['Content-Range'] = s3_obj['Content-Range']
+    if 'Accept-Ranges' in s3_obj:
+        response.headers['Accept-Ranges'] = s3_obj['Accept-Ranges']
+    response.headers['Content-Length'] = s3_obj['ContentLength']
+    
+    return response
+
+# --- OQIMLI (STREAMING) YUKLAB OLISH ---
+@app.route('/download/<int:id>')
+def download_article(id):
+    article = Article.query.get_or_404(id)
+    
+    try:
+        if not is_bot():
+            Article.query.filter_by(id=id).update({"downloads_count": (Article.downloads_count or 0) + 1})
+            db.session.commit()
+    except Exception:
+        db.session.rollback()
+
+    filename = article.pdf_filename.split('/')[-1].split('?')[0]
+    
+    try:
+        s3_obj = s3_client.get_object(Bucket=R2_BUCKET_NAME, Key=filename)
+    except Exception:
+        return "Fayl topilmadi", 404
+
+    response = Response(
+        stream_with_context(s3_obj['Body'].iter_chunks()),
+        status=200,
+        content_type='application/pdf',
+        direct_passthrough=True
+    )
+    response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
+    response.headers['Content-Length'] = s3_obj['ContentLength']
+    
+    return response
+
+# --- MAQOLANI TAHRIRLASH (Edit) ---
 @app.route('/article/edit/<int:article_id>', methods=['GET', 'POST'])
 @admin_required
 def edit_article(article_id):
@@ -173,7 +234,6 @@ def edit_article(article_id):
                     db.session.commit()
                 article.collection_id = collection.id
             
-            # Yangi PDF yuklansa, R2 ga yangilaymiz
             pdf_file = request.files.get('pdf_file')
             if pdf_file and pdf_file.filename != '':
                 filename = f"{int(time.time())}_{secure_filename(pdf_file.filename)}"
@@ -194,88 +254,12 @@ def edit_article(article_id):
             
     return render_template('admin_edit.html', article=article, collections=collections)
 
-from flask import Response, stream_with_context
-
-def is_bot():
-    user_agent = request.headers.get('User-Agent', '').lower()
-    bots = ['googlebot', 'bingbot', 'yandexbot', 'baiduspider', 'duckduckbot', 'slurp', 'crawler', 'spider', 'bot', 'uptimerobot']
-    return any(b in user_agent for b in bots)
-
-@app.route('/pdf/<int:id>.pdf')
-def serve_pdf(id):
-    article = Article.query.get_or_404(id)
-    
-    # Bot bo'lmasa va IP takrorlanmasa views_count ni oshiramiz (Atomar tarzda)
-    if not is_bot():
-        client_ip = request.remote_addr
-        # So'nggi 30 daqiqada shu IP dan qilingan murojaatni tekshirish uchun sessiya yoki vaqtinchalik mantiq ishlatish mumkin
-        session_key = f"viewed_article_{id}"
-        if not session.get(session_key):
-            Article.query.filter_by(id=id).update({"views_count": Article.views_count + 1})
-            db.session.commit()
-            session[session_key] = True
-
-    filename = article.pdf_filename.split('/')[-1].split('?')[0]
-    
-    range_header = request.headers.get('Range')
-    kwargs = {}
-    if range_header:
-        kwargs['Range'] = range_header
-
-    try:
-        s3_obj = s3_client.get_object(Bucket=R2_BUCKET_NAME, Key=filename, **kwargs)
-    except Exception:
-        return "Fayl topilmadi", 404
-
-    response = Response(
-        stream_with_context(s3_obj['Body'].iter_chunks()),
-        status=s3_obj.get('ResponseMetadata', {}).get('HTTPStatusCode', 200),
-        content_type='application/pdf',
-        direct_passthrough=True
-    )
-    
-    response.headers['Content-Disposition'] = f'inline; filename="{filename}"'
-    if 'Content-Range' in s3_obj:
-        response.headers['Content-Range'] = s3_obj['Content-Range']
-    if 'Accept-Ranges' in s3_obj:
-        response.headers['Accept-Ranges'] = s3_obj['Accept-Ranges']
-    response.headers['Content-Length'] = s3_obj['ContentLength']
-    
-    return response
-
-@app.route('/download/<int:id>')
-def download_article(id):
-    article = Article.query.get_or_404(id)
-    
-    if not is_bot():
-        Article.query.filter_by(id=id).update({"downloads_count": Article.downloads_count + 1})
-        db.session.commit()
-
-    filename = article.pdf_filename.split('/')[-1].split('?')[0]
-    
-    try:
-        s3_obj = s3_client.get_object(Bucket=R2_BUCKET_NAME, Key=filename)
-    except Exception:
-        return "Fayl topilmadi", 404
-
-    response = Response(
-        stream_with_context(s3_obj['Body'].iter_chunks()),
-        status=200,
-        content_type='application/pdf',
-        direct_passthrough=True
-    )
-    response.headers['Content-Disposition'] = f'attachment; filename="{filename}"'
-    response.headers['Content-Length'] = s3_obj['ContentLength']
-    
-    return response
-
 # --- TO'PLAMNI O'CHIRISH (Delete Collection) ---
 @app.route('/collection/delete/<int:collection_id>', methods=['POST'])
 @admin_required
 def delete_collection(collection_id):
     collection = Collection.query.get_or_404(collection_id)
     try:
-        # To'plamga tegishli maqolalarning collection_id sini NULL qilamiz yoki o'chiramiz
         Article.query.filter_by(collection_id=collection.id).update({'collection_id': None})
         db.session.delete(collection)
         db.session.commit()
@@ -297,6 +281,11 @@ def delete_article(article_id):
     except Exception as e:
         flash(f"O'chirishda xatolik: {str(e)}", "danger")
     return redirect(url_for('index'))
+
+# --- GOOGLE SEARCH CONSOLE TASDIQLASH ---
+@app.route('/google35a149858ebe2d59.html')
+def google_verification():
+    return "google-site-verification: google35a149858ebe2d59.html"
 
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
@@ -425,7 +414,6 @@ def add_article():
 
             filename = f"{int(time.time())}_{secure_filename(pdf_file.filename)}"
             
-            # --- CLOUDFLARE R2 GA YUKLASH ---
             s3_client.upload_fileobj(
                 pdf_file,
                 R2_BUCKET_NAME,
