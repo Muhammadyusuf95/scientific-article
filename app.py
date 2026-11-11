@@ -335,6 +335,7 @@ def edit_article(article_id):
     
     if request.method == 'POST':
         try:
+            # 1. Akademik va sana maydonlarini yangilash
             article.item_type = request.form.get('item_type', 'jurnal')
             article.isbn = request.form.get('isbn')
             article.issn = request.form.get('issn')
@@ -345,17 +346,18 @@ def edit_article(article_id):
             article.pub_date = request.form.get('pub_date')
             article.uploaded_date = request.form.get('uploaded_date')
 
-            article.title_uz = request.form.get('title_uz')
-            article.title_en = request.form.get('title_en')
-            article.title_ru = request.form.get('title_ru')
+            # 2. Sarlavhalar va tahrirlar
+            article.title_uz = request.form.get('title_uz', '').strip()
+            article.title_en = request.form.get('title_en', '').strip()
+            article.title_ru = request.form.get('title_ru', '').strip()
             
-            article.abstract_uz = request.form.get('abstract_uz')
-            article.abstract_en = request.form.get('abstract_en')
-            article.abstract_ru = request.form.get('abstract_ru')
+            article.abstract_uz = request.form.get('abstract_uz', '').strip()
+            article.abstract_en = request.form.get('abstract_en', '').strip()
+            article.abstract_ru = request.form.get('abstract_ru', '').strip()
             
-            article.keywords_uz = request.form.get('keywords_uz')
-            article.keywords_en = request.form.get('keywords_en')
-            article.keywords_ru = request.form.get('keywords_ru')
+            article.keywords_uz = request.form.get('keywords_uz', '').strip()
+            article.keywords_en = request.form.get('keywords_en', '').strip()
+            article.keywords_ru = request.form.get('keywords_ru', '').strip()
             
             article.references = request.form.get('references')
             article.doi = request.form.get('doi')
@@ -372,6 +374,8 @@ def edit_article(article_id):
                     db.session.add(collection)
                     db.session.commit()
                 article.collection_id = collection.id
+            else:
+                article.collection_id = None
             
             pdf_file = request.files.get('pdf_file')
             if pdf_file and pdf_file.filename != '':
@@ -391,11 +395,11 @@ def edit_article(article_id):
                 article.pdf_filename = f"https://pub-21eece65689f4ee39fbe5b16812adb10.r2.dev/{filename}"
 
             db.session.commit()
-            flash("Maqola muvaffaqiyatli tahrirlandi!", "success")
+            flash("Maqola muvaffaqiyatli tahrirlandi va saqlandi!", "success")
             return redirect(url_for('article_detail', id=article.id))
         except Exception as e:
             db.session.rollback()
-            flash(f"Tahrirlashda xatolik: {str(e)}", "danger")
+            flash(f"Tahrirlashda xatolik yuz berdi: {str(e)}", "danger")
             
     return render_template('admin_edit.html', article=article, collections=collections)
 
