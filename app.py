@@ -408,6 +408,26 @@ def add_article():
             volume = request.form.get('volume', type=int) or 1
             issue = request.form.get('issue', type=int) or 1
             pages = request.form.get('pages')
+            # Sanalarni qabul qilib olish
+            pub_date = request.form.get('pub_date')
+            uploaded_date = request.form.get('uploaded_date')
+            
+            # Yangi Article yaratish jarayoni
+            new_article = Article(
+                item_type=item_type,
+                isbn=isbn,
+                issn=issn,
+                bbk=bbk,
+                udk=udk,
+                journal_name=journal_name,
+                conference_org=conference_org,
+                pub_date=pub_date,
+                uploaded_date=uploaded_date,
+                title_uz=title_uz, 
+                title_en=title_en, 
+                title_ru=title_ru,
+                # ... qolgan maydonlar va PDF linki shu yerda davom etadi ...
+            )
             
             authors_input = request.form.get('authors')
             pdf_file = request.files.get('pdf_file')
