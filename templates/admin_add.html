@@ -251,7 +251,21 @@
                 } else {
                     nextNum = text.split('\n').filter(l => l.trim().length > 0).length + 1;
                 }
-                
+
+                <!-- SANA MAYDONLARI -->
+                        <div class="card bg-light border-0 p-3 mb-4 rounded-3">
+                            <h6 class="fw-bold text-primary mb-3"><i class="fas fa-calendar-alt me-1"></i> Sana ma'lumotlari</h6>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label id="dateLabel" class="form-label small fw-semibold">Nashr etilgan sana *</label>
+                                    <input type="date" name="pub_date" id="pub_date" class="form-control" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold">Saytga joylangan sana</label>
+                                    <input type="date" name="uploaded_date" id="uploaded_date" class="form-control">
+                                </div>
+                            </div>
+                        </div>
                 const addition = `\n${nextNum}. `;
                 textarea.value = text.substring(0, cursorPos) + addition + text.substring(cursorPos);
                 textarea.selectionStart = textarea.selectionEnd = cursorPos + addition.length;
