@@ -14,16 +14,15 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
-# Limiter ni sozlash (xotirada saqlash uchun "memory://" ishlatiladi)
+app = Flask(__name__)
+
+# --- Limiter ni sozlash ---
 limiter = Limiter(
     get_remote_address,
     app=app,
     default_limits=["200 per day", "50 per hour"],
     storage_uri="memory://"
 )
-app = Flask(__name__)
-
-from flask import render_template
 
 @app.errorhandler(429)
 def ratelimit_handler(e):
@@ -110,7 +109,7 @@ with app.app_context():
         db.session.rollback()
         print(f"Migratsiya xatosi: {e}")
 
-# --- PDF DAN ADABIYOTLARNI TOZA VA AVTOMATIK TARTIBLAB O'QIB OLUVCHI FUNKSIYA ---
+# --- PDF DAN ADABIYOTLARni toza va AVTOMATIK TARTIBLAB O'QIB OLUVCHI FUNKSIYA ---
 def extract_references_from_pdf(pdf_stream):
     try:
         reader = pypdf.PdfReader(pdf_stream)
@@ -140,11 +139,7 @@ def extract_references_from_pdf(pdf_stream):
                 matched_kw_len = len(kw)
                 
         if best_idx != -1:
-            # Kalit so'zdan keyingi matnni olamiz
             ref_text = full_text[best_idx + matched_kw_len:].strip()
-            
-            # Agar oxirida keraksiz jurnaldagi boshqa ma'lumotlar ketsa, ularni tozalash mumkin
-            # Matnni qatorlarga bo'lib chiqamiz
             raw_lines = ref_text.split('\n')
             cleaned_items = []
             
@@ -154,11 +149,9 @@ def extract_references_from_pdf(pdf_stream):
                 if not line:
                     continue
                 
-                # Yangi adabiyot raqam bilan boshlanayotganini tekshirish (masalan, "1.", "[1]", "1)")
                 if re.match(r'^(\d+[\.\)]|\[\d+\])', line):
                     if current_item:
                         cleaned_items.append(current_item.strip())
-                    # Eski raqamni olib tashlab, toza matnni boshlaymiz
                     clean_line = re.sub(r'^(\d+[\.\)]|\[\d+\])\s*', '', line)
                     current_item = clean_line
                 else:
@@ -170,7 +163,6 @@ def extract_references_from_pdf(pdf_stream):
             if current_item:
                 cleaned_items.append(current_item.strip())
                 
-            # Agar avtomatik ajratishda elementlar topilsa, ularni 1., 2., 3. qilib tartibli qaytaramiz
             if cleaned_items:
                 formatted_refs = []
                 for i, item in enumerate(cleaned_items, 1):
@@ -210,6 +202,7 @@ def is_bot():
 
 # --- 4. ODDDIY FOYDALANUVCHI (USER) AUTENTIFIKATSIYASI ---
 @app.route('/login', methods=['GET', 'POST'])
+@limiter.limit("10 per minute")
 def login():
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
@@ -258,8 +251,9 @@ def logout():
     flash("Tizimdan chiqildi.", "info")
     return redirect(url_for('index'))
 
-# --- 5. XAVFSIZ ADMIN (TAHRIRIYAT) KIRISHI ---
+# --- 5. XAVFSIZ ADMIN (TAHRIRIYAT) KIRISHI (BRUTE-FORCE HIMOYasi) ---
 @app.route('/admin/login', methods=['GET', 'POST'])
+@limiter.limit("5 per minute")
 def admin_login():
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
@@ -391,13 +385,31 @@ def edit_article(article_id):
         try:
             article.item_type = request.form.get('item_type', 'jurnal')
             article.isbn = request.form.get('isbn')
-            article.issn = request.form.get('issn')
             article.bbk = request.form.get('bbk')
             article.udk = request.form.get('udk') or request.form.get('udk_b')
             article.journal_name = request.form.get('journal_name')
             article.conference_org = request.form.get('conference_org')
             article.pub_date = request.form.get('pub_date')
             article.uploaded_date = request.form.get('uploaded_date')
+
+            # ISSN ni tozalash
+            issn = request.form.get('issn', '').strip()
+            if not issn or issn in ['0000-0000', '00000000', '0000-000']:
+                article.issn = None
+            else:
+                article.issn = issn
+
+            # To'plamni ixtiyoriy qilish
+            collection_name = request.form.get('collection_name', '').strip()
+            if collection_name:
+                collection = Collection.query.filter_by(name=collection_name).first()
+                if not collection:
+                    collection = Collection(name=collection_name)
+                    db.session.add(collection)
+                    db.session.commit()
+                article.collection_id = collection.id
+            else:
+                article.collection_id = None
 
             article.title_uz = request.form.get('title_uz', '').strip()
             article.title_en = request.form.get('title_en', '').strip()
@@ -417,17 +429,6 @@ def edit_article(article_id):
             article.volume = request.form.get('volume', type=int) or 1
             article.issue = request.form.get('issue', type=int) or 1
             article.pages = request.form.get('pages')
-            
-            collection_name = request.form.get('collection_name', '').strip()
-            if collection_name:
-                collection = Collection.query.filter_by(name=collection_name).first()
-                if not collection:
-                    collection = Collection(name=collection_name)
-                    db.session.add(collection)
-                    db.session.commit()
-                article.collection_id = collection.id
-            else:
-                article.collection_id = None
             
             pdf_file = request.files.get('pdf_file')
             if pdf_file and pdf_file.filename != '':
@@ -492,12 +493,13 @@ def add_article():
             udk = request.form.get('udk') or request.form.get('udk_b')
             journal_name = request.form.get('journal_name')
             conference_org = request.form.get('conference_org')
-           # ISSN ni tozalash va tekshirish (0000-0000 bo'lsa saqlamaslik)
+            
+            # ISSN ni tozalash va tekshirish
             issn = request.form.get('issn', '').strip()
             if not issn or issn in ['0000-0000', '00000000', '0000-000']:
                 issn = None
 
-            # To'plamni ixtiyoriy qilish (agar kiritilmasa None bo'ladi)
+            # To'plamni ixtiyoriy qilish
             collection_name = request.form.get('collection_name', '').strip()
             collection_id = None
             if collection_name:
@@ -507,6 +509,9 @@ def add_article():
                     db.session.add(collection)
                     db.session.commit()
                 collection_id = collection.id
+
+            pub_date = request.form.get('pub_date')
+            uploaded_date = request.form.get('uploaded_date')
 
             title_uz = request.form.get('title_uz', '').strip()
             title_en = request.form.get('title_en', '').strip()
