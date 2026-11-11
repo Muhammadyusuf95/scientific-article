@@ -538,7 +538,9 @@ def add_article():
             flash("Material muvaffaqiyatli qo'shildi va chop etildi!", "success")
             return redirect(url_for('add_article'))
             
-        except Exception as e:
+       except Exception as e:
+            db.session.rollback()
+            print(f"XATOLIK TAFSILOTI: {str(e)}")  # Terminalga to'liq xatoni chiqarish
             flash(f"Xatolik yuz berdi: {str(e)}", "danger")
             return redirect(url_for('add_article'))
             
