@@ -2,6 +2,7 @@ import pypdf
 import io
 import os
 import time
+import re
 import boto3
 from flask import Flask, request, render_template, redirect, url_for, flash, make_response, session, Response, stream_with_context
 from werkzeug.utils import secure_filename
@@ -94,7 +95,7 @@ with app.app_context():
         db.session.rollback()
         print(f"Migratsiya xatosi: {e}")
 
-# --- PDF DAN ADABIYOTLARNI AVTOMATIK O'QIB OLUVCHI FUNKSIYA ---
+# --- PDF DAN ADABIYOTLARNI TOZA VA AVTOMATIK TARTIBLAB O'QIB OLUVCHI FUNKSIYA ---
 def extract_references_from_pdf(pdf_stream):
     try:
         reader = pypdf.PdfReader(pdf_stream)
@@ -115,14 +116,52 @@ def extract_references_from_pdf(pdf_stream):
         
         lower_text = full_text.lower()
         best_idx = -1
+        matched_kw_len = 0
         
         for kw in keywords:
             idx = lower_text.rfind(kw)
             if idx != -1 and idx > best_idx:
                 best_idx = idx
+                matched_kw_len = len(kw)
                 
         if best_idx != -1:
-            ref_text = full_text[best_idx:]
+            # Kalit so'zdan keyingi matnni olamiz
+            ref_text = full_text[best_idx + matched_kw_len:].strip()
+            
+            # Agar oxirida keraksiz jurnaldagi boshqa ma'lumotlar ketsa, ularni tozalash mumkin
+            # Matnni qatorlarga bo'lib chiqamiz
+            raw_lines = ref_text.split('\n')
+            cleaned_items = []
+            
+            current_item = ""
+            for line in raw_lines:
+                line = line.strip()
+                if not line:
+                    continue
+                
+                # Yangi adabiyot raqam bilan boshlanayotganini tekshirish (masalan, "1.", "[1]", "1)")
+                if re.match(r'^(\d+[\.\)]|\[\d+\])', line):
+                    if current_item:
+                        cleaned_items.append(current_item.strip())
+                    # Eski raqamni olib tashlab, toza matnni boshlaymiz
+                    clean_line = re.sub(r'^(\d+[\.\)]|\[\d+\])\s*', '', line)
+                    current_item = clean_line
+                else:
+                    if current_item:
+                        current_item += " " + line
+                    else:
+                        current_item = line
+                        
+            if current_item:
+                cleaned_items.append(current_item.strip())
+                
+            # Agar avtomatik ajratishda elementlar topilsa, ularni 1., 2., 3. qilib tartibli qaytaramiz
+            if cleaned_items:
+                formatted_refs = []
+                for i, item in enumerate(cleaned_items, 1):
+                    formatted_refs.append(f"{i}. {item}")
+                return "\n".join(formatted_refs)
+            
             return ref_text.strip()
             
     except Exception as e:
