@@ -23,6 +23,12 @@ limiter = Limiter(
 )
 app = Flask(__name__)
 
+from flask import render_template
+
+@app.errorhandler(429)
+def ratelimit_handler(e):
+    return "Juda ko'p urinish qilindi! Iltimos, 1 daqiqadan so'ng qayta urinib ko'ring.", 429
+
 # --- 1. XAVFSIZLIK VA COOKIE SOZLAMALARI ---
 app.config.update(
     SESSION_COOKIE_SECURE=True,
