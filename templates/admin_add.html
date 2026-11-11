@@ -368,34 +368,40 @@
             }
             toggleItemFields();
         });
-        <script>
-    // Bibliografik manbalar uchun avtomatik raqamlovchi skript
-    document.getElementById('references').addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            
-            const textarea = this;
-            const cursorPos = textarea.selectionStart;
-            const text = textarea.value;
-            
-            // Hozirgi qatordagi raqamni aniqlash
-            const lines = text.substring(0, cursorPos).split('\n');
-            const currentLine = lines[lines.length - 1];
-            
-            let nextNum = 1;
-            const match = currentLine.match(/^(\d+)\./);
-            if (match) {
-                nextNum = parseInt(match[1]) + 1;
-            } else {
-                // Agar qatorda raqam bo'lmasa, jami to'ldirilgan qatorlar soniga qarab raqam qo'yish
-                nextNum = text.split('\n').filter(l => l.trim().length > 0).length + 1;
+<script>
+    // Bibliografik manbalar uchun avtomatik raqamlash skripti
+    const refTextarea = document.getElementById('references');
+    if (refTextarea) {
+        refTextarea.addEventListener('focus', function() {
+            // Agar maydon bo'sh bo'lsa, avtomatik "1. " bilan boshlash
+            if (this.value.trim() === '') {
+                this.value = '1. ';
             }
-            
-            const addition = `\n${nextNum}. `;
-            textarea.value = text.substring(0, cursorPos) + addition + text.substring(cursorPos);
-            textarea.selectionStart = textarea.selectionEnd = cursorPos + addition.length;
-        }
-    });
+        });
+
+        refTextarea.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                
+                const cursorPos = this.selectionStart;
+                const text = this.value;
+                
+                // Hozirgi qatordagi raqamni topish
+                const linesBeforeCursor = text.substring(0, cursorPos).split('\n');
+                const currentLine = linesBeforeCursor[linesBeforeCursor.length - 1];
+                
+                let nextNum = linesBeforeCursor.length + 1;
+                const match = currentLine.match(/^(\d+)\./);
+                if (match) {
+                    nextNum = parseInt(match[1]) + 1;
+                }
+                
+                const addition = `\n${nextNum}. `;
+                this.value = text.substring(0, cursorPos) + addition + text.substring(cursorPos);
+                this.selectionStart = this.selectionEnd = cursorPos + addition.length;
+            }
+        });
+    }
 </script>
     </script>
 </body>
