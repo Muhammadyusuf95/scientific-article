@@ -335,7 +335,6 @@ def edit_article(article_id):
     
     if request.method == 'POST':
         try:
-            # 1. Akademik va sana maydonlarini yangilash
             article.item_type = request.form.get('item_type', 'jurnal')
             article.isbn = request.form.get('isbn')
             article.issn = request.form.get('issn')
@@ -346,7 +345,6 @@ def edit_article(article_id):
             article.pub_date = request.form.get('pub_date')
             article.uploaded_date = request.form.get('uploaded_date')
 
-            # 2. Sarlavhalar va tahrirlar
             article.title_uz = request.form.get('title_uz', '').strip()
             article.title_en = request.form.get('title_en', '').strip()
             article.title_ru = request.form.get('title_ru', '').strip()
