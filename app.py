@@ -492,10 +492,12 @@ def add_article():
             udk = request.form.get('udk') or request.form.get('udk_b')
             journal_name = request.form.get('journal_name')
             conference_org = request.form.get('conference_org')
-            issn = request.form.get('issn')
-            pub_date = request.form.get('pub_date')
-            uploaded_date = request.form.get('uploaded_date')
+           # ISSN ni tozalash va tekshirish (0000-0000 bo'lsa saqlamaslik)
+            issn = request.form.get('issn', '').strip()
+            if not issn or issn in ['0000-0000', '00000000', '0000-000']:
+                issn = None
 
+            # To'plamni ixtiyoriy qilish (agar kiritilmasa None bo'ladi)
             collection_name = request.form.get('collection_name', '').strip()
             collection_id = None
             if collection_name:
