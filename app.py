@@ -1,3 +1,44 @@
+import pypdf
+import io
+
+def extract_references_from_pdf(pdf_stream):
+    try:
+        reader = pypdf.PdfReader(pdf_stream)
+        full_text = ""
+        # PDF ning barcha sahifalaridagi matnni yig'ib chiqamiz
+        for page in reader.pages:
+            text = page.extract_text()
+            if text:
+                full_text += text + "\n"
+        
+        # Adabiyotlar boshlanadigan kalit so'zlar (har xil tillarda)
+        keywords = [
+            "foydalanilgan adabiyotlar", 
+            "adabiyotlar ro'yxati", 
+            "references", 
+            "bibliography", 
+            "литература", 
+            "список литературы"
+        ]
+        
+        lower_text = full_text.lower()
+        best_idx = -1
+        
+        # Matn oxiridan boshlab kalit so'zni qidiramiz (chunki adabiyotlar asosan oxirida bo'ladi)
+        for kw in keywords:
+            idx = lower_text.rfind(kw)
+            if idx != -1 and idx > best_idx:
+                best_idx = idx
+                
+        if best_idx != -1:
+            # Kalit so'z topilgandan keyingi qismni to'liq olamiz
+            ref_text = full_text[best_idx:]
+            return ref_text.strip()
+            
+    except Exception as e:
+        print(f"PDF dan adabiyotlarni o'qishda xatolik: {e}")
+        
+    return ""
 import os
 import time
 import boto3
