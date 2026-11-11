@@ -273,6 +273,39 @@
         });
     </script>
 
+    <script>
+    function toggleItemFields() {
+        const type = document.getElementById('item_type').value;
+        const bookPanel = document.getElementById('panel-book');
+        const journalPanel = document.getElementById('panel-journal');
+        const confPanel = document.getElementById('panel-conf');
+
+        if (bookPanel) bookPanel.style.display = (type === 'darslik' || type === 'oquv_qollanma' || type === 'monografiya') ? 'block' : 'none';
+        if (journalPanel) journalPanel.style.display = (type === 'jurnal') ? 'block' : 'none';
+        if (confPanel) confPanel.style.display = (type === 'konferensiya_maqola' || type === 'konferensiya_tezis') ? 'block' : 'none';
+
+        // Sana matnini material turiga qarab moslashtirish
+        const dateLabel = document.getElementById('dateLabel');
+        if (dateLabel) {
+            if (type === 'konferensiya_maqola' || type === 'konferensiya_tezis') {
+                dateLabel.innerText = "Konferensiya bo'lib o'tgan sana *";
+            } else {
+                dateLabel.innerText = "Nashr etilgan sana *";
+            }
+        }
+    }
+
+    // Sahifa yuklanganda vaqtni avtomatik to'ldirish
+    window.addEventListener('DOMContentLoaded', () => {
+        const today = new Date().toISOString().split('T')[0];
+        const upDateInput = document.getElementById('uploaded_date');
+        if (upDateInput && !upDateInput.value) {
+            upDateInput.value = today;
+        }
+        // Boshlang'ich holatni tekshirish
+        toggleItemFields();
+    });
+</script>
     <footer class="bg-dark text-white text-center py-4 mt-auto">
         <div class="container">
             <p class="mb-1 small">&copy; 2026 Ilmiy Maqolalar Portali. Barcha huquqlar himoyalangan.</p>
