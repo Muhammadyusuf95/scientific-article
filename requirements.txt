@@ -5,3 +5,4 @@ psycopg[binary]
 boto3
 gunicorn
 pypdf
+Flask-Limiter
