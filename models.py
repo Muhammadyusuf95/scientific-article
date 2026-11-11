@@ -72,6 +72,10 @@ class Article(db.Model):
     collection_id = db.Column(db.Integer, db.ForeignKey('collection.id'), nullable=True)
     authors = db.relationship('Author', backref='article', cascade="all, delete-orphan", lazy=True)
 
+# Yangi sana maydonlari (Kun.Oy.Yil shaklida saqlash yoki Date turi)
+    pub_date = db.Column(db.String(50))         # Nashr etilgan sana (yoki konferensiya sanasi)
+    uploaded_date = db.Column(db.String(50))    # Saytga joylangan sana
+
 
 class User(db.Model):
     __tablename__ = 'user'
