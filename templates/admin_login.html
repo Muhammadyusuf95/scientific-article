@@ -35,12 +35,14 @@
         {% endwith %}
 
         <form method="POST">
+            <!-- CSRF TOKEN -->
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
             <div class="mb-3">
-                <input type="text" name="username" class="form-control" placeholder="Admin login" required>
+                <input type="text" name="username" class="form-control" placeholder="Admin login" required autocomplete="username">
             </div>
             <div class="mb-4">
-                <input type="password" name="password" class="form-control" placeholder="Admin parol" required>
+                <input type="password" name="password" class="form-control" placeholder="Admin parol" required autocomplete="current-password">
             </div>
             <button type="submit" class="btn btn-warning-custom w-100 shadow-sm">Kirish</button>
         </form>
