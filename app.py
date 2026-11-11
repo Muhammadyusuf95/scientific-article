@@ -83,6 +83,8 @@ with app.app_context():
         db.session.execute(text("ALTER TABLE article ADD COLUMN IF NOT EXISTS udk VARCHAR(50);"))
         db.session.execute(text("ALTER TABLE article ADD COLUMN IF NOT EXISTS journal_name VARCHAR(255);"))
         db.session.execute(text("ALTER TABLE article ADD COLUMN IF NOT EXISTS conference_org VARCHAR(255);"))
+        db.session.execute(text("ALTER TABLE article ADD COLUMN IF NOT EXISTS pub_date VARCHAR(50);"))
+        db.session.execute(text("ALTER TABLE article ADD COLUMN IF NOT EXISTS uploaded_date VARCHAR(50);"))
         db.session.execute(text("ALTER TABLE collection ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;"))
         db.session.commit()
     except Exception as e:
