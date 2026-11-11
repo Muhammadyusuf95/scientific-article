@@ -42,10 +42,13 @@
                             {% endfor %}
                         {% endif %}
                     {% endwith %}
-
                     <form method="POST" enctype="multipart/form-data">
-                        <!-- CSRF Token -->
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                         <!-- CSRF TOKENNI ALBATTA QO'SHISH KERAK -->
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    
+                    <!-- qolgan forma maydonlari... -->
+                      </form>
+                  
 
                         <!-- ILMIY ISH TURI VA DINAMIK PANELLAR -->
                         <div class="card bg-light border-primary border-2 p-3 mb-4 rounded-3 shadow-sm">
