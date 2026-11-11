@@ -42,13 +42,11 @@
                             {% endfor %}
                         {% endif %}
                     {% endwith %}
+
+                    <!-- TO'G'RI FORMA BOSHLANISHI -->
                     <form method="POST" enctype="multipart/form-data">
-                         <!-- CSRF TOKENNI ALBATTA QO'SHISH KERAK -->
-                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    
-                    <!-- qolgan forma maydonlari... -->
-                      </form>
-                  
+                        <!-- CSRF TOKEN -->
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
                         <!-- ILMIY ISH TURI VA DINAMIK PANELLAR -->
                         <div class="card bg-light border-primary border-2 p-3 mb-4 rounded-3 shadow-sm">
@@ -153,6 +151,21 @@
                             </div>
                         </div>
 
+                        <!-- SANA MAYDONLARI -->
+                        <div class="card bg-light border-0 p-3 mb-4 rounded-3">
+                            <h6 class="fw-bold text-primary mb-3"><i class="fas fa-calendar-alt me-1"></i> Sana ma'lumotlari</h6>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label id="dateLabel" class="form-label small fw-semibold">Nashr etilgan sana *</label>
+                                    <input type="date" name="pub_date" id="pub_date" class="form-control" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-semibold">Saytga joylangan sana</label>
+                                    <input type="date" name="uploaded_date" id="uploaded_date" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- O'ZBEKCHA -->
                         <div class="card bg-light border-0 p-3 mb-3 rounded-3">
                             <h2 class="fw-bold text-primary mb-3 fs-6">🇺🇿 O'zbek tilidagi ma'lumotlar</h2>
@@ -205,31 +218,19 @@
                         </div>
 
                         <!-- BIBLIOGRAFIK MANBALAR -->
-                        <!-- SANA MAYDONLARI (Kalendardan va qo'lda tanlash uchun) -->
-                        <div class="card bg-light border-0 p-3 mb-4 rounded-3">
-                            <h6 class="fw-bold text-primary mb-3"><i class="fas fa-calendar-alt me-1"></i> Sana ma'lumotlari</h6>
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label id="dateLabel" class="form-label small fw-semibold">Nashr etilgan sana *</label>
-                                    <input type="date" name="pub_date" id="pub_date" class="form-control" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-semibold">Saytga joylangan sana</label>
-                                    <input type="date" name="uploaded_date" id="uploaded_date" class="form-control">
-                                </div>
-                            </div>
-                        </div>
                         <div class="card bg-light border-0 p-3 mb-3 rounded-3">
                             <label for="references" class="fw-bold text-primary mb-2 fs-6"><i class="fas fa-list-ul me-2" aria-hidden="true"></i>Bibliografik manbalar (References)</label>
                             <p class="small text-muted mb-2">Har bir manbani yangi qatordan kiriting. Enter bosganda raqamlar avtomatik qo'shiladi.</p>
                             <textarea id="references" name="references" class="form-control font-monospace" rows="4" placeholder="1. Navoiy A. Xamsa. – T.: 2020.&#10;2. Qahhor A. Sarob. – T.: 2022." aria-label="Bibliografik manbalar"></textarea>
                         </div>
 
+                        <!-- PDF YUKLASH -->
                         <div class="mb-4">
                             <label for="pdf_file" class="form-label fw-semibold">PDF Faylni Yuklash *</label>
                             <input type="file" id="pdf_file" name="pdf_file" class="form-control" accept=".pdf" required aria-label="PDF fayl yuklash">
                         </div>
 
+                        <!-- SAQLASH TUGMASI -->
                         <button type="submit" class="btn btn-primary w-100 py-3 fw-bold shadow-sm rounded-pill"><i class="fas fa-save me-2" aria-hidden="true"></i>Maqolani Saqlash va Nashr Qilish</button>
                     </form>
                 </div>
@@ -237,109 +238,18 @@
         </div>
     </main>
 
-    <!-- Dinamik Panellar va Avtomatik raqamlovchi JS -->
-    <script>
-        function toggleItemFields() {
-            const type = document.getElementById('item_type').value;
-            const bookPanel = document.getElementById('panel-book');
-            const journalPanel = document.getElementById('panel-journal');
-            const confPanel = document.getElementById('panel-conf');
-
-            bookPanel.style.display = (type === 'darslik' || type === 'oquv_qollanma') ? 'block' : 'none';
-            journalPanel.style.display = (type === 'jurnal') ? 'block' : 'none';
-            confPanel.style.display = (type === 'konferensiya_maqola' || type === 'konferensiya_tezis') ? 'block' : 'none';
-        }
-
-        document.getElementById('references').addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                
-                const textarea = this;
-                const cursorPos = textarea.selectionStart;
-                const text = textarea.value;
-                
-                const lines = text.substring(0, cursorPos).split('\n');
-                const currentLine = lines[lines.length - 1];
-                
-                let nextNum = 1;
-                const match = currentLine.match(/^(\d+)\./);
-                if (match) {
-                    nextNum = parseInt(match[1]) + 1;
-                } else {
-                    nextNum = text.split('\n').filter(l => l.trim().length > 0).length + 1;
-                }
-
-                <!-- SANA MAYDONLARI -->
-                        <div class="card bg-light border-0 p-3 mb-4 rounded-3">
-                            <h6 class="fw-bold text-primary mb-3"><i class="fas fa-calendar-alt me-1"></i> Sana ma'lumotlari</h6>
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label id="dateLabel" class="form-label small fw-semibold">Nashr etilgan sana *</label>
-                                    <input type="date" name="pub_date" id="pub_date" class="form-control" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-semibold">Saytga joylangan sana</label>
-                                    <input type="date" name="uploaded_date" id="uploaded_date" class="form-control">
-                                </div>
-                            </div>
-                        </div>
-                const addition = `\n${nextNum}. `;
-                textarea.value = text.substring(0, cursorPos) + addition + text.substring(cursorPos);
-                textarea.selectionStart = textarea.selectionEnd = cursorPos + addition.length;
-            }
-        });
-    </script>
-
-    <script>
-    function toggleItemFields() {
-        const type = document.getElementById('item_type').value;
-        const bookPanel = document.getElementById('panel-book');
-        const journalPanel = document.getElementById('panel-journal');
-        const confPanel = document.getElementById('panel-conf');
-
-        if (bookPanel) bookPanel.style.display = (type === 'darslik' || type === 'oquv_qollanma' || type === 'monografiya') ? 'block' : 'none';
-        if (journalPanel) journalPanel.style.display = (type === 'jurnal') ? 'block' : 'none';
-        if (confPanel) confPanel.style.display = (type === 'konferensiya_maqola' || type === 'konferensiya_tezis') ? 'block' : 'none';
-
-        // Sana matnini material turiga qarab moslashtirish
-        const dateLabel = document.getElementById('dateLabel');
-        if (dateLabel) {
-            if (type === 'konferensiya_maqola' || type === 'konferensiya_tezis') {
-                dateLabel.innerText = "Konferensiya bo'lib o'tgan sana *";
-            } else {
-                dateLabel.innerText = "Nashr etilgan sana *";
-            }
-        }
-    }
-
-    // Sahifa yuklanganda vaqtni avtomatik to'ldirish
-    window.addEventListener('DOMContentLoaded', () => {
-        const today = new Date().toISOString().split('T')[0];
-        const upDateInput = document.getElementById('uploaded_date');
-        if (upDateInput && !upDateInput.value) {
-            upDateInput.value = today;
-        }
-        // Boshlang'ich holatni tekshirish
-        toggleItemFields();
-    });
-</script>
+    <!-- Footer qismi -->
     <footer class="bg-dark text-white text-center py-4 mt-auto">
         <div class="container">
             <p class="mb-1 small">&copy; 2026 Ilmiy Maqolalar Portali. Barcha huquqlar himoyalangan.</p>
             <p class="mb-0 small text-muted">Litsenziya: <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer" class="text-reset text-decoration-underline">CC BY 4.0</a></p>
         </div>
     </footer>
-    <!-- Footer qismi -->
-    <footer class="bg-dark text-white text-center py-4 mt-auto">
-        <div class="container">
-            <p class="mb-1 small">&copy; 2026 Ilmiy Maqolalar Portali. Barcha huquqlar himoyalangan.</p>
-        </div>
-    </footer>
 
     <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
 
-    <!-- Dinamik panellar va sanalar uchun skript -->
+    <!-- Dinamik panellar va sanalar, avtomatik raqamlovchi skript -->
     <script>
         function toggleItemFields() {
             const type = document.getElementById('item_type').value;
@@ -351,7 +261,6 @@
             if (journalPanel) journalPanel.style.display = (type === 'jurnal') ? 'block' : 'none';
             if (confPanel) confPanel.style.display = (type === 'konferensiya_maqola' || type === 'konferensiya_tezis') ? 'block' : 'none';
 
-            // Sana matnini material turiga qarab moslashtirish
             const dateLabel = document.getElementById('dateLabel');
             if (dateLabel) {
                 if (type === 'konferensiya_maqola' || type === 'konferensiya_tezis') {
@@ -362,7 +271,7 @@
             }
         }
 
-        // Sahifa ochilganda saytga joylangan sanani bugungi sana bilan avtofill qilish
+        // Sahifa ochilganda bugungi sanani avtofill qilish
         window.addEventListener('DOMContentLoaded', () => {
             const today = new Date().toISOString().split('T')[0];
             const upDateInput = document.getElementById('uploaded_date');
@@ -371,45 +280,38 @@
             }
             toggleItemFields();
         });
-<script>
-    // Bibliografik manbalar uchun avtomatik raqamlash skripti
-    const refTextarea = document.getElementById('references');
-    if (refTextarea) {
-        refTextarea.addEventListener('focus', function() {
-            // Agar maydon bo'sh bo'lsa, avtomatik "1. " bilan boshlash
-            if (this.value.trim() === '') {
-                this.value = '1. ';
-            }
-        });
 
-        refTextarea.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                
-                const cursorPos = this.selectionStart;
-                const text = this.value;
-                
-                // Hozirgi qatordagi raqamni topish
-                const linesBeforeCursor = text.substring(0, cursorPos).split('\n');
-                const currentLine = linesBeforeCursor[linesBeforeCursor.length - 1];
-                
-                let nextNum = linesBeforeCursor.length + 1;
-                const match = currentLine.match(/^(\d+)\./);
-                if (match) {
-                    nextNum = parseInt(match[1]) + 1;
+        // Bibliografik manbalarni avtomatik raqamlash
+        const refTextarea = document.getElementById('references');
+        if (refTextarea) {
+            refTextarea.addEventListener('focus', function() {
+                if (this.value.trim() === '') {
+                    this.value = '1. ';
                 }
-                
-                const addition = `\n${nextNum}. `;
-                this.value = text.substring(0, cursorPos) + addition + text.substring(cursorPos);
-                this.selectionStart = this.selectionEnd = cursorPos + addition.length;
-            }
-        });
-    }
-</script>
-    </script>
-</body>
-</html>
+            });
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+            refTextarea.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    
+                    const cursorPos = this.selectionStart;
+                    const text = this.value;
+                    
+                    const linesBeforeCursor = text.substring(0, cursorPos).split('\n');
+                    const currentLine = linesBeforeCursor[linesBeforeCursor.length - 1];
+                    
+                    let nextNum = linesBeforeCursor.length + 1;
+                    const match = currentLine.match(/^(\d+)\./);
+                    if (match) {
+                        nextNum = parseInt(match[1]) + 1;
+                    }
+                    
+                    const addition = `\n${nextNum}. `;
+                    this.value = text.substring(0, cursorPos) + addition + text.substring(cursorPos);
+                    this.selectionStart = this.selectionEnd = cursorPos + addition.length;
+                }
+            });
+        }
+    </script>
 </body>
 </html>
