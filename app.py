@@ -489,6 +489,66 @@ def add_article():
             )
             
             public_url = f"https://pub-21eece65689f4ee39fbe5b16812adb10.r2.dev/{filename}"
+
+            @app.route('/admin/add', methods=['GET', 'POST'])
+@admin_required
+def add_article():
+    if request.method == 'POST':
+        try:
+            # ... oldingi formadan olinayotgan o'zgaruvchilar ...
+            
+            pdf_file = request.files.get('pdf_file')
+            
+            if not pdf_file or pdf_file.filename == '':
+                flash("Iltimos, PDF faylni biriktiring!", "danger")
+                return redirect(url_for('add_article'))
+
+            # --- KODNI AYNAN SHU YERGA QO'YASIZ ---
+            references_text = request.form.get('references', '').strip()
+            
+            # Agar admin adabiyotlar maydonini bo'sh qoldirgan bo'lsa, PDF ichidan qidirib topish
+            if not references_text and pdf_file:
+                pdf_file.stream.seek(0)
+                extracted_refs = extract_references_from_pdf(pdf_file.stream)
+                pdf_file.stream.seek(0) # stream'ni boshiga qaytaramiz (Cloudflare R2 ga yuklash uchun)
+                if extracted_refs:
+                    references_text = extracted_refs
+            # ----------------------------------------
+
+            # PDF faylni Cloudflare R2 ga yuklash
+            filename = f"{int(time.time())}_{secure_filename(pdf_file.filename)}"
+            s3_client.upload_fileobj(
+                pdf_file,
+                R2_BUCKET_NAME,
+                filename,
+                ExtraArgs={'ContentType': 'application/pdf'}
+            )
+            
+            public_url = f"https://pub-21eece65689f4ee39fbe5b16812adb10.r2.dev/{filename}"
+            
+            # Yangi maqola obyektini yaratishda references_text ni berib yuborasiz:
+            new_article = Article(
+                item_type=item_type,
+                isbn=isbn,
+                issn=issn,
+                bbk=bbk,
+                udk=udk,
+                journal_name=journal_name,
+                conference_org=conference_org,
+                pub_date=pub_date,
+                uploaded_date=uploaded_date,
+                collection_id=collection_id,
+                title_uz=title_uz, title_en=title_en, title_ru=title_ru,
+                abstract_uz=abstract_uz, abstract_en=abstract_en, abstract_ru=abstract_ru,
+                keywords_uz=keywords_uz, keywords_en=keywords_en, keywords_ru=keywords_ru,
+                references=references_text,  # <--- Avtomatik yoki qo'lda kiritilgan adabiyotlar shu yerga yoziladi
+                doi=doi, year=year, volume=volume, issue=issue, pages=pages,
+                pdf_filename=public_url
+            )
+            db.session.add(new_article)
+            db.session.commit()
+            
+            # ... qolgan kodlar ...
             
             new_article = Article(
                 item_type=item_type,
