@@ -368,6 +368,35 @@
             }
             toggleItemFields();
         });
+        <script>
+    // Bibliografik manbalar uchun avtomatik raqamlovchi skript
+    document.getElementById('references').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            
+            const textarea = this;
+            const cursorPos = textarea.selectionStart;
+            const text = textarea.value;
+            
+            // Hozirgi qatordagi raqamni aniqlash
+            const lines = text.substring(0, cursorPos).split('\n');
+            const currentLine = lines[lines.length - 1];
+            
+            let nextNum = 1;
+            const match = currentLine.match(/^(\d+)\./);
+            if (match) {
+                nextNum = parseInt(match[1]) + 1;
+            } else {
+                // Agar qatorda raqam bo'lmasa, jami to'ldirilgan qatorlar soniga qarab raqam qo'yish
+                nextNum = text.split('\n').filter(l => l.trim().length > 0).length + 1;
+            }
+            
+            const addition = `\n${nextNum}. `;
+            textarea.value = text.substring(0, cursorPos) + addition + text.substring(cursorPos);
+            textarea.selectionStart = textarea.selectionEnd = cursorPos + addition.length;
+        }
+    });
+</script>
     </script>
 </body>
 </html>
