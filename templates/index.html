@@ -258,9 +258,13 @@
                         <li class="list-inline-item ms-3"><a href="/contact" class="text-decoration-none text-secondary">Aloqa</a></li>
                     </ul>
                     <p class="text-muted small mb-1">&copy; 2026 Barcha huquqlar himoyalangan. Litsenziya: <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer" class="text-reset text-decoration-underline">CC BY 4.0</a></p>
+                    
+                    <!-- TAHRIRIYAT TIZIMI HAVOLASI FAQAT ADMIN UCHUN YASHIRILDI -->
+                    {% if session.get('is_admin') %}
                     <p class="mb-0">
                         <a href="{{ url_for('admin_login') }}" class="text-secondary opacity-50 small text-decoration-none hover-opacity-100" style="font-size: 0.8rem;"><i class="fas fa-lock me-1"></i> Tahririyat tizimi</a>
                     </p>
+                    {% endif %}
                 </div>
             </div>
         </div>
