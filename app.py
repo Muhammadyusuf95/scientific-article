@@ -11,7 +11,16 @@ from models import db, Article, Author, User, Collection
 from functools import wraps
 from sqlalchemy import text
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
+# Limiter ni sozlash (xotirada saqlash uchun "memory://" ishlatiladi)
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["200 per day", "50 per hour"],
+    storage_uri="memory://"
+)
 app = Flask(__name__)
 
 # --- 1. XAVFSIZLIK VA COOKIE SOZLAMALARI ---
