@@ -4,3 +4,4 @@ Flask-WTF
 psycopg[binary]
 boto3
 gunicorn
+pypdf
