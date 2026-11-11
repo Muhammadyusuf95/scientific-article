@@ -1,44 +1,5 @@
 import pypdf
 import io
-
-def extract_references_from_pdf(pdf_stream):
-    try:
-        reader = pypdf.PdfReader(pdf_stream)
-        full_text = ""
-        # PDF ning barcha sahifalaridagi matnni yig'ib chiqamiz
-        for page in reader.pages:
-            text = page.extract_text()
-            if text:
-                full_text += text + "\n"
-        
-        # Adabiyotlar boshlanadigan kalit so'zlar (har xil tillarda)
-        keywords = [
-            "foydalanilgan adabiyotlar", 
-            "adabiyotlar ro'yxati", 
-            "references", 
-            "bibliography", 
-            "литература", 
-            "список литературы"
-        ]
-        
-        lower_text = full_text.lower()
-        best_idx = -1
-        
-        # Matn oxiridan boshlab kalit so'zni qidiramiz (chunki adabiyotlar asosan oxirida bo'ladi)
-        for kw in keywords:
-            idx = lower_text.rfind(kw)
-            if idx != -1 and idx > best_idx:
-                best_idx = idx
-                
-        if best_idx != -1:
-            # Kalit so'z topilgandan keyingi qismni to'liq olamiz
-            ref_text = full_text[best_idx:]
-            return ref_text.strip()
-            
-    except Exception as e:
-        print(f"PDF dan adabiyotlarni o'qishda xatolik: {e}")
-        
-    return ""
 import os
 import time
 import boto3
@@ -131,6 +92,42 @@ with app.app_context():
     except Exception as e:
         db.session.rollback()
         print(f"Migratsiya xatosi: {e}")
+
+# --- PDF DAN ADABIYOTLARNI AVTOMATIK O'QIB OLUVCHI FUNKSIYA ---
+def extract_references_from_pdf(pdf_stream):
+    try:
+        reader = pypdf.PdfReader(pdf_stream)
+        full_text = ""
+        for page in reader.pages:
+            text = page.extract_text()
+            if text:
+                full_text += text + "\n"
+        
+        keywords = [
+            "foydalanilgan adabiyotlar", 
+            "adabiyotlar ro'yxati", 
+            "references", 
+            "bibliography", 
+            "литература", 
+            "список литературы"
+        ]
+        
+        lower_text = full_text.lower()
+        best_idx = -1
+        
+        for kw in keywords:
+            idx = lower_text.rfind(kw)
+            if idx != -1 and idx > best_idx:
+                best_idx = idx
+                
+        if best_idx != -1:
+            ref_text = full_text[best_idx:]
+            return ref_text.strip()
+            
+    except Exception as e:
+        print(f"PDF dan adabiyotlarni o'qishda xatolik: {e}")
+        
+    return ""
 
 @app.template_filter('clean_doi')
 def clean_doi(doi_str):
@@ -337,6 +334,16 @@ def edit_article(article_id):
     
     if request.method == 'POST':
         try:
+            article.item_type = request.form.get('item_type', 'jurnal')
+            article.isbn = request.form.get('isbn')
+            article.issn = request.form.get('issn')
+            article.bbk = request.form.get('bbk')
+            article.udk = request.form.get('udk') or request.form.get('udk_b')
+            article.journal_name = request.form.get('journal_name')
+            article.conference_org = request.form.get('conference_org')
+            article.pub_date = request.form.get('pub_date')
+            article.uploaded_date = request.form.get('uploaded_date')
+
             article.title_uz = request.form.get('title_uz')
             article.title_en = request.form.get('title_en')
             article.title_ru = request.form.get('title_ru')
@@ -422,7 +429,6 @@ def delete_article(article_id):
 def add_article():
     if request.method == 'POST':
         try:
-            # 1. Material turi va akademik rekvizitlar
             item_type = request.form.get('item_type', 'jurnal')
             isbn = request.form.get('isbn')
             bbk = request.form.get('bbk')
@@ -443,7 +449,6 @@ def add_article():
                     db.session.commit()
                 collection_id = collection.id
 
-            # 2. Tillar (Faqat bitta tilda kiritish majburiy)
             title_uz = request.form.get('title_uz', '').strip()
             title_en = request.form.get('title_en', '').strip()
             title_ru = request.form.get('title_ru', '').strip()
@@ -460,7 +465,6 @@ def add_article():
             keywords_en = request.form.get('keywords_en', '').strip()
             keywords_ru = request.form.get('keywords_ru', '').strip()
             
-            references_text = request.form.get('references')
             doi = request.form.get('doi')
             year = request.form.get('year', type=int) or 2026
             volume = request.form.get('volume', type=int) or 1
@@ -480,42 +484,15 @@ def add_article():
                 flash("Yuklangan fayl haqiqiy PDF emas!", "danger")
                 return redirect(url_for('add_article'))
 
-            filename = f"{int(time.time())}_{secure_filename(pdf_file.filename)}"
-            s3_client.upload_fileobj(
-                pdf_file,
-                R2_BUCKET_NAME,
-                filename,
-                ExtraArgs={'ContentType': 'application/pdf'}
-            )
-            
-            public_url = f"https://pub-21eece65689f4ee39fbe5b16812adb10.r2.dev/{filename}"
-
-            @app.route('/admin/add', methods=['GET', 'POST'])
-@admin_required
-def add_article():
-    if request.method == 'POST':
-        try:
-            # ... oldingi formadan olinayotgan o'zgaruvchilar ...
-            
-            pdf_file = request.files.get('pdf_file')
-            
-            if not pdf_file or pdf_file.filename == '':
-                flash("Iltimos, PDF faylni biriktiring!", "danger")
-                return redirect(url_for('add_article'))
-
-            # --- KODNI AYNAN SHU YERGA QO'YASIZ ---
+            # Avtomatik yoki qo'lda kiritilgan adabiyotlar
             references_text = request.form.get('references', '').strip()
-            
-            # Agar admin adabiyotlar maydonini bo'sh qoldirgan bo'lsa, PDF ichidan qidirib topish
             if not references_text and pdf_file:
                 pdf_file.stream.seek(0)
                 extracted_refs = extract_references_from_pdf(pdf_file.stream)
-                pdf_file.stream.seek(0) # stream'ni boshiga qaytaramiz (Cloudflare R2 ga yuklash uchun)
+                pdf_file.stream.seek(0)
                 if extracted_refs:
                     references_text = extracted_refs
-            # ----------------------------------------
 
-            # PDF faylni Cloudflare R2 ga yuklash
             filename = f"{int(time.time())}_{secure_filename(pdf_file.filename)}"
             s3_client.upload_fileobj(
                 pdf_file,
@@ -525,30 +502,6 @@ def add_article():
             )
             
             public_url = f"https://pub-21eece65689f4ee39fbe5b16812adb10.r2.dev/{filename}"
-            
-            # Yangi maqola obyektini yaratishda references_text ni berib yuborasiz:
-            new_article = Article(
-                item_type=item_type,
-                isbn=isbn,
-                issn=issn,
-                bbk=bbk,
-                udk=udk,
-                journal_name=journal_name,
-                conference_org=conference_org,
-                pub_date=pub_date,
-                uploaded_date=uploaded_date,
-                collection_id=collection_id,
-                title_uz=title_uz, title_en=title_en, title_ru=title_ru,
-                abstract_uz=abstract_uz, abstract_en=abstract_en, abstract_ru=abstract_ru,
-                keywords_uz=keywords_uz, keywords_en=keywords_en, keywords_ru=keywords_ru,
-                references=references_text,  # <--- Avtomatik yoki qo'lda kiritilgan adabiyotlar shu yerga yoziladi
-                doi=doi, year=year, volume=volume, issue=issue, pages=pages,
-                pdf_filename=public_url
-            )
-            db.session.add(new_article)
-            db.session.commit()
-            
-            # ... qolgan kodlar ...
             
             new_article = Article(
                 item_type=item_type,
@@ -588,6 +541,7 @@ def add_article():
             
     collections = Collection.query.all()
     return render_template('admin_add.html', collections=collections)
+
 # --- 9. STATIK AXBOROT SAHIFALARI ---
 @app.route('/about')
 def about():
