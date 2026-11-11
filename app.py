@@ -381,9 +381,19 @@ def delete_article(article_id):
 def add_article():
     if request.method == 'POST':
         try:
+            # 1. Material turi va akademik rekvizitlar
+            item_type = request.form.get('item_type', 'jurnal')
+            isbn = request.form.get('isbn')
+            bbk = request.form.get('bbk')
+            udk = request.form.get('udk') or request.form.get('udk_b')
+            journal_name = request.form.get('journal_name')
+            conference_org = request.form.get('conference_org')
+            issn = request.form.get('issn')
+            pub_date = request.form.get('pub_date')
+            uploaded_date = request.form.get('uploaded_date')
+
             collection_name = request.form.get('collection_name', '').strip()
             collection_id = None
-            
             if collection_name:
                 collection = Collection.query.filter_by(name=collection_name).first()
                 if not collection:
@@ -392,17 +402,22 @@ def add_article():
                     db.session.commit()
                 collection_id = collection.id
 
-            title_uz = request.form.get('title_uz')
-            title_en = request.form.get('title_en')
-            title_ru = request.form.get('title_ru')
+            # 2. Tillar (Faqat bitta tilda kiritish majburiy)
+            title_uz = request.form.get('title_uz', '').strip()
+            title_en = request.form.get('title_en', '').strip()
+            title_ru = request.form.get('title_ru', '').strip()
+
+            if not (title_uz or title_en or title_ru):
+                flash("Iltimos, kamida bitta tilda sarlavha kiriting!", "danger")
+                return redirect(url_for('add_article'))
+
+            abstract_uz = request.form.get('abstract_uz', '').strip()
+            abstract_en = request.form.get('abstract_en', '').strip()
+            abstract_ru = request.form.get('abstract_ru', '').strip()
             
-            abstract_uz = request.form.get('abstract_uz')
-            abstract_en = request.form.get('abstract_en')
-            abstract_ru = request.form.get('abstract_ru')
-            
-            keywords_uz = request.form.get('keywords_uz')
-            keywords_en = request.form.get('keywords_en')
-            keywords_ru = request.form.get('keywords_ru')
+            keywords_uz = request.form.get('keywords_uz', '').strip()
+            keywords_en = request.form.get('keywords_en', '').strip()
+            keywords_ru = request.form.get('keywords_ru', '').strip()
             
             references_text = request.form.get('references')
             doi = request.form.get('doi')
@@ -410,26 +425,6 @@ def add_article():
             volume = request.form.get('volume', type=int) or 1
             issue = request.form.get('issue', type=int) or 1
             pages = request.form.get('pages')
-            # Sanalarni qabul qilib olish
-            pub_date = request.form.get('pub_date')
-            uploaded_date = request.form.get('uploaded_date')
-            
-            # Yangi Article yaratish jarayoni
-            new_article = Article(
-                item_type=item_type,
-                isbn=isbn,
-                issn=issn,
-                bbk=bbk,
-                udk=udk,
-                journal_name=journal_name,
-                conference_org=conference_org,
-                pub_date=pub_date,
-                uploaded_date=uploaded_date,
-                title_uz=title_uz, 
-                title_en=title_en, 
-                title_ru=title_ru,
-                # ... qolgan maydonlar va PDF linki shu yerda davom etadi ...
-            )
             
             authors_input = request.form.get('authors')
             pdf_file = request.files.get('pdf_file')
@@ -455,6 +450,15 @@ def add_article():
             public_url = f"https://pub-21eece65689f4ee39fbe5b16812adb10.r2.dev/{filename}"
             
             new_article = Article(
+                item_type=item_type,
+                isbn=isbn,
+                issn=issn,
+                bbk=bbk,
+                udk=udk,
+                journal_name=journal_name,
+                conference_org=conference_org,
+                pub_date=pub_date,
+                uploaded_date=uploaded_date,
                 collection_id=collection_id,
                 title_uz=title_uz, title_en=title_en, title_ru=title_ru,
                 abstract_uz=abstract_uz, abstract_en=abstract_en, abstract_ru=abstract_ru,
@@ -474,7 +478,7 @@ def add_article():
                         db.session.add(new_author)
                 db.session.commit()
             
-            flash("Maqola muvaffaqiyatli qo'shildi va chop etildi!", "success")
+            flash("Material muvaffaqiyatli qo'shildi va chop etildi!", "success")
             return redirect(url_for('add_article'))
             
         except Exception as e:
@@ -483,7 +487,6 @@ def add_article():
             
     collections = Collection.query.all()
     return render_template('admin_add.html', collections=collections)
-
 # --- 9. STATIK AXBOROT SAHIFALARI ---
 @app.route('/about')
 def about():
