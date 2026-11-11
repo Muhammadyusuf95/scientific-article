@@ -34,7 +34,12 @@
                 {% endif %}
             {% endwith %}
 
-            <form method="POST" enctype="multipart/form-data">
+           <form method="POST" enctype="multipart/form-data">
+    <!-- CSRF TOKENNI ALBATTA QO'SHISH KERAK -->
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    
+    <!-- qolgan forma maydonlari... -->
+                    </form>
                 
                 <!-- To'plam nomi -->
                 <div class="mb-3">
