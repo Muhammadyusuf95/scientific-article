@@ -677,7 +677,7 @@ def internal_server_error(e):
     return render_template('500.html'), 500
 
 # --- 11. CLOUDFLARE WORKERS / ASGI KIRISH QISMI ---
-# Cloudflare Workers uchun on_fetch funksiyasi
+# --- CLOUDFLARE WORKERS / ASGI KIRISH QISMI ---
 async def on_fetch(request, env, ctx):
     return await app.handle_asgi(request, env)
 
