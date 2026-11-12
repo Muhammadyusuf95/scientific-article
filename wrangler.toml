@@ -1,0 +1,6 @@
+name = "scientific-article-portal"
+main = "app.py"
+compatibility_date = "2026-11-12"
+
+[vars]
+ENVIRONMENT = "production"
