@@ -15,4 +15,4 @@ bucket_name = "scientific-article"
 [[d1_databases]]
 binding = "DB"
 database_name = "scholar-db"
-database_id = "b828117b95ed9d61c82ed59a87d6290e"
+database_id = "14567560-9991-4401-882c-52d0bc3d636a"
