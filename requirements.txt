@@ -1,8 +1,5 @@
 Flask
 Flask-SQLAlchemy
 Flask-WTF
-psycopg[binary]
-boto3
-gunicorn
-pypdf
-Flask-Limiter
+Werkzeug
+email-validator
