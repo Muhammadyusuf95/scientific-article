@@ -15,9 +15,12 @@ class Collection(db.Model):
 
 
 class Author(db.Model):
+    __tablename__ = 'author'
+    __table_args__ = {'extend_existing': True}
+    
     id = db.Column(db.Integer, primary_key=True)
     full_name = db.Column(db.String(255), nullable=False)
-    order_index = db.Column(db.Integer, default=1)  # <--- Shu qatorni qo'shing
+    order_index = db.Column(db.Integer, default=1)
     article_id = db.Column(db.Integer, db.ForeignKey('article.id'), nullable=False)
 
 
@@ -42,9 +45,9 @@ class Article(db.Model):
     keywords_en = db.Column(db.String(255))
     keywords_ru = db.Column(db.String(255))
     
-    # Yangi akademik va rasmiy rekvizitlar
+    # Akademik va rasmiy rekvizitlar
     isbn = db.Column(db.String(50))
-    issn = db.Column(db.String(50))  # Soxta 0000-0000 olib tashlandi, faqat haqiqiy bo'lsa kiritiladi
+    issn = db.Column(db.String(50))
     bbk = db.Column(db.String(50))
     udk = db.Column(db.String(50))
     journal_name = db.Column(db.String(255))
@@ -66,13 +69,13 @@ class Article(db.Model):
     publisher = db.Column(db.String(255), default="Ilmiy Maqolalar Portali")
     institution = db.Column(db.String(255), default="O'zbek tilshunosligi kafedrasi")
     
+    # Sana maydonlari
+    pub_date = db.Column(db.String(50))         # Nashr etilgan sana
+    uploaded_date = db.Column(db.String(50))    # Saytga joylangan sana
+
     # Tashqi kalitlar va munosabatlar
     collection_id = db.Column(db.Integer, db.ForeignKey('collection.id'), nullable=True)
     authors = db.relationship('Author', backref='article', cascade="all, delete-orphan", lazy=True)
-
-# Yangi sana maydonlari (Kun.Oy.Yil shaklida saqlash yoki Date turi)
-    pub_date = db.Column(db.String(50))         # Nashr etilgan sana (yoki konferensiya sanasi)
-    uploaded_date = db.Column(db.String(50))    # Saytga joylangan sana
 
 
 class User(db.Model):
