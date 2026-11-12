@@ -29,8 +29,6 @@ class Article(db.Model):
     __table_args__ = {'extend_existing': True}
     
     id = db.Column(db.Integer, primary_key=True)
-    
-    # Ilmiy ish turi: 'jurnal', 'darslik', 'oquv_qollanma', 'konferensiya_maqola', 'konferensiya_tezis'
     item_type = db.Column(db.String(50), default='jurnal')
     
     title_uz = db.Column(db.String(500), nullable=False)
@@ -45,7 +43,6 @@ class Article(db.Model):
     keywords_en = db.Column(db.String(255))
     keywords_ru = db.Column(db.String(255))
     
-    # Akademik va rasmiy rekvizitlar
     isbn = db.Column(db.String(50))
     issn = db.Column(db.String(50))
     bbk = db.Column(db.String(50))
@@ -69,11 +66,9 @@ class Article(db.Model):
     publisher = db.Column(db.String(255), default="Ilmiy Maqolalar Portali")
     institution = db.Column(db.String(255), default="O'zbek tilshunosligi kafedrasi")
     
-    # Sana maydonlari
-    pub_date = db.Column(db.String(50))         # Nashr etilgan sana
-    uploaded_date = db.Column(db.String(50))    # Saytga joylangan sana
+    pub_date = db.Column(db.String(50))
+    uploaded_date = db.Column(db.String(50))
 
-    # Tashqi kalitlar va munosabatlar
     collection_id = db.Column(db.Integer, db.ForeignKey('collection.id'), nullable=True)
     authors = db.relationship('Author', backref='article', cascade="all, delete-orphan", lazy=True)
 
