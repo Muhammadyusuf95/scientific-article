@@ -1,9 +1,19 @@
-import pypdf
 import io
 import os
 import time
 import re
-import boto3
+
+# Cloudflare Workers muhiti uchun xavfsiz importlar
+try:
+    import pypdf
+except ImportError:
+    pypdf = None
+
+try:
+    import boto3
+except ImportError:
+    boto3 = None
+
 from flask import Flask, request, render_template, redirect, url_for, flash, make_response, session, Response, stream_with_context
 from werkzeug.utils import secure_filename
 from flask_wtf.csrf import CSRFProtect
@@ -77,13 +87,18 @@ R2_ACCESS_KEY_ID = os.getenv('R2_ACCESS_KEY_ID', 'ac38a96c402e0c4e919cdd96554cfa
 R2_SECRET_ACCESS_KEY = os.getenv('R2_SECRET_ACCESS_KEY', 'b218b5c0d690c92f0d2ef49cde3b182be3b83be1fff97059b99ab0d221ab606e')
 R2_BUCKET_NAME = os.getenv('R2_BUCKET_NAME', 'scientific-article')
 
-s3_client = boto3.client(
-    's3',
-    endpoint_url=R2_ENDPOINT_URL,
-    aws_access_key_id=R2_ACCESS_KEY_ID,
-    aws_secret_access_key=R2_SECRET_ACCESS_KEY,
-    region_name='auto'
-)
+s3_client = None
+if boto3:
+    try:
+        s3_client = boto3.client(
+            's3',
+            endpoint_url=R2_ENDPOINT_URL,
+            aws_access_key_id=R2_ACCESS_KEY_ID,
+            aws_secret_access_key=R2_SECRET_ACCESS_KEY,
+            region_name='auto'
+        )
+    except Exception as e:
+        print(f"S3 client xatosi: {e}")
 
 db.init_app(app)
 
@@ -111,6 +126,8 @@ with app.app_context():
 
 # --- PDF DAN ADABIYOTLARni toza va AVTOMATIK TARTIBLAB O'QIB OLUVCHI FUNKSIYA ---
 def extract_references_from_pdf(pdf_stream):
+    if not pypdf:
+        return ""
     try:
         reader = pypdf.PdfReader(pdf_stream)
         full_text = ""
@@ -319,6 +336,9 @@ def serve_pdf(id):
     article = Article.query.get_or_404(id)
     filename = article.pdf_filename.split('/')[-1].split('?')[0]
     
+    if not s3_client:
+        return redirect(article.pdf_filename)
+
     range_header = request.headers.get('Range')
     kwargs = {}
     if range_header:
@@ -327,7 +347,7 @@ def serve_pdf(id):
     try:
         s3_obj = s3_client.get_object(Bucket=R2_BUCKET_NAME, Key=filename, **kwargs)
     except Exception:
-        return "Fayl topilmadi", 404
+        return redirect(article.pdf_filename)
 
     response = Response(
         stream_with_context(s3_obj['Body'].iter_chunks()),
@@ -358,10 +378,13 @@ def download_article(id):
 
     filename = article.pdf_filename.split('/')[-1].split('?')[0]
     
+    if not s3_client:
+        return redirect(article.pdf_filename)
+
     try:
         s3_obj = s3_client.get_object(Bucket=R2_BUCKET_NAME, Key=filename)
     except Exception:
-        return "Fayl topilmadi", 404
+        return redirect(article.pdf_filename)
 
     response = Response(
         stream_with_context(s3_obj['Body'].iter_chunks()),
@@ -437,12 +460,13 @@ def edit_article(article_id):
                     return redirect(request.url)
 
                 filename = f"{int(time.time())}_{secure_filename(pdf_file.filename)}"
-                s3_client.upload_fileobj(
-                    pdf_file,
-                    R2_BUCKET_NAME,
-                    filename,
-                    ExtraArgs={'ContentType': 'application/pdf'}
-                )
+                if s3_client:
+                    s3_client.upload_fileobj(
+                        pdf_file,
+                        R2_BUCKET_NAME,
+                        filename,
+                        ExtraArgs={'ContentType': 'application/pdf'}
+                    )
                 article.pdf_filename = f"https://pub-21eece65689f4ee39fbe5b16812adb10.r2.dev/{filename}"
 
             db.session.commit()
@@ -553,12 +577,13 @@ def add_article():
                     references_text = extracted_refs
 
             filename = f"{int(time.time())}_{secure_filename(pdf_file.filename)}"
-            s3_client.upload_fileobj(
-                pdf_file,
-                R2_BUCKET_NAME,
-                filename,
-                ExtraArgs={'ContentType': 'application/pdf'}
-            )
+            if s3_client:
+                s3_client.upload_fileobj(
+                    pdf_file,
+                    R2_BUCKET_NAME,
+                    filename,
+                    ExtraArgs={'ContentType': 'application/pdf'}
+                )
             
             public_url = f"https://pub-21eece65689f4ee39fbe5b16812adb10.r2.dev/{filename}"
             
@@ -596,7 +621,7 @@ def add_article():
             
         except Exception as e:
             db.session.rollback()
-            print(f"XATOLik TAFSILOTI: {str(e)}")
+            print(f"XATOLIK TAFSILOTI: {str(e)}")
             flash(f"Xatolik yuz berdi: {str(e)}", "danger")
             return redirect(url_for('add_article'))
             
@@ -677,7 +702,6 @@ def internal_server_error(e):
     return render_template('500.html'), 500
 
 # --- 11. CLOUDFLARE WORKERS / ASGI KIRISH QISMI ---
-# --- CLOUDFLARE WORKERS / ASGI KIRISH QISMI ---
 async def on_fetch(request, env, ctx):
     return await app.handle_asgi(request, env)
 
