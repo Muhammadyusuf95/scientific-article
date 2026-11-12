@@ -392,14 +392,12 @@ def edit_article(article_id):
             article.pub_date = request.form.get('pub_date')
             article.uploaded_date = request.form.get('uploaded_date')
 
-            # ISSN ni tozalash
             issn = request.form.get('issn', '').strip()
             if not issn or issn in ['0000-0000', '00000000', '0000-000']:
                 article.issn = None
             else:
                 article.issn = issn
 
-            # To'plamni ixtiyoriy qilish
             collection_name = request.form.get('collection_name', '').strip()
             if collection_name:
                 collection = Collection.query.filter_by(name=collection_name).first()
@@ -494,12 +492,10 @@ def add_article():
             journal_name = request.form.get('journal_name')
             conference_org = request.form.get('conference_org')
             
-            # ISSN ni tozalash va tekshirish
             issn = request.form.get('issn', '').strip()
             if not issn or issn in ['0000-0000', '00000000', '0000-000']:
                 issn = None
 
-            # To'plamni ixtiyoriy qilish
             collection_name = request.form.get('collection_name', '').strip()
             collection_id = None
             if collection_name:
@@ -548,7 +544,6 @@ def add_article():
                 flash("Yuklangan fayl haqiqiy PDF emas!", "danger")
                 return redirect(url_for('add_article'))
 
-            # Avtomatik yoki qo'lda kiritilgan adabiyotlar
             references_text = request.form.get('references', '').strip()
             if not references_text and pdf_file:
                 pdf_file.stream.seek(0)
@@ -601,7 +596,7 @@ def add_article():
             
         except Exception as e:
             db.session.rollback()
-            print(f"XATOLIK TAFSILOTI: {str(e)}")
+            print(f"XATOLik TAFSILOTI: {str(e)}")
             flash(f"Xatolik yuz berdi: {str(e)}", "danger")
             return redirect(url_for('add_article'))
             
@@ -680,6 +675,11 @@ def page_not_found(e):
 @app.errorhandler(500)
 def internal_server_error(e):
     return render_template('500.html'), 500
+
+# --- 11. CLOUDFLARE WORKERS / ASGI KIRISH QISMI ---
+# Cloudflare Workers uchun on_fetch funksiyasi
+async def on_fetch(request, env, ctx):
+    return await app.handle_asgi(request, env)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=False)
