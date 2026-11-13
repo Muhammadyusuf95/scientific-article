@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Maqola Yuklash Paneli</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f7f6; padding: 20px; }
+    .container { max-width: 600px; background: white; padding: 20px; border-radius: 8px; margin: 0 auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    h2 { text-align: center; color: #333; }
+    label { font-weight: bold; margin-top: 10px; display: block; }
+    input, select, textarea { width: 100%; padding: 10px; margin-top: 5px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+    button { width: 100%; padding: 10px; background: #0056b3; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
+    button:disabled { background: #ccc; }
+    #status { margin-top: 15px; text-align: center; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>Yangi Maqola Joylash</h2>
+  <form id="uploadForm">
+    <label>ID (kichik harflarda, bo'sh joysiz):</label>
+    <input type="text" id="id" placeholder="masalan: maqola-2026-1" required>
+
+    <label>Sarlavha (O'zbek tilida):</label>
+    <input type="text" id="title" required>
+
+    <label>Mualliflar (vergul bilan ajrating):</label>
+    <input type="text" id="authors" placeholder="Aliyev V., Valiyev S." required>
+
+    <label>Nashr yili:</label>
+    <input type="number" id="year" value="2026" required>
+
+    <label>Jurnal / Konferensiya nomi:</label>
+    <input type="text" id="journal" required>
+
+    <label>Tom / Son (ixtiyoriy):</label>
+    <input type="text" id="vol_issue" placeholder="Tom 1, Son 2">
+
+    <label>Betlar:</label>
+    <input type="text" id="pages" placeholder="10-15">
+
+    <label>Annotatsiya:</label>
+    <textarea id="abstract" rows="4" required></textarea>
+
+    <label>Maqola PDF faylini tanlang:</label>
+    <input type="file" id="pdfFile" accept="application/pdf" required>
+
+    <button type="submit" id="submitBtn">Maqolani Yuklash</button>
+    <p id="status"></p>
+  </form>
+</div>
+
+<script>
+  document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    const status = document.getElementById('status');
+    btn.disabled = true;
+    status.innerText = "Yuklanmoqda, iltimos kuting... (1-2 daqiqa vaqt olishi mumkin)";
+    status.style.color = "blue";
+
+    const file = document.getElementById('pdfFile').files[0];
+    const reader = new FileReader();
+
+    reader.onload = async function(event) {
+      const pdfBase64 = event.target.result;
+      const pdfName = file.name.replace(/\s+/g, '_'); // Bo'sh joylarni chiziqchaga almashtirish
+
+      const articleData = {
+        id: document.getElementById('id').value,
+        item_type: "jurnal",
+        title_uz: document.getElementById('title').value,
+        authors: document.getElementById('authors').value.split(',').map(a => a.trim()),
+        year: parseInt(document.getElementById('year').value),
+        journal_name: document.getElementById('journal').value,
+        pages: document.getElementById('pages').value,
+        pdf: pdfName,
+        abstract_uz: document.getElementById('abstract').value
+      };
+
+      try {
+        const response = await fetch('/.netlify/functions/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pdfBase64, pdfName, articleData })
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+          status.innerText = "Maqola muvaffaqiyatli yuklandi! 1-2 daqiqadan so'ng saytda paydo bo'ladi.";
+          status.style.color = "green";
+          document.getElementById('uploadForm').reset();
+        } else {
+          throw new Error(result.error);
+        }
+      } catch (err) {
+        status.innerText = "Xatolik yuz berdi: " + err.message;
+        status.style.color = "red";
+      } finally {
+        btn.disabled = false;
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+</script>
+
+</body>
+</html>
