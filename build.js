@@ -6,7 +6,7 @@ const S=D.site,BASE=(process.env.URL||S.url||'https://example.netlify.app').repl
 // CLOUDFLARE R2 OMMAVIY MANZILI
 const R2_URL = 'https://pub-21eece65689f4ee39fbe5b16812adb10.r2.dev';
 
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;n'}[c]||c));
 const slug=s=>String(s).toLowerCase().replace(/[^a-z0-9-]+/g,'-').replace(/^-+|-+$/g,'');
 const out=(p,h)=>{const f=path.join('dist',p);fs.mkdirSync(path.dirname(f),{recursive:true});fs.writeFileSync(f,h)};
 const meta=(n,v)=>v||v===0?`<meta name="${n}" content="${esc(v)}">\n`:'';
@@ -16,9 +16,9 @@ const title=a=>a.title_uz||a.title_en||a.title_ru;
 const doi=a=>(a.doi||'').replace(/^https?:\/\/(dx\.)?doi\.org\//i,'');
 const src=a=>[a.journal_name||a.conference_org,a.volume&&`Tom ${a.volume}`,a.issue&&`Son ${a.issue}`].filter(Boolean).join(', ');
 const bad=[];const seen=new Set();
-for(const a of A){if(!a._id||seen.has(a._id))bad.push(`id xato yoki takror: ${a.id}`);seen.add(a._id);
- if(!title(a))bad.push(`${a.id}: sarlavha yo'q`);if(!a.authors?.length)bad.push(`${a.id}: mualliflar yo'q`);if(!a.year)bad.push(`${a.id}: yil yo'q`);
- if(!(a.abstract_uz||a.abstract_en||a.abstract_ru))bad.push(`${a.id}: annotatsiya yo'q (Google Scholar uchun shart)`);
+for(const A_item of A){if(!A_item._id||seen.has(A_item._id))bad.push(`id xato yoki takror: ${A_item.id}`);seen.add(A_item._id);
+ if(!title(A_item))bad.push(`${A_item.id}: sarlavha yo'q`);if(!A_item.authors?.length)bad.push(`${A_item.id}: mualliflar yo'q`);if(!A_item.year)bad.push(`${A_item.id}: yil yo'q`);
+ if(!(A_item.abstract_uz||A_item.abstract_en||A_item.abstract_ru))bad.push(`${A_item.id}: annotatsiya yo'q (Google Scholar uchun shart)`);
 }
 if(bad.length){console.error(bad.join('\n'));process.exit(1)}
 const NAV=[['/about/','Portal haqida'],['/editorial-board/',"Tahririyat hay'ati"],['/ethics/','Nashr etikasi'],['/contact/','Aloqa']];
@@ -38,7 +38,6 @@ for(const c of C){const L=A.filter(a=>a.collection===c.id);out(`collection/${c._
 for(const a of A){
  const c=C.find(x=>x.id===a.collection),conf=a.item_type==='konferensiya',[fp,lp]=String(a.pages||'').split(/\s*[-–]\s*/),d=doi(a),url=`${BASE}/article/${a._id}/`;
  
- // BU YERDA PDF MANZILI R2_URL GA O'ZGARTIRILDI
  const head=meta('citation_title',title(a))+a.authors.map(x=>meta('citation_author',x)).join('')+meta('citation_publication_date',a.date?a.date.replace(/-/g,'/'):a.year)
   +meta(conf?'citation_conference_title':'citation_journal_title',conf?a.conference_org:a.journal_name)+meta('citation_volume',a.volume)+meta('citation_issue',a.issue)+meta('citation_firstpage',fp)+meta('citation_lastpage',lp)
   +meta('citation_doi',d)+meta('citation_issn',a.issn)+meta('citation_isbn',a.isbn)+meta('citation_language',a.language||'uz')+meta('citation_keywords',(a.keywords_uz||[]).join('; '))
@@ -50,7 +49,6 @@ for(const a of A){
  const refs=[].concat(a.references||[]);
  const cite=`${a.authors.join(', ')} (${a.year}). ${title(a)}. ${src(a)}${a.pages?', '+a.pages+'-b':''}.${d?' https://doi.org/'+d:''}`;
  
- // TO'LIQ MATN (PDF) TUGMASI UCHUN HAVOLA R2_URL GA O'ZGARTIRILDI
  out(`article/${a._id}/index.html`,page(`${title(a)} - ${S.name}`,(a.abstract_uz||a.abstract_en||a.abstract_ru).slice(0,160),
  `<div class="wrap"><article class="paper">${c?`<p class="crumb"><a href="/collection/${c._id}/">${esc(c.name)}</a></p>`:''}<h1>${esc(title(a))}</h1>
 <p class="authors">${esc(a.authors.join(', '))}</p><dl class="meta">${dl}</dl>${a.pdf?`<p><a class="btn" href="${R2_URL}/${encodeURIComponent(a.pdf)}" target="_blank" rel="noopener noreferrer">To'liq matn (PDF)</a></p>`:''}${ab}${kw}
@@ -61,4 +59,8 @@ const urls=['/',...C.map(c=>`/collection/${c._id}/`),...A.map(a=>`/article/${a._
 out('sitemap.xml',`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.map(u=>`<url><loc>${BASE}${u}</loc></url>`).join('')}</urlset>`);
 out('robots.txt',`User-agent: *\nAllow: /\nSitemap: ${BASE}/sitemap.xml\n`);
 for(const d of ['css','js'])if(fs.existsSync(d))fs.cpSync(d,path.join('dist',d),{recursive:true});
+
+// ADMIN.HTML FAYLINI DIST PAPKASIGA KO'CHIRISH UCHUN QO'SHILDI:
+if(fs.existsSync('admin.html'))fs.copyFileSync('admin.html',path.join('dist','admin.html'));
+
 console.log(`Tayyor: ${A.length} maqola, ${C.length} to'plam, ${urls.length} sahifa`);
