@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Maqola yuklash</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .admin-container { background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        h2 { text-align: center; color: #333; }
+        label { font-weight: bold; margin-top: 10px; display: block; color: #555; }
+        input[type="text"], input[type="file"] { width: 100%; padding: 10px; margin-top: 5px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background-color: #0056b3; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
+        button:hover { background-color: #004494; }
+        #status { text-align: center; margin-top: 15px; font-weight: bold; color: #d9534f; }
+    </style>
+</head>
+<body>
+
+<div class="admin-container">
+    <h2>Yangi maqola yuklash</h2>
+    <form id="uploadForm">
+        <label for="title">Maqola nomi:</label>
+        <input type="text" id="title" placeholder="Masalan: Fizika sohasidagi yangiliklar" required>
+
+        <label for="pdfFile">PDF faylni tanlang:</label>
+        <input type="file" id="pdfFile" accept="application/pdf" required>
+
+        <button type="submit">Yuklash</button>
+    </form>
+    <div id="status"></div>
+</div>
+
+<script>
+    document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const status = document.getElementById('status');
+        const title = document.getElementById('title').value;
+        const file = document.getElementById('pdfFile').files[0];
+
+        status.style.color = "#0056b3";
+        status.innerText = "Yuklanmoqda... Iltimos kuting (sahifani yopmang).";
+
+        const formData = new FormData();
+        formData.append('title', title);
+        formData.append('file', file);
+
+        try {
+            // Backend'ga (Cloudflare Functions'ga) so'rov yuborish
+            const res = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const result = await res.json();
+            
+            if(result.success) {
+                status.style.color = "green";
+                status.innerText = "Maqola muvaffaqiyatli yuklandi!";
+                document.getElementById('uploadForm').reset();
+            } else {
+                status.style.color = "red";
+                status.innerText = "Xatolik: " + result.error;
+            }
+        } catch (err) {
+            status.style.color = "red";
+            status.innerText = "Tarmoq xatoligi yuz berdi. Qaytadan urinib ko'ring.";
+        }
+    });
+</script>
+
+</body>
+</html>
