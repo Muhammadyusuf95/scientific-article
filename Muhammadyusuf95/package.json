@@ -1,7 +1,0 @@
-{
-  "name": "scientific-article",
-  "version": "1.0.0",
-  "dependencies": {
-    "@aws-sdk/client-s3": "^3.400.0"
-  }
-}
