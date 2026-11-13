@@ -18,7 +18,6 @@ export async function onRequestGet({ params, env, request }) {
   headers.set('Accept-Ranges', 'bytes');
   headers.set('Cache-Control', 'public, max-age=86400');
   headers.set('X-Content-Type-Options', 'nosniff');
-  headers.set('Content-Security-Policy', "default-src 'none'; sandbox");
   headers.set('X-Robots-Tag', 'all');
 
   if (object.range) {
