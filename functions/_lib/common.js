@@ -187,4 +187,4 @@ export function parseArticle(form) {
   const coll = g('collection', 200); if (coll) a.collection = coll;
   const refs = list(form.get('references'), /\n+/, 300, 1000); if (refs.length) a.references = refs;
   return a;
-}_lib/common.js
+}
