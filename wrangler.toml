@@ -1,3 +1,6 @@
 name = "scientific-article"
-compatibility_date = "2024-01-01"
+compatibility_date = "2024-03-20"
 pages_build_output_dir = "dist"
+
+[vars]
+# Agar kerak bo'lsa environment o'zgaruvchilari shu yerda yoziladi
