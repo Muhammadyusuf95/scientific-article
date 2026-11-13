@@ -1,0 +1,52 @@
+{
+  "site": {
+    "name": "Ilmiy Maqolalar Portali",
+    "description": "Ilmiy jurnal maqolalari va konferensiya materiallari to'plami. Barcha nashrlar ochiq foydalanish uchun.",
+    "publisher": "Ilmiy Maqolalar Portali",
+    "url": ""
+  },
+  "collections": [
+    { "id": "namuna-jurnal", "name": "Namuna jurnali" }
+  ],
+  "articles": [
+    {
+      "id": "namuna-1",
+      "item_type": "jurnal",
+      "title_uz": "Namuna maqola sarlavhasi (buni o'zingizniki bilan almashtiring)",
+      "title_en": "Sample article title",
+      "authors": ["Ism Familiya", "Ism Familiya"],
+      "year": 2026,
+      "date": "2026-03-15",
+      "journal_name": "Namuna jurnali",
+      "volume": 1,
+      "issue": 2,
+      "pages": "10-18",
+      "issn": "",
+      "doi": "",
+      "pdf": "",
+      "collection": "namuna-jurnal",
+      "language": "uz",
+      "keywords_uz": ["kalit so'z 1", "kalit so'z 2"],
+      "abstract_uz": "Maqolaning to'liq muallif annotatsiyasi shu yerga yoziladi.",
+      "abstract_en": "Full author abstract in English goes here.",
+      "references": ["Birinchi manba.", "Ikkinchi manba."]
+    },
+    {
+      "id": "namuna-2",
+      "item_type": "konferensiya",
+      "title_uz": "Namuna konferensiya materiali",
+      "authors": ["Ism Familiya"],
+      "year": 2025,
+      "conference_org": "Namuna xalqaro konferensiyasi",
+      "pages": "45-49",
+      "abstract_uz": "Konferensiya materialining annotatsiyasi.",
+      "keywords_uz": ["konferensiya"]
+    }
+  ],
+  "pages": {
+    "about": { "title": "Portal haqida", "text": ["Portal maqsadi va faoliyati haqida matn."] },
+    "editorial-board": { "title": "Tahririyat hay'ati", "text": ["Tahririyat a'zolari ro'yxati."] },
+    "ethics": { "title": "Nashr etikasi", "text": ["Nashr etikasi qoidalari."] },
+    "contact": { "title": "Aloqa", "text": ["Elektron pochta va manzil."] }
+  }
+}
