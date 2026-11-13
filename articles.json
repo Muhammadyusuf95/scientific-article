@@ -3,7 +3,7 @@
     "name": "Ilmiy Maqolalar Portali",
     "description": "Ilmiy jurnal maqolalari va konferensiya materiallari to'plami. Barcha nashrlar ochiq foydalanish uchun.",
     "publisher": "Ilmiy Maqolalar Portali",
-    "url": ""
+    "url": "https://scientific-article.netlify.app"
   },
   "collections": [
     { "id": "namuna-jurnal", "name": "Namuna jurnali" }
@@ -23,7 +23,7 @@
       "pages": "10-18",
       "issn": "",
       "doi": "",
-      "pdf": "",
+      "pdf": "maqola1.pdf",
       "collection": "namuna-jurnal",
       "language": "uz",
       "keywords_uz": ["kalit so'z 1", "kalit so'z 2"],
@@ -39,6 +39,7 @@
       "year": 2025,
       "conference_org": "Namuna xalqaro konferensiyasi",
       "pages": "45-49",
+      "pdf": "konferensiya_maqolasi.pdf",
       "abstract_uz": "Konferensiya materialining annotatsiyasi.",
       "keywords_uz": ["konferensiya"]
     }
