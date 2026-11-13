@@ -1,229 +1,42 @@
-<!DOCTYPE html>
-<html lang="uz">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="robots" content="noindex, nofollow">
-<meta name="color-scheme" content="light dark">
-<title>Admin panel — maqola yuklash</title>
-<style>
-  :root {
-    --bg: #f3f5f9; --card: #ffffff; --text: #17202e; --muted: #5d6b82; --line: #d9dfea;
-    --brand: #1a56db; --brand-d: #1445b0; --ok: #0e7a43; --err: #b42318; --field: #ffffff;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root { --bg: #0e1420; --card: #161e2e; --text: #e8edf6; --muted: #98a6bf; --line: #2a3650;
-            --brand: #5b8def; --brand-d: #7aa3f5; --ok: #46c37f; --err: #ff7b72; --field: #0f1726; }
-  }
-  * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-  .wrap { max-width: 860px; margin: 0 auto; padding: 24px 16px 64px; }
-  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
-  h1 { font-size: 1.5rem; margin: 0; }
-  header a { color: var(--brand); text-decoration: none; font-size: .95rem; }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 22px; margin-bottom: 18px; }
-  .card h2 { font-size: 1.05rem; margin: 0 0 14px; }
-  .grid { display: grid; gap: 14px; grid-template-columns: 1fr 1fr; }
-  .full { grid-column: 1 / -1; }
-  @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
-  label { display: block; font-weight: 600; font-size: .92rem; margin-bottom: 5px; }
-  .hint { display: block; font-weight: 400; color: var(--muted); font-size: .82rem; margin-top: 4px; }
-  .req::after { content: " *"; color: var(--err); }
-  input, textarea, select {
-    width: 100%; padding: 10px 12px; font: inherit; color: var(--text); background: var(--field);
-    border: 1px solid var(--line); border-radius: 9px;
-  }
-  textarea { resize: vertical; min-height: 90px; }
-  input:focus, textarea:focus, select:focus { outline: 2px solid var(--brand); outline-offset: 1px; border-color: transparent; }
-  input[type=file] { padding: 9px; }
-  button {
-    width: 100%; padding: 13px; font: inherit; font-weight: 600; color: #fff; background: var(--brand);
-    border: 0; border-radius: 10px; cursor: pointer;
-  }
-  button:hover { background: var(--brand-d); }
-  button:disabled { opacity: .6; cursor: not-allowed; }
-  .bar { height: 8px; background: var(--line); border-radius: 99px; overflow: hidden; margin-top: 14px; display: none; }
-  .bar i { display: block; height: 100%; width: 0; background: var(--brand); transition: width .15s; }
-  #status { margin-top: 14px; font-weight: 600; min-height: 1.4em; }
-  #status.ok { color: var(--ok); } #status.err { color: var(--err); } #status.info { color: var(--brand); }
-  #status a { color: inherit; }
-  .small { color: var(--muted); font-size: .85rem; margin-top: 10px; }
-</style>
-</head>
-<body>
-<div class="wrap">
-  <header>
-    <h1>Yangi maqola yuklash</h1>
-    <a href="/">← Saytga qaytish</a>
-  </header>
-
-  <form id="f" autocomplete="off">
-    <div class="card">
-      <h2>Kirish</h2>
-      <label for="token" class="req">Admin paroli (ADMIN_TOKEN)</label>
-      <input type="password" id="token" required autocomplete="current-password">
-      <span class="hint">Parol faqat shu brauzer oynasida eslab qolinadi va oyna yopilganda o'chadi.</span>
-    </div>
-
-    <div class="card">
-      <h2>Asosiy ma'lumotlar</h2>
-      <div class="grid">
-        <div class="full">
-          <label for="title" class="req">Maqola nomi</label>
-          <input id="title" maxlength="300" required>
-        </div>
-        <div class="full">
-          <label for="authors" class="req">Mualliflar</label>
-          <textarea id="authors" rows="3" required placeholder="Ism Familiya; Ism Familiya"></textarea>
-          <span class="hint">Bir nechta muallifni «;» bilan yoki har birini yangi qatordan yozing. PDF dagi ismlar bilan bir xil bo'lsin.</span>
-        </div>
-        <div class="full">
-          <label for="abstract" class="req">Annotatsiya</label>
-          <textarea id="abstract" rows="6" maxlength="6000" required></textarea>
-          <span class="hint">Google Scholar uchun majburiy. Maqolaning qisqa, to'liq mazmuni.</span>
-        </div>
-        <div>
-          <label for="language">Maqola tili</label>
-          <select id="language">
-            <option value="uz">O'zbekcha</option>
-            <option value="en">English</option>
-            <option value="ru">Русский</option>
-          </select>
-        </div>
-        <div>
-          <label for="keywords">Kalit so'zlar</label>
-          <input id="keywords" placeholder="kalit so'z 1, kalit so'z 2">
-        </div>
-        <div>
-          <label for="year">Nashr yili</label>
-          <input id="year" type="number" min="1900" max="2100">
-        </div>
-        <div>
-          <label for="date">Nashr sanasi</label>
-          <input id="date" type="date">
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>Nashr ma'lumotlari <span style="font-weight:400;color:var(--muted)">(ixtiyoriy)</span></h2>
-      <div class="grid">
-        <div class="full">
-          <label for="journal_name">Jurnal nomi</label>
-          <input id="journal_name" maxlength="200">
-        </div>
-        <div>
-          <label for="volume">Tom</label>
-          <input id="volume" maxlength="200">
-        </div>
-        <div>
-          <label for="issue">Son</label>
-          <input id="issue" maxlength="200">
-        </div>
-        <div>
-          <label for="pages">Betlar</label>
-          <input id="pages" placeholder="10-18" maxlength="200">
-        </div>
-        <div>
-          <label for="doi">DOI</label>
-          <input id="doi" placeholder="10.xxxx/xxxxx" maxlength="200">
-        </div>
-        <div class="full">
-          <label for="collection">To'plam ID</label>
-          <input id="collection" maxlength="200">
-          <span class="hint">Faqat articles.json dagi «collections» ro'yxatida bor to'plam ID sini yozing, aks holda bo'sh qoldiring.</span>
-        </div>
-        <div class="full">
-          <label for="references">Foydalanilgan adabiyotlar</label>
-          <textarea id="references" rows="6" placeholder="Har bir manba yangi qatordan"></textarea>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>PDF fayl</h2>
-      <label for="pdfFile" class="req">To'liq matn (PDF, 25 MB gacha)</label>
-      <input id="pdfFile" type="file" accept="application/pdf" required>
-      <span class="hint">Birinchi sahifada sarlavha va mualliflar ko'rinib tursin, matn belgilanadigan bo'lsin (skaner rasmi emas).</span>
-      <div style="margin-top:18px"><button id="btn" type="submit">Yuklash</button></div>
-      <div class="bar" id="bar"><i id="fill"></i></div>
-      <div id="status" role="status" aria-live="polite"></div>
-      <p class="small">Yuklangandan keyin sayt avtomatik qayta quriladi va maqola 1–3 daqiqada paydo bo'ladi.</p>
-    </div>
-  </form>
-</div>
-
-<script>
-(function () {
-  var $ = function (id) { return document.getElementById(id); };
-  var MAX = 25 * 1024 * 1024;
-  var form = $('f'), btn = $('btn'), status = $('status'), bar = $('bar'), fill = $('fill');
-
-  // Boshlang'ich qiymatlar
-  var now = new Date();
-  $('year').value = now.getFullYear();
-  $('date').value = now.toISOString().slice(0, 10);
-  try { $('token').value = sessionStorage.getItem('admin_token') || ''; } catch (e) {}
-
-  function say(cls, text) { status.className = cls; status.textContent = text; }
-
-  form.addEventListener('submit', function (e) {
-    e.preventDefault();
-    var file = $('pdfFile').files[0];
-    if (!file) return say('err', 'PDF fayl tanlanmagan.');
-    if (file.size > MAX) return say('err', 'PDF hajmi 25 MB dan oshmasligi kerak.');
-    if (file.type && file.type !== 'application/pdf') return say('err', 'Faqat PDF fayl yuklash mumkin.');
-
-    var token = $('token').value;
-    try { sessionStorage.setItem('admin_token', token); } catch (e) {}
-
-    var fd = new FormData();
-    ['title', 'authors', 'abstract', 'language', 'keywords', 'year', 'date',
-     'journal_name', 'volume', 'issue', 'pages', 'doi', 'collection', 'references']
-      .forEach(function (k) { fd.append(k, $(k).value); });
-    fd.append('file', file);
-
-    btn.disabled = true;
-    bar.style.display = 'block';
-    fill.style.width = '0';
-    say('info', 'Yuklanmoqda… Sahifani yopmang.');
-
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', '/api/upload');
-    xhr.setRequestHeader('X-Admin-Token', token);
-    xhr.upload.onprogress = function (ev) {
-      if (ev.lengthComputable) fill.style.width = Math.round(ev.loaded / ev.total * 100) + '%';
-    };
-    xhr.onload = function () {
-      btn.disabled = false;
-      var r = {};
-      try { r = JSON.parse(xhr.responseText); } catch (e) {}
-      if (xhr.status === 200 && r.success) {
-        fill.style.width = '100%';
-        status.className = 'ok';
-        status.textContent = 'Maqola muvaffaqiyatli yuklandi! Sayt qayta qurilmoqda. Tayyor bo\u2018lgach manzil: ';
-        var a = document.createElement('a');
-        a.href = '/article/' + r.id + '/';
-        a.textContent = '/article/' + r.id + '/';
-        status.appendChild(a);
-        var keep = $('token').value;
-        form.reset();
-        $('token').value = keep;
-        $('year').value = now.getFullYear();
-        $('date').value = now.toISOString().slice(0, 10);
-      } else if (xhr.status === 401) {
-        say('err', 'Parol noto\u2018g\u2018ri.');
-      } else {
-        say('err', 'Xatolik: ' + (r.error || ('server javobi ' + xhr.status)));
-      }
-    };
-    xhr.onerror = function () {
-      btn.disabled = false;
-      say('err', 'Tarmoq xatoligi. Qaytadan urinib ko\u2018ring.');
-    };
-    xhr.send(fd);
-  });
-})();
-</script>
-</body>
-</html>
+:root { --bg:#f3f5f9; --card:#fff; --text:#17202e; --muted:#5d6b82; --line:#d9dfea; --brand:#1a56db; --brand-d:#1445b0; --ok:#0e7a43; --err:#b42318; --field:#fff; --warn:#8a5a00; --warnbg:#fff6df; }
+@media (prefers-color-scheme: dark) { :root { --bg:#0e1420; --card:#161e2e; --text:#e8edf6; --muted:#98a6bf; --line:#2a3650; --brand:#5b8def; --brand-d:#7aa3f5; --ok:#46c37f; --err:#ff7b72; --field:#0f1726; --warn:#f0c36a; --warnbg:#2a2412; } }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--text); font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+.wrap { max-width:880px; margin:0 auto; padding:24px 16px 64px; }
+header { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:20px; }
+h1 { font-size:1.5rem; margin:0; } header a { color:var(--brand); text-decoration:none; font-size:.95rem; }
+.card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:22px; margin-bottom:18px; }
+.card h2 { font-size:1.05rem; margin:0 0 14px; } .opt { font-weight:400; color:var(--muted); }
+.grid { display:grid; gap:14px; grid-template-columns:1fr 1fr; } .full { grid-column:1/-1; }
+@media (max-width:640px) { .grid { grid-template-columns:1fr; } }
+.row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; } .row input { flex:1; min-width:180px; }
+label { display:block; font-weight:600; font-size:.92rem; margin-bottom:5px; }
+.hint { display:block; font-weight:400; color:var(--muted); font-size:.82rem; margin-top:4px; } .hint.first { margin-top:0; margin-bottom:12px; }
+.req::after, .rq.req::after { content:" *"; color:var(--err); }
+input, textarea, select { width:100%; padding:10px 12px; font:inherit; color:var(--text); background:var(--field); border:1px solid var(--line); border-radius:9px; }
+textarea { resize:vertical; min-height:90px; }
+input:focus, textarea:focus, select:focus, .tab:focus-visible, .mini:focus-visible { outline:2px solid var(--brand); outline-offset:1px; }
+.tabs { display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap; }
+.tab { width:auto; padding:8px 16px; background:var(--field); color:var(--text); border:1px solid var(--line); border-radius:99px; font:inherit; font-weight:600; cursor:pointer; }
+.tab[aria-selected=true] { background:var(--brand); color:#fff; border-color:var(--brand); }
+.tab.filled::after { content:" ✓"; }
+.mb { margin-bottom:14px; }
+.note { background:var(--warnbg); color:var(--warn); border-radius:10px; padding:10px 14px; font-size:.9rem; }
+.card.note { border-color:transparent; }
+.check { display:flex; gap:10px; align-items:flex-start; font-weight:400; margin-bottom:8px; }
+.check input { width:auto; margin-top:5px; }
+.checks { margin-top:16px; } .actions { margin-top:18px; }
+button.go { width:100%; padding:13px; font:inherit; font-weight:600; color:#fff; background:var(--brand); border:0; border-radius:10px; cursor:pointer; }
+button.go:hover { background:var(--brand-d); } button:disabled { opacity:.6; cursor:not-allowed; }
+.bar { height:8px; background:var(--line); border-radius:99px; overflow:hidden; margin-top:14px; display:none; }
+.bar i { display:block; height:100%; width:0; background:var(--brand); transition:width .15s; }
+.msg { margin-top:14px; font-weight:600; min-height:1.4em; }
+.msg.ok { color:var(--ok); } .msg.err { color:var(--err); } .msg.info { color:var(--brand); } .msg a { color:inherit; }
+.small { color:var(--muted); font-size:.85rem; margin-top:10px; }
+.items { list-style:none; margin:14px 0 0; padding:0; }
+.item { display:flex; gap:12px; justify-content:space-between; align-items:center; padding:12px 0; border-top:1px solid var(--line); flex-wrap:wrap; }
+.item .info { flex:1; min-width:220px; } .item .info strong { display:block; } .item .info span { color:var(--muted); font-size:.85rem; }
+.item .acts { display:flex; gap:6px; flex-wrap:wrap; }
+.mini { padding:6px 12px; font:inherit; font-size:.85rem; font-weight:600; color:var(--text); background:var(--field); border:1px solid var(--line); border-radius:8px; cursor:pointer; text-decoration:none; }
+.mini.danger { color:var(--err); border-color:var(--err); }
+[hidden] { display:none !important; }
