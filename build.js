@@ -162,6 +162,7 @@ if(bad.length){console.error(bad.join('\n'));process.exit(1)}
 const NAV=[['/about/','Portal haqida'],['/editorial-board/',"Tahririyat hay'ati"],['/ethics/','Nashr etikasi'],['/contact/','Aloqa']];
 const page=(t,d,body,p='/',head='',l='uz')=>`<!doctype html>
 <html lang="${l}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="google-site-verification" content="vQNgaEMkoKVjJBtF3rtL4v_wphIuwCbRxkA3h495RTY">
 <title>${esc(t)}</title><meta name="description" content="${esc(d)}"><link rel="canonical" href="${BASE}${p}">
 ${head}<link rel="stylesheet" href="/css/style.css"></head><body>
 <a class="skip" href="#main">Asosiy mazmunga o'tish</a>
