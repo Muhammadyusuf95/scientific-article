@@ -2,5 +2,9 @@ name = "scientific-article"
 compatibility_date = "2024-03-20"
 pages_build_output_dir = "dist"
 
+[[r2_buckets]]
+binding = "R2_OMBOR"
+bucket_name = "BUCKET-NOMI"
+
 [vars]
-# Agar kerak bo'lsa environment o'zgaruvchilari shu yerda yoziladi
+GITHUB_REPO = "Muhammadyusuf95/scientific-article"
