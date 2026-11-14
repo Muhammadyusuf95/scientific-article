@@ -4,7 +4,7 @@ pages_build_output_dir = "dist"
 
 [[r2_buckets]]
 binding = "R2_OMBOR"
-bucket_name = "BUCKET-NOMI"
+bucket_name = "scientific-article"
 
 [vars]
 GITHUB_REPO = "Muhammadyusuf95/scientific-article"
