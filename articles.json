@@ -6,7 +6,61 @@
     "url": "https://LOYIHA-NOMI.pages.dev"
   },
   "collections": [],
-  "articles": [],
+  "articles": [
+    {
+      "id": "fitonimlarni-xalq-etnomadaniyatining-shakllanishidagi-roli-950238",
+      "item_type": "konferensiya-maqolasi",
+      "language": "uz",
+      "title_uz": "FITONIMLARNI XALQ ETNOMADANIYATINING SHAKLLANISHIDAGI ROLI",
+      "abstract_uz": "shbu maqolada fitonimlarning (o‘simlik nomlari) xalq etnomadaniyati, madaniy xotirasi va global lingvistik manzara shakllanishidagi lingvomadaniy va etnolingvistik roli o‘rganiladi. Unda fitonim ta'limotining etimologik va semantik xususiyatlari, uning xalq tabobati, marosimlar va ritual folklor, mifologiya, g‘oyalar va maishiy hayot bilan uzviy bog‘liqligi tahlil qilinadi. Maqolada fitonimlarni o‘qitishni lingvomadaniy jarayonga aylantirish va ularning etnik guruhning aqliy va madaniy kodini saqlashdagi roli ilmiy asoslanadi",
+      "keywords_uz": [
+        "itonim",
+        "etnolingvistika",
+        "lingvokulturologiya",
+        "etnomadaniyat",
+        "olamning lisoniy manzarasi",
+        "lingvokulturema",
+        "nominatsiya"
+      ],
+      "title_en": "THE ROLE OF PHYTONYMS IN THE FORMATION OF FOLK ETHNOCULTURE",
+      "abstract_en": "This article studies the linguocultural and ethnolinguistic role of phytonyms (plant names) in the formation of folk ethnoculture, cultural memory and the global linguistic landscape. It analyzes the etymological and semantic features of phytonym teaching, its inextricable connection with folk medicine, rituals and ritual folklore, mythology, ideas and everyday life. The article scientifically substantiates the transformation of phytonym teaching into a linguocultural process and their role in preserving the mental and cultural code of an ethnic group",
+      "keywords_en": [
+        "phytonym",
+        "ethnolinguistics",
+        "linguoculturology",
+        "ethnoculture",
+        "linguistic landscape of the world",
+        "linguoculturema",
+        "nomination"
+      ],
+      "authors": [
+        "FITONIMLARNI XALQ ETNOMADANIYATINING SHAKLLANISHIDAGI ROLI"
+      ],
+      "year": 2026,
+      "date": "2026-11-14",
+      "conference_org": "“Filologiyaning dolzarb masalalari”",
+      "conference_place": "Qo‘qon davlat universiteti",
+      "conference_date": "14.10.2026",
+      "pages": "405-409",
+      "doi": "10.5281/zenodo.23772550",
+      "references": [
+        "1. Aytmatov Ch. Oq kema : qissa. — Toshkent : Yoshlar nashriyot uyi, 2018. — B. 6.",
+        "2. Ikromov M. Botanik terminlarni antroposentrik paradigmada o‘rganishning ahamiyati // Namangan davlat universiteti ilmiy axborotnomasi. – 2025. – № 2. – B.448-452.",
+        "3. Ikromov M. Fitonimlarning ramziy va etnomadaniy xususiyatlari // Globallashuv jarayonida ta’lim, ilm-fan, texnologiya va sun’iy intellektning o‘rni: Resp. ilmiy-amaliy anj. mat. to‘plami. – Andijon, 2026. – B. 264-268.",
+        "4. Sobotka P. Rostlinstvo a jeho význam v národních písních, pověstech, bájích, obřadech a povĕrách slovanských. Příspĕvek k slovanské symbolice // Novočeská bibliothéka. Číslo XXII.",
+        "Praha, 1879. – C. 47.",
+        "5. Дьякова Т. А. \"Этнокультурная основа использования фитонимов лексико- семантической группы «Дикорастущие травы» (на материале сборника М. Матусовского «Земля моих отцов-Донбасс») // Вопросы журналистики, педагогики, языкознания. 38.4 (2019): 508-515.",
+        "6. Колосова В. Б. Лексика и символика славянской народной ботаники.",
+        "Этнолингвистический аспект. — М.: «Индрик», 2009. – С. 61.",
+        "7. Толмачева У. К. Цветочная символика в повседневной и праздничной культуре Китая // Державинский форум. — 2021. — Т. 5. — № 18. — С. 135–142.",
+        "8. Усманов Ф. Ўзбек тилидаги ўхшатишларнинг лингвомаданий тадқиқи: Филол. фан. б. фалс. докт. (PhD) ... дисс. – Тошкент, 2020. – Б. 79.",
+        "9. https://www.infoabad.com/5780-tutovnik-zhivoi-simvol-i-ekologicheskoe-nasledie- turkmenistana-nuzhdaetsja-v-vozrozhdenii.html",
+        "10. https://xn----8sbgjbjpvpkiwni6b4f.xn--p1ai/news/legenda-o-tutovom-dereve/"
+      ],
+      "pdf": "fitonimlarni-xalq-etnomadaniyatining-shakllanishidagi-roli-950238.pdf",
+      "pdf_size": 327111
+    }
+  ],
   "pages": {
     "about": {
       "title": "Portal haqida",
