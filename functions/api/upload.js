@@ -1,4 +1,4 @@
-// functions/api/upload.js -> POST /api/upload (Yangi qo'shish va Tahrirlash)
+// functions/api/upload.js -> POST /api/upload (Yangi qo'shish, Tahrirlash va To'plamlar)
 const SCHOLAR_MAX = 5000000;
 const BOOK_MAX = 25 * 1024 * 1024;
 const LANGS = ['uz', 'en', 'ru'];
@@ -16,11 +16,17 @@ const OK = {
   isbn: /^(?:\d[- ]?){9}[\dXx]$|^(?:\d[- ]?){12}\d$/,
   doi: /^10\.\d{4,9}\/\S+$/,
 };
+const PDF_NAME = /^[A-Za-z0-9][A-Za-z0-9._-]{0,150}\.pdf$/i;
+const ID_RE = /^[a-z0-9-]{1,120}$/;
 
 const json = (obj, status = 200) =>
   new Response(JSON.stringify(obj), {
     status,
-    headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' },
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Cache-Control': 'no-store',
+      'X-Content-Type-Options': 'nosniff',
+    },
   });
 class UserError extends Error {}
 
@@ -42,6 +48,16 @@ const b64encode = (s) => {
   return btoa(bin);
 };
 
+async function archiveObject(env, key) {
+  if (!PDF_NAME.test(key) || !env.R2_OMBOR) return;
+  const o = await env.R2_OMBOR.get(key);
+  if (!o) return;
+  await env.R2_OMBOR.put(`deleted/${Date.now()}-${key}`, await o.arrayBuffer(), {
+    httpMetadata: { contentType: 'application/pdf' },
+  });
+  await env.R2_OMBOR.delete(key);
+}
+
 export async function onRequestPost({ request, env }) {
   let key = null;
   let committed = false;
@@ -58,6 +74,7 @@ export async function onRequestPost({ request, env }) {
     const form = await request.formData();
     const g = (name, max) => clean(form.get(name), max);
     const editId = g('edit_id', 120);
+    if (editId && !ID_RE.test(editId)) throw new UserError("Tahrirlanayotgan nashr ID si noto'g'ri");
 
     const type = g('item_type', 40);
     const kind = KIND[type];
@@ -108,7 +125,9 @@ export async function onRequestPost({ request, env }) {
       article.collection = collIdIn;
     }
 
-    const references = list(form.get('references'), /\n+/, 300, 1000);
+    const references = list(form.get('references'), /\n+/, 300, 1000)
+      .map((r) => r.replace(/^(?:\[\d+\]|\d+[\.\)])\s+/, '').trim())
+      .filter(Boolean);
     if (references.length) article.references = references;
 
     const file = form.get('file');
@@ -119,9 +138,13 @@ export async function onRequestPost({ request, env }) {
       if (form.get('checks') !== 'yes') throw new UserError('PDF tayyorgarligi tasdiqlanmagan');
       const limit = kind === 'book' ? BOOK_MAX : SCHOLAR_MAX;
       if (file.size > limit) {
-        throw new UserError(kind === 'book' ? 'PDF hajmi 25 MB dan oshmasligi kerak' : 'Google Scholar 5 MB dan katta fayllarni indekslamaydi.');
+        throw new UserError(kind === 'book'
+          ? 'PDF hajmi 25 MB dan oshmasligi kerak'
+          : 'Google Scholar 5 MB dan katta fayllarni indekslamaydi. PDF hajmini 5 MB dan kichik qiling');
       }
-      if (new TextDecoder().decode(await file.slice(0, 5).arrayBuffer()) !== '%PDF-') throw new UserError('Faqat PDF fayl qabul qilinadi');
+      if (new TextDecoder().decode(await file.slice(0, 5).arrayBuffer()) !== '%PDF-') {
+        throw new UserError('Faqat PDF fayl qabul qilinadi');
+      }
     }
 
     if (!article.id) {
@@ -129,7 +152,7 @@ export async function onRequestPost({ request, env }) {
     }
 
     if (hasNewFile) {
-      key = `${article.id}.pdf`;
+      key = editId ? `${article.id}-${Date.now().toString(36)}.pdf` : `${article.id}.pdf`;
       article.pdf = key;
       article.pdf_size = file.size;
       await env.R2_OMBOR.put(key, await file.arrayBuffer(), { httpMetadata: { contentType: 'application/pdf' } });
@@ -144,11 +167,18 @@ export async function onRequestPost({ request, env }) {
       'X-GitHub-Api-Version': '2022-11-28',
     };
 
+    let oldPdfToArchive = null;
     for (let attempt = 0; attempt < 3 && !committed; attempt++) {
       const getRes = await fetch(api + ref, { headers: gh });
       if (!getRes.ok) throw new Error(`GitHub o'qish xatosi: ${getRes.status}`);
       const cur = await getRes.json();
-      const data = JSON.parse(b64decode(cur.content));
+      let b64 = cur.content;
+      if (!b64 && cur.sha) {
+        const blobRes = await fetch(`https://api.github.com/repos/${env.GITHUB_REPO}/git/blobs/${cur.sha}`, { headers: gh });
+        if (!blobRes.ok) throw new Error(`GitHub blob xatosi: ${blobRes.status}`);
+        b64 = (await blobRes.json()).content;
+      }
+      const data = JSON.parse(b64decode(b64));
       if (!Array.isArray(data.articles)) data.articles = [];
       if (!Array.isArray(data.collections)) data.collections = [];
 
@@ -161,11 +191,14 @@ export async function onRequestPost({ request, env }) {
       if (editId) {
         const idx = data.articles.findIndex((x) => x.id === editId);
         if (idx === -1) throw new UserError('Tahrirlanayotgan maqola topilmadi');
+        const prev = data.articles[idx];
         if (!hasNewFile) {
-          article.pdf = data.articles[idx].pdf;
-          article.pdf_size = data.articles[idx].pdf_size;
+          article.pdf = prev.pdf;
+          article.pdf_size = prev.pdf_size;
+        } else if (prev.pdf && prev.pdf !== key) {
+          oldPdfToArchive = prev.pdf;
         }
-        data.articles[idx] = article;
+        data.articles[idx] = { ...article, id: editId };
       } else {
         data.articles.unshift(article);
       }
@@ -185,7 +218,11 @@ export async function onRequestPost({ request, env }) {
     }
     if (!committed) throw new Error("articles.json ni yangilab bo'lmadi (konflikt)");
 
-    return json({ success: true, id: article.id });
+    if (oldPdfToArchive) {
+      try { await archiveObject(env, oldPdfToArchive); } catch (e) { console.error(e); }
+    }
+
+    return json({ success: true, id: article.id, scholar_pdf: !article.pdf_size || article.pdf_size <= SCHOLAR_MAX });
   } catch (err) {
     if (key && !committed) { try { await env.R2_OMBOR.delete(key); } catch (_) {} }
     if (err instanceof UserError) return json({ success: false, error: err.message }, 400);
