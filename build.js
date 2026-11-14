@@ -3,8 +3,8 @@ const fs=require('fs'),path=require('path');
 const D=JSON.parse(fs.readFileSync('articles.json','utf8'));
 if(!Array.isArray(D.articles)){console.error("articles.json: 'articles' massivi topilmadi");process.exit(1)}
 const S=D.site||{};
-const BASE=(process.env.SITE_URL||S.url||process.env.CF_PAGES_URL||'').replace(/\/$/,'');
-if(!/^https:\/\//.test(BASE)){console.error("Sayt manzili topilmadi: articles.json -> site.url ga https://... manzilni yozing");process.exit(1)}
+const cleanUrl = u => (u && !/loyiha-nomi\.pages\.dev/i.test(u)) ? u : '';
+const BASE=(cleanUrl(process.env.SITE_URL)||cleanUrl(S.url)||process.env.CF_PAGES_URL||'https://scientific-article.pages.dev').replace(/\/$/,'');
 
 const SCHOLAR_MAX=5000000;
 const LANGS=['uz','en','ru'];
@@ -27,12 +27,12 @@ const first=(a,k)=>a[k+'_'+lang(a)]||LANGS.map(l=>a[k+'_'+l]).find(v=>v&&v.lengt
 const title=a=>first(a,'title'),abstract=a=>first(a,'abstract'),kws=a=>first(a,'keywords')||[];
 const order=a=>[lang(a),...LANGS.filter(l=>l!==lang(a))];
 const doi=a=>(a.doi||'').replace(/^https?:\/\/(dx\.)?doi\.org\//i,'');
-const pdfUrl=a=>`${BASE}/pdf/${encodeURIComponent(a.pdf)}`;
+const pdfPath=a=>`/pdf/${encodeURIComponent(a.pdf)}`;
+const pdfUrl=a=>`${BASE}${pdfPath(a)}`;
 const scholarPdf=a=>a.pdf&&(!a.pdf_size||a.pdf_size<=SCHOLAR_MAX);
 const src=a=>{const k=KIND[a._t];return k==='journal'?[a.journal_name,a.volume&&`Tom ${a.volume}`,a.issue&&`Son ${a.issue}`]:k==='conf'?[a.conference_org]:[a.publisher,a.publisher_city]};
 const srcText=a=>src(a).filter(Boolean).join(', ');
 
-// 7 ta xalqaro va mahalliy formatda avtomat iqtibos yaratish (APA, GOST va 5 ta eng mashhur format)
 function buildCitations(a, d, url) {
   const au = a.authors || [];
   const auComma = au.join(', ');
@@ -54,6 +54,92 @@ function buildCitations(a, d, url) {
     IEEE: `${auComma}, "${t}," ${venue}${a.volume ? `, vol. ${a.volume}` : ''}${a.issue ? `, no. ${a.issue}` : ''}${a.pages ? `, pp. ${a.pages}` : ''}, ${y}.${d ? ` doi: ${d}.` : ''}`,
     Vancouver: `${auComma}. ${t}. ${venue}. ${y}${a.volume ? `;${a.volume}` : ''}${iss}${a.pages ? `:${a.pages}` : ''}.${doiStr}`
   };
+}
+
+// BibTeX (.bib) formatini generatsiya qilish (Google Scholar, Mendeley, LaTeX uchun)
+function buildBibtex(a, k, d, url) {
+  const entryType = k === 'conf' ? 'inproceedings' : k === 'book' ? 'book' : 'article';
+  const key = `${slug((a.authors?.[0] || 'author').split(/\s+/)[0]) || 'item'}${a.year}`;
+  const fields = [
+    ['title', title(a)],
+    ['author', (a.authors || []).join(' and ')],
+    ['year', a.year],
+    k === 'journal' && ['journal', a.journal_name],
+    k === 'conf' && ['booktitle', a.conference_org],
+    k === 'book' && ['publisher', a.publisher],
+    a.volume && ['volume', a.volume],
+    a.issue && ['number', a.issue],
+    a.pages && ['pages', String(a.pages).replace(/[-–]/g, '--')],
+    d && ['doi', d],
+    ['url', url],
+  ].filter(Boolean);
+  return `@${entryType}{${key},\n${fields.map(([n, v]) => `  ${n} = {${String(v).replace(/[{}]/g, '')}}`).join(',\n')}\n}\n`;
+}
+
+// RIS (.ris) formatini generatsiya qilish (EndNote, Zotero, Mendeley uchun)
+function buildRis(a, k, d, url) {
+  const ty = k === 'conf' ? 'CONF' : k === 'book' ? 'BOOK' : 'JOUR';
+  const [fp, lp] = String(a.pages || '').split(/\s*[-–]\s*/);
+  const lines = [
+    `TY  - ${ty}`,
+    `TI  - ${title(a)}`,
+    ...(a.authors || []).map(au => `AU  - ${au}`),
+    `PY  - ${a.year}`,
+    a.date && `DA  - ${a.date.replace(/-/g, '/')}`,
+    k === 'journal' && a.journal_name && `JO  - ${a.journal_name}`,
+    k === 'conf' && a.conference_org && `T2  - ${a.conference_org}`,
+    a.publisher && `PB  - ${a.publisher}`,
+    a.volume && `VL  - ${a.volume}`,
+    a.issue && `IS  - ${a.issue}`,
+    fp && `SP  - ${fp}`,
+    lp && `EP  - ${lp}`,
+    d && `DO  - ${d}`,
+    `UR  - ${url}`,
+    a.pdf && `L1  - ${pdfUrl(a)}`,
+    `ER  - `,
+  ].filter(Boolean);
+  return lines.join('\r\n') + '\r\n';
+}
+
+// Google va Google Scholar uchun Schema.org (ScholarlyArticle JSON-LD) strukturasi
+function buildJsonLd(a, k, d, url, fp, lp) {
+  const obj = {
+    '@context': 'https://schema.org',
+    '@type': k === 'book' ? 'Book' : 'ScholarlyArticle',
+    headline: title(a),
+    name: title(a),
+    author: (a.authors || []).map(name => ({ '@type': 'Person', name })),
+    datePublished: a.date || String(a.year),
+    inLanguage: lang(a),
+    url,
+    mainEntityOfPage: url,
+    isAccessibleForFree: true,
+    license: 'https://creativecommons.org/licenses/by/4.0/',
+    publisher: { '@type': 'Organization', name: a.publisher || S.publisher || S.name },
+  };
+  if (abstract(a)) obj.abstract = abstract(a);
+  if (kws(a).length) obj.keywords = kws(a).join(', ');
+  if (d) obj.sameAs = `https://doi.org/${d}`;
+  if (a.isbn) obj.isbn = a.isbn;
+  if (fp) obj.pageStart = fp;
+  if (lp) obj.pageEnd = lp;
+  if (k === 'journal' && a.journal_name) {
+    obj.isPartOf = {
+      '@type': 'Periodical',
+      name: a.journal_name,
+      ...(a.issn ? { issn: a.issn } : {}),
+    };
+  } else if (k === 'conf' && a.conference_org) {
+    obj.isPartOf = { '@type': 'PublicationEvent', name: a.conference_org };
+  }
+  if (a.pdf) {
+    obj.encoding = {
+      '@type': 'MediaObject',
+      contentUrl: pdfUrl(a),
+      encodingFormat: 'application/pdf',
+    };
+  }
+  return `<script type="application/ld+json">${JSON.stringify(obj).replace(/</g, '\\u003c')}</script>\n`;
 }
 
 const bad=[];const seen=new Set();
@@ -93,12 +179,14 @@ for(const c of C){const L=A.filter(a=>a.collection===c.id);out(`collection/${c._
 
 for(const a of A){
  const k=KIND[a._t],L=lang(a),c=C.find(x=>x.id===a.collection),d=doi(a),url=`${BASE}/article/${a._id}/`,[fp,lp]=String(a.pages||'').split(/\s*[-–]\s*/);
+ // Google Scholar Highwire Press meta teglari + Schema.org JSON-LD
  const head=meta('citation_title',title(a))+a.authors.map(x=>meta('citation_author',x)).join('')+meta('citation_publication_date',a.date?a.date.replace(/-/g,'/'):a.year)
   +(k==='journal'?meta('citation_journal_title',a.journal_name)+meta('citation_volume',a.volume)+meta('citation_issue',a.issue):'')
   +(k==='conf'?meta('citation_conference_title',a.conference_org):'')
   +(k==='book'?meta('citation_publisher',a.publisher):meta('citation_firstpage',fp)+meta('citation_lastpage',lp))
   +meta('citation_doi',d)+meta('citation_issn',a.issn)+meta('citation_isbn',a.isbn)+meta('citation_language',L)+meta('citation_keywords',kws(a).join('; '))
-  +meta('citation_abstract_html_url',url)+(scholarPdf(a)?meta('citation_pdf_url',pdfUrl(a)):'');
+  +meta('citation_abstract_html_url',url)+(scholarPdf(a)?meta('citation_pdf_url',pdfUrl(a)):'')
+  +buildJsonLd(a,k,d,url,fp,lp);
 
  const rows=[['Turi',TYPES[a._t]],['Nashr yili',a.year],
   k==='journal'&&['Jurnal',a.journal_name],k==='journal'&&['Tom / son',[a.volume,a.issue].filter(Boolean).join(' / ')],
@@ -111,23 +199,44 @@ for(const a of A){
  const kw=order(a).filter(l=>a['keywords_'+l]?.length).map(l=>`<p lang="${l}"><strong>${KW[l]}:</strong> ${esc(a['keywords_'+l].join(', '))}</p>`).join('');
  const refs=[].concat(a.references||[]);
  const cites=buildCitations(a,d,url);
+ const bibB64=Buffer.from(buildBibtex(a,k,d,url),'utf8').toString('base64');
+ const risB64=Buffer.from(buildRis(a,k,d,url),'utf8').toString('base64');
  const size=a.pdf_size?` (${(a.pdf_size/1e6).toFixed(1)} MB)`:'';
 
  const citeWidget = `
   <h2>Iqtibos keltirish</h2>
   <div class="cite-box" style="margin-top:0.5rem">
-    <label for="citeStyle" style="font-weight:600;font-size:0.95rem;margin-right:0.5rem">Iqtibos turi:</label>
-    <select id="citeStyle" style="padding:0.4rem 0.6rem;font:inherit;border:1px solid var(--line);border-radius:2px;background:#fff">
-      ${Object.keys(cites).map(k=>`<option value="${k}">${k}</option>`).join('')}
-    </select>
-    <p id="citeOut" style="background:#fff;border:1px solid var(--line);padding:0.85rem 1rem;border-radius:2px;margin:0.6rem 0">${esc(cites.APA)}</p>
+    <div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center">
+      <label for="citeStyle" style="font-weight:600;font-size:0.95rem">Iqtibos uslubi:</label>
+      <select id="citeStyle" style="padding:0.45rem 0.7rem;font:inherit;border:1px solid var(--line);border-radius:4px;background:#fff">
+        ${Object.keys(cites).map(k=>`<option value="${k}">${k}</option>`).join('')}
+      </select>
+      <button type="button" id="citeCopy" class="btn" style="padding:0.45rem 0.9rem;font-size:0.9rem;border:0;cursor:pointer">Nusxa olish</button>
+      <a href="data:application/x-bibtex;charset=utf-8;base64,${bibB64}" download="${esc(a._id)}.bib" style="font-size:0.9rem;font-weight:600;margin-left:0.4rem">BibTeX (.bib)</a>
+      <a href="data:application/x-research-info-systems;charset=utf-8;base64,${risB64}" download="${esc(a._id)}.ris" style="font-size:0.9rem;font-weight:600;margin-left:0.4rem">RIS / EndNote (.ris)</a>
+    </div>
+    <p id="citeOut" style="background:#fff;border:1px solid var(--line);padding:0.85rem 1rem;border-radius:4px;margin:0.6rem 0;user-select:all">${esc(cites.APA)}</p>
     ${Object.entries(cites).map(([k,v])=>`<template data-cite="${k}">${esc(v)}</template>`).join('')}
   </div>`;
 
+ const pdfPreview = a.pdf ? `
+  <div style="display:flex;flex-wrap:wrap;gap:0.75rem;align-items:center;margin:1.25rem 0">
+    <a class="btn" href="${pdfPath(a)}" target="_blank" rel="noopener">To'liq matn (PDF)${size}</a>
+    <a class="btn" href="${pdfPath(a)}" download="${esc(a.pdf)}" style="background:#fff;color:var(--teal);border:1px solid var(--teal)">PDF yuklab olish</a>
+  </div>
+  <h2>Maqolani sahifada o'qish (PDF)</h2>
+  <div style="border:1px solid var(--line);border-radius:4px;overflow:hidden;background:#e9eef0;margin:0.75rem 0 1.75rem">
+    <iframe src="${pdfPath(a)}#view=FitH" title="${esc(title(a))} (PDF)" style="width:100%;height:560px;border:0;display:block" loading="lazy"></iframe>
+  </div>` : '';
+
+ const refsSection = refs.length ? `
+  <h2>Foydalanilgan adabiyotlar</h2>
+  <ol>${refs.map(r=>`<li>${esc(r)}</li>`).join('')}</ol>
+  <p style="margin-top:0.75rem"><a href="data:text/plain;charset=utf-8;base64,${Buffer.from(refs.map((r,i)=>`${i+1}. ${r}`).join('\n'),'utf8').toString('base64')}" download="${esc(a._id)}-adabiyotlar.txt" style="font-weight:600">Adabiyotlar ro'yxatini yuklab olish (.txt)</a></p>` : '';
+
  out(`article/${a._id}/index.html`,page(`${title(a)} - ${S.name}`,(abstract(a)||'').slice(0,160),
  `<div class="wrap"><article class="paper">${c?`<p class="crumb"><a href="/collection/${c._id}/">${esc(c.name)}</a></p>`:''}<p class="kind">${esc(TYPES[a._t])}</p><h1 lang="${L}">${esc(title(a))}</h1>${alt}
-<p class="authors">${esc(a.authors.join(', '))}</p><dl class="meta">${dl}</dl>${a.pdf?`<p><a class="btn" href="${pdfUrl(a)}">To'liq matn (PDF)${size}</a></p>`:''}${ab}${kw}
-${refs.length?`<h2>Foydalanilgan adabiyotlar</h2><ol>${refs.map(r=>`<li>${esc(r)}</li>`).join('')}</ol>`:''}${citeWidget}</article></div>`,`/article/${a._id}/`,head+'<script src="/js/app.js" defer></script>\n',L));
+<p class="authors">${esc(a.authors.join(', '))}</p><dl class="meta">${dl}</dl>${ab}${kw}${citeWidget}${pdfPreview}${refsSection}</article></div>`,`/article/${a._id}/`,head+'<script src="/js/app.js" defer></script>\n',L));
 }
 
 for(const [k,t] of Object.entries(D.pages||{}))out(`${k}/index.html`,page(`${t.title} - ${S.name}`,t.title,`<div class="wrap"><div class="text"><h1>${esc(t.title)}</h1>${t.text.map(p=>`<p>${esc(p)}</p>`).join('')}</div></div>`,`/${k}/`));
@@ -139,11 +248,11 @@ out('robots.txt',`User-agent: *\nAllow: /\nSitemap: ${BASE}/sitemap.xml\n`);
 
 out('_headers',`/*
   X-Content-Type-Options: nosniff
-  X-Frame-Options: DENY
+  X-Frame-Options: SAMEORIGIN
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=()
   Strict-Transport-Security: max-age=31536000; includeSubDomains
-  Content-Security-Policy: default-src 'self'; img-src 'self' data:; script-src 'self'; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; img-src 'self' data:; script-src 'self'; style-src 'self' 'unsafe-inline'; frame-src 'self'; object-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'
 
 /admin.html
   ! Content-Security-Policy
