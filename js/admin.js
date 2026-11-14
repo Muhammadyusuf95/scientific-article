@@ -25,7 +25,7 @@
 
   function resetIdle() {
     clearTimeout(idleTimer);
-    if (getToken()) idleTimer = setTimeout(() => doLogout('20 daqiqa faoliyat bo\'lmagani uchun tizimdan chiqildi.'), IDLE_MS);
+    if (getToken()) idleTimer = setTimeout(() => doLogout("20 daqiqa faoliyat bo'lmagani uchun tizimdan chiqildi."), IDLE_MS);
   }
   ['click', 'keydown', 'mousemove', 'touchstart'].forEach((ev) => window.addEventListener(ev, resetIdle, { passive: true }));
 
@@ -35,7 +35,10 @@
     el.className = (el.id === 'refsMsg' ? 'small ' : 'msg ') + type;
   }
 
-  // --- Tillar tablari ---
+  function esc(s) {
+    return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
   let activeLang = 'uz';
   function initLangTabs() {
     const tabs = $('tabs');
@@ -87,7 +90,6 @@
     });
   }
 
-  // --- To'plamlar paneli (Konferensiya to'plami va Jurnal to'plami galochka bilan) ---
   function renderCollectionPanels() {
     const box = $('collPanels');
     const jColls = state.collections.filter((c) => c.type !== 'conf');
@@ -97,7 +99,7 @@
       <div class="coll-group">
         <label class="check" style="margin-top:0">
           <input type="checkbox" id="chkJournalColl">
-          <span><strong>Jurnal to'plami</strong> (bir jurnal sonidagi maqolalarni to'plam sifatida birlashtirish)</span>
+          <span><strong>Jurnal to'plami</strong> (jurnal sonidagi maqolalarni to'plam sifatida birlashtirish)</span>
         </label>
         <div class="coll-body" id="bodyJournalColl" hidden>
           <div class="grid">
@@ -119,7 +121,7 @@
       <div class="coll-group">
         <label class="check" style="margin-top:0">
           <input type="checkbox" id="chkConfColl">
-          <span><strong>Konferensiya to'plami</strong> (bir konferensiya materiallarini to'plam sifatida birlashtirish)</span>
+          <span><strong>Konferensiya to'plami</strong> (konferensiya materiallarini to'plam sifatida birlashtirish)</span>
         </label>
         <div class="coll-body" id="bodyConfColl" hidden>
           <div class="grid">
@@ -132,7 +134,7 @@
             </label>
             <label class="field">
               <span class="lbl">Konferensiya to'plami nomi (qo'lda yozish)</span>
-              <input type="text" id="inpConfColl" maxlength="200" placeholder="Masalan: Raqamli iqtisodiyot xalqaro konferensiyasi — 2026">
+              <input type="text" id="inpConfColl" maxlength="200" placeholder="Masalan: Filologiyaning dolzarb masalalari — 2026">
             </label>
           </div>
         </div>
@@ -166,23 +168,14 @@
 
   function getSelectedCollectionData() {
     if ($('chkJournalColl')?.checked) {
-      return {
-        id: $('selJournalColl').value.trim(),
-        name: $('inpJournalColl').value.trim(),
-        type: 'journal',
-      };
+      return { id: $('selJournalColl').value.trim(), name: $('inpJournalColl').value.trim(), type: 'journal' };
     }
     if ($('chkConfColl')?.checked) {
-      return {
-        id: $('selConfColl').value.trim(),
-        name: $('inpConfColl').value.trim(),
-        type: 'conf',
-      };
+      return { id: $('selConfColl').value.trim(), name: $('inpConfColl').value.trim(), type: 'conf' };
     }
     return null;
   }
 
-  // --- Material turiga qarab qo'shimcha maydonlar ---
   function renderExtraFields() {
     const type = $('item_type').value;
     const kind = KIND[type] || 'journal';
@@ -198,8 +191,8 @@
       extra.innerHTML = `
         <label class="field full"><span class="lbl req">Konferensiya nomi</span><input name="conference_org" id="f_conference_org" maxlength="200" required></label>
         <label class="field"><span class="lbl">O'tkazilgan joyi</span><input name="conference_place" id="f_conference_place" maxlength="120"></label>
-        <label class="field"><span class="lbl">Konferensiya sanasi</span><input name="conference_date" id="f_conference_date" maxlength="60" placeholder="2026-05-10"></label>
-        <label class="field"><span class="lbl">Betlar</span><input name="pages" id="f_pages" placeholder="45-49" maxlength="40"></label>
+        <label class="field"><span class="lbl">Konferensiya sanasi</span><input name="conference_date" id="f_conference_date" maxlength="60" placeholder="14.10.2026"></label>
+        <label class="field"><span class="lbl">Betlar</span><input name="pages" id="f_pages" placeholder="405-409" maxlength="40"></label>
       `;
     } else {
       extra.innerHTML = `
@@ -213,7 +206,6 @@
     $('sizeHint').textContent = `Maksimal hajm: ${maxMb} MB (Google Scholar indeksatsiyasi uchun 5 MB gacha tavsiya etiladi).`;
   }
 
-  // --- PDF dan Foydalanilgan adabiyotlarni avtomat ajratib olish ---
   let pdfjsLoaded = null;
   function loadPdfJs() {
     if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
@@ -233,7 +225,7 @@
 
   async function extractRefsFromPdfFile(file) {
     if (!file) { msg($('refsMsg'), 'Avval PDF faylni tanlang.', 'err'); return; }
-    msg($('refsMsg'), "PDF ichidan adabiyotlar ro'yxati qidirilmoqda...", 'info');
+    msg($('refsMsg'), "PDF ichidan foydalanilgan adabiyotlar ro'yxati o'qilmoqda...", 'info');
     try {
       const pdfjsLib = await loadPdfJs();
       const buf = await file.arrayBuffer();
@@ -287,19 +279,16 @@
         return;
       }
       $('references').value = cleaned.join('\n');
-      msg($('refsMsg'), `${cleaned.length} ta manba avtomat ajratib olindi! Saqlashdan oldin tekshirib chiqing.`, 'ok');
+      msg($('refsMsg'), `${cleaned.length} ta manba avtomat ajratib olindi!`, 'ok');
     } catch (e) {
       msg($('refsMsg'), "PDF matnini avtomat o'qishda xatolik: " + e.message, 'err');
     }
   }
 
-  // --- Serverdan maqolalar va to'plamlarni yuklash ---
   async function loadArticles() {
     msg($('listMsg'), 'Yuklanmoqda...', 'info');
     try {
-      const res = await fetch('/api/articles', {
-        headers: { 'X-Admin-Token': getToken() },
-      });
+      const res = await fetch('/api/articles', { headers: { 'X-Admin-Token': getToken() } });
       if (res.status === 401 || res.status === 403) {
         doLogout("Admin kaliti noto'g'ri yoki muddati tugagan.");
         return false;
@@ -317,10 +306,6 @@
       msg($('listMsg'), 'Xatolik: ' + e.message, 'err');
       return false;
     }
-  }
-
-  function esc(s) {
-    return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
 
   function renderList() {
@@ -358,7 +343,6 @@
     ul.querySelectorAll('[data-del]').forEach((b) => (b.onclick = () => deleteArticle(b.dataset.del)));
   }
 
-  // --- Maqolani Tahrirlash ---
   function startEdit(id) {
     const a = state.articles.find((x) => x.id === id);
     if (!a) return;
@@ -396,7 +380,6 @@
 
     $('references').value = (a.references || []).join('\n');
 
-    // To'plamni tiklash
     renderCollectionPanels();
     if (a.collection) {
       const coll = state.collections.find((c) => c.id === a.collection);
@@ -432,20 +415,20 @@
     renderCollectionPanels();
   }
 
-  // --- Maqolani O'chirish ---
+  // Sizning delete.js faylingizga (form.get('id') va form.get('confirm')) 100% mos!
   async function deleteArticle(id) {
     const a = state.articles.find((x) => x.id === id);
     if (!a) return;
     if (!confirm(`Haqiqatan ham "${a.title_uz || a.id}" nashrini o'chirmoqchimisiz?`)) return;
     msg($('listMsg'), "O'chirilmoqda...", 'info');
     try {
+      const fd = new FormData();
+      fd.append('id', id);
+      fd.append('confirm', id);
       const res = await fetch('/api/delete', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Admin-Token': getToken(),
-        },
-        body: JSON.stringify({ id }),
+        headers: { 'X-Admin-Token': getToken() },
+        body: fd,
       });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.error || "O'chirishda xatolik");
@@ -473,7 +456,6 @@
     if (reason) msg($('loginMsg'), reason, 'err');
   }
 
-  // --- Boshlang'ich bog'lanishlar ---
   initLangTabs();
   renderExtraFields();
   $('year').value = new Date().getFullYear();
@@ -514,7 +496,6 @@
 
   $('logoutBtn').onclick = () => doLogout();
 
-  // PDF tanlanganda avtomat adabiyotlarni o'qish
   $('file').onchange = function () {
     const f = this.files[0];
     if (!f) { $('fileInfo').textContent = ''; return; }
@@ -523,7 +504,6 @@
   };
   $('refsBtn').onclick = () => extractRefsFromPdfFile($('file').files[0]);
 
-  // --- Formani Yuborish (Yangi yuklash yoki Tahrirlash) ---
   $('form').onsubmit = async (e) => {
     e.preventDefault();
     const btn = $('submitBtn');
