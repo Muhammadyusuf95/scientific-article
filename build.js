@@ -2,6 +2,9 @@
 const fs = require('fs'), path = require('path');
 const CIT = require('./citations.js');
 
+// Eski fayllar qolib ketmasligi uchun chiqish papkasini har safar tozalaymiz
+fs.rmSync('dist', { recursive: true, force: true });
+
 const D = JSON.parse(fs.readFileSync('articles.json', 'utf8'));
 if (!Array.isArray(D.articles)) { console.error("articles.json: 'articles' massivi topilmadi"); process.exit(1); }
 const S = D.site || {};
@@ -10,7 +13,8 @@ const S = D.site || {};
 const placeholder = u => !u || /LOYIHA-NOMI|example\.com/i.test(u);
 let BASE = (process.env.SITE_URL || (!placeholder(S.url) ? S.url : '') || '').replace(/\/$/, '');
 if (!BASE && process.env.CF_PAGES_URL) {
-  BASE = process.env.CF_PAGES_URL.replace(/\/$/, '');
+  // CF_PAGES_URL har bir deploy uchun alohida (8a0774b7.loyiha.pages.dev). Doimiy manzil: loyiha.pages.dev
+  BASE = process.env.CF_PAGES_URL.replace(/\/$/, '').replace(/^(https:\/\/)[0-9a-f]{8}\./, '$1');
   console.warn("OGOHLANTIRISH: articles.json -> site.url shablon holida. Vaqtincha " + BASE + " ishlatildi. Haqiqiy manzilni yozing.");
 }
 if (!/^https:\/\//.test(BASE)) { console.error("Sayt manzili topilmadi: articles.json -> site.url ga https://... manzilni yozing"); process.exit(1); }
@@ -90,9 +94,10 @@ if (bad.length) { console.error(bad.join('\n')); process.exit(1); }
 
 // ---------- Sahifa qobig'i ----------
 const NAV = [['/about/', 'Portal haqida'], ['/editorial-board/', "Tahririyat hay'ati"], ['/ethics/', 'Nashr etikasi'], ['/contact/', 'Aloqa']];
+const FAVICON = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231a56db'/%3E%3Ctext x='16' y='23' font-size='20' text-anchor='middle' fill='white' font-family='Arial,sans-serif'%3EA%3C/text%3E%3C/svg%3E";
 const page = (t, d, body, p = '/', head = '', l = 'uz', ot = 'website') => `<!doctype html>
 <html lang="${l}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${esc(t)}</title><meta name="description" content="${esc(d)}"><link rel="canonical" href="${BASE}${p}">
+<title>${esc(t)}</title><meta name="description" content="${esc(d)}"><link rel="canonical" href="${BASE}${p}"><link rel="icon" href="${FAVICON}">
 <meta property="og:title" content="${esc(t)}"><meta property="og:description" content="${esc(d)}"><meta property="og:url" content="${BASE}${p}"><meta property="og:type" content="${ot}"><meta property="og:site_name" content="${esc(S.name)}">
 ${head}<link rel="stylesheet" href="/css/style.css"><link rel="stylesheet" href="/css/extra.css"></head><body>
 <a class="skip" href="#main">Asosiy mazmunga o'tish</a>
@@ -182,7 +187,7 @@ out('404.html', page('Sahifa topilmadi', S.name, `<div class="wrap"><div class="
 const lastOf = L => L.map(a => a.date).filter(Boolean).sort().pop();
 const urls = [['/', lastOf(A)], ...C.map(c => [`/collection/${c._id}/`, lastOf(A.filter(a => a.collection === c.id))]), ...A.map(a => [`/article/${a._id}/`, a.date]), ...Object.keys(D.pages || {}).map(k => [`/${k}/`])];
 out('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.map(([u, m]) => `<url><loc>${BASE}${u}</loc>${m ? `<lastmod>${esc(m)}</lastmod>` : ''}</url>`).join('')}</urlset>`);
-out('robots.txt', `User-agent: *\nAllow: /\nDisallow: /api/\nSitemap: ${BASE}/sitemap.xml\n`);
+out('robots.txt', `User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /admin\nSitemap: ${BASE}/sitemap.xml\n`);
 
 // Qo'shimcha uslublar (iqtibos va to'plam bloklari). Asosiy dizayn css/style.css da qoladi.
 out('css/extra.css', `.cite{margin-top:2.5rem;padding-top:1.5rem;border-top:1px solid rgba(128,128,128,.3)}
@@ -225,6 +230,20 @@ ${adminRule('/admin/')}
   Cache-Control: public, max-age=3600
 `);
 
+// ---------- Statik fayllarni ko'chirish ----------
 for (const d of ['css', 'js']) if (fs.existsSync(d)) fs.cpSync(d, path.join('dist', d), { recursive: true });
+
+// Admin sahifa: ildizdagi admin.html (asosiy) yoki admin/index.html (zaxira) - qaysi biri bo'lsa, o'sha ko'chiriladi
 if (fs.existsSync('admin.html')) fs.copyFileSync('admin.html', path.join('dist', 'admin.html'));
+else if (fs.existsSync(path.join('admin', 'index.html'))) fs.copyFileSync(path.join('admin', 'index.html'), path.join('dist', 'admin.html'));
+else console.warn("OGOHLANTIRISH: admin.html topilmadi (ildizda yoki admin/index.html)");
+
+// pdf.js (adabiyotlarni PDF dan avtomat o'qish uchun). CSP "script-src 'self'" tufayli sayt ichida turishi kerak.
+// Kerak: package.json -> dependencies -> "pdfjs-dist". Yo'q bo'lsa, build to'xtamaydi, faqat avtomat o'qish o'chiq bo'ladi.
+const PJ = ['node_modules/pdfjs-dist/build', 'node_modules/pdfjs-dist/legacy/build'].find(p => fs.existsSync(path.join(p, 'pdf.min.mjs')));
+if (PJ) {
+  fs.mkdirSync(path.join('dist', 'js', 'vendor'), { recursive: true });
+  for (const f of ['pdf.min.mjs', 'pdf.worker.min.mjs']) if (fs.existsSync(path.join(PJ, f))) fs.copyFileSync(path.join(PJ, f), path.join('dist', 'js', 'vendor', f));
+} else console.warn("OGOHLANTIRISH: pdfjs-dist o'rnatilmagan, adabiyotlarni PDF dan avtomat o'qish ishlamaydi.");
+
 console.log(`Tayyor: ${A.length} nashr, ${C.length} to'plam, ${urls.length} sahifa`);
