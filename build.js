@@ -115,6 +115,12 @@ out('_headers',`/*
   X-Robots-Tag: noindex, nofollow
   Cache-Control: no-store
 
+/admin
+  ! Content-Security-Policy
+  Content-Security-Policy: default-src 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'
+  X-Robots-Tag: noindex, nofollow
+  Cache-Control: no-store
+
 /css/*
   Cache-Control: public, max-age=3600
 /js/*
