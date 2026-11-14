@@ -196,3 +196,31 @@ export function replaceEditable(existing, fresh) {
   for (const k of OWN_KEYS) delete out[k];
   return Object.assign(out, fresh);
 }
+
+// ---------- _middleware.js, articles.js va delete.js kutadigan nomlar ----------
+export const ID_RE = /^[a-z0-9-]{1,120}$/;
+
+export const readArticles = readData;
+
+// null qaytaradi (ruxsat bor) yoki rad javobi (Response)
+export async function assertAdmin(request, env) {
+  if (!env.ADMIN_TOKEN) {
+    console.error('ADMIN_TOKEN sozlanmagan');
+    return json({ success: false, error: "Server sozlamalari to'liq emas" }, 500);
+  }
+  const given = request.headers.get('X-Admin-Token') || '';
+  if (!given || !(await sameSecret(given, env.ADMIN_TOKEN))) {
+    await sleep(700);
+    return json({ success: false, error: "Ruxsat yo'q" }, 401);
+  }
+  return null;
+}
+
+// O'chirilgan/almashtirilgan PDF ni yo'qotmasdan deleted/ papkasiga ko'chiradi (qayta tiklash mumkin)
+export async function archiveObject(env, key) {
+  if (!OK.pdf.test(key)) return;
+  const o = await env.R2_OMBOR.get(key);
+  if (!o) return;
+  await env.R2_OMBOR.put(`deleted/${Date.now()}-${key}`, await o.arrayBuffer(), { httpMetadata: { contentType: 'application/pdf' } });
+  await env.R2_OMBOR.delete(key);
+}
