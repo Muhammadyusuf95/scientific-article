@@ -13,10 +13,26 @@ if(q&&l){
   });
 }
 
-const citeSel=document.getElementById('citeStyle'),citeOut=document.getElementById('citeOut');
+const citeSel=document.getElementById('citeStyle'),citeOut=document.getElementById('citeOut'),citeCopy=document.getElementById('citeCopy');
 if(citeSel&&citeOut){
   citeSel.addEventListener('change',()=>{
     const tpl=document.querySelector(`template[data-cite="${citeSel.value}"]`);
     if(tpl)citeOut.textContent=tpl.innerHTML.replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'");
+  });
+}
+if(citeCopy&&citeOut){
+  citeCopy.addEventListener('click',async()=>{
+    try{
+      await navigator.clipboard.writeText(citeOut.textContent.trim());
+      const old=citeCopy.textContent;
+      citeCopy.textContent='Nusxa olindi!';
+      setTimeout(()=>{citeCopy.textContent=old},1800);
+    }catch(_){
+      const r=document.createRange();
+      r.selectNodeContents(citeOut);
+      const s=window.getSelection();
+      s.removeAllRanges();
+      s.addRange(r);
+    }
   });
 }
