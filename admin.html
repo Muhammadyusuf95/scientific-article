@@ -4,233 +4,174 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>Nashr yuklash paneli</title>
-<style>
-:root{--bg:#f3f5f9;--card:#fff;--text:#17202e;--muted:#5d6b82;--line:#d9dfea;--brand:#1a56db;--brand-d:#1445b0;--ok:#0e7a43;--err:#b42318;--field:#fff}
-@media (prefers-color-scheme:dark){:root{--bg:#0e1420;--card:#161e2e;--text:#e8edf6;--muted:#98a6bf;--line:#2a3650;--brand:#5b8def;--brand-d:#7aa3f5;--ok:#46c37f;--err:#ff7b72;--field:#0f1726}}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-.wrap{max-width:820px;margin:0 auto;padding:24px 16px 64px}
-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px}
-h1{font-size:1.5rem;margin:0}
-h2{font-size:1.05rem;margin:0 0 14px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px;margin-bottom:18px}
-.grid{display:grid;gap:14px;grid-template-columns:1fr 1fr}
-.full{grid-column:1/-1}
-@media (max-width:640px){.grid{grid-template-columns:1fr}}
-label{display:block;font-weight:600;font-size:.92rem}
-label>input,label>select,label>textarea{margin-top:5px}
-.opt{font-weight:400;color:var(--muted)}
-.req::after{content:" *";color:var(--err)}
-.hint{display:block;font-weight:400;color:var(--muted);font-size:.82rem;margin-top:4px}
-input,textarea,select{width:100%;padding:10px 12px;font:inherit;color:var(--text);background:var(--field);border:1px solid var(--line);border-radius:9px}
-textarea{resize:vertical;min-height:90px}
-input:focus,textarea:focus,select:focus,button:focus-visible{outline:2px solid var(--brand);outline-offset:1px}
-input:user-invalid,textarea:user-invalid{border-color:var(--err)}
-.check{display:flex;gap:10px;align-items:flex-start;font-weight:400}
-.check input{width:auto;margin-top:5px}
-button{font:inherit;cursor:pointer}
-button.go{width:100%;padding:13px;font-weight:600;color:#fff;background:var(--brand);border:0;border-radius:10px;margin-top:18px}
-button.go:hover{background:var(--brand-d)}
-button:disabled{opacity:.6;cursor:not-allowed}
-.link{background:none;border:0;color:var(--brand);padding:4px}
-.bar{height:8px;background:var(--line);border-radius:99px;overflow:hidden;margin-top:14px;display:none}
-.bar i{display:block;height:100%;width:0;background:var(--brand);transition:width .15s}
-.msg{margin-top:14px;font-weight:600;min-height:1.4em}
-.msg.ok{color:var(--ok)}.msg.err{color:var(--err)}.msg.info{color:var(--brand)}
-[hidden]{display:none!important}
-@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
-</style>
+<meta name="referrer" content="no-referrer">
+<meta name="color-scheme" content="light dark">
+<title>Admin panel</title>
+<link rel="stylesheet" href="/css/admin.css?v=3">
+<script src="/js/admin.js?v=3" defer></script>
 </head>
 <body>
-<div class="wrap">
-<header><h1>Nashr yuklash paneli</h1><button class="link" id="logout" type="button" hidden>Chiqish</button></header>
 
-<section class="card" id="loginCard">
-  <form id="loginForm" autocomplete="off">
-    <label>Admin kaliti<input type="password" id="token" required autocomplete="current-password"></label>
-    <span class="hint">Kalit faqat shu brauzer oynasida saqlanadi va oynani yopganingizda oʻchadi.</span>
-    <button class="go" type="submit">Kirish</button>
-  </form>
-</section>
+<header class="top">
+  <div class="wrap top-in">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">A</span>
+      <div><h1>Admin panel</h1><p>Ilmiy nashrlarni boshqarish</p></div>
+    </div>
+    <div class="top-acts">
+      <a class="link" href="/">Saytga qaytish</a>
+      <button class="btn ghost sm" type="button" id="logoutBtn" hidden>Chiqish</button>
+    </div>
+  </div>
+</header>
 
-<form id="f" hidden>
-  <div class="card">
-    <h2>Asosiy maʼlumotlar</h2>
-    <div class="grid">
-      <label class="req">Material turi
-        <select name="item_type" required>
-          <option value="jurnal-maqolasi">Jurnal maqolasi</option>
-          <option value="konferensiya-maqolasi">Konferensiya maqolasi</option>
-          <option value="konferensiya-tezisi">Konferensiya tezisi</option>
-          <option value="darslik">Darslik</option>
-          <option value="oquv-qollanma">Oʻquv qoʻllanma</option>
-          <option value="monografiya">Monografiya</option>
-        </select>
+<main class="wrap">
+
+  <!-- Kirish -->
+  <section class="card login" id="loginCard" aria-labelledby="loginTitle">
+    <h2 id="loginTitle">Kirish</h2>
+    <form id="loginForm" autocomplete="off">
+      <label class="field">
+        <span class="lbl req">Admin kaliti</span>
+        <span class="pw">
+          <input type="password" id="token" maxlength="200" required autocomplete="current-password" spellcheck="false">
+          <button class="btn ghost sm" type="button" id="pwToggle" aria-label="Kalitni ko'rsatish">Ko'rsatish</button>
+        </span>
+        <span class="hint">Kalit faqat shu brauzer oynasida saqlanadi va oynani yopganingizda o'chadi. 20 daqiqa faoliyat bo'lmasa, avtomat chiqiladi.</span>
       </label>
-      <label class="req">Asosiy til
-        <select name="language"><option value="uz">Oʻzbekcha</option><option value="en">Inglizcha</option><option value="ru">Ruscha</option></select>
-      </label>
-      <label class="full req">Mualliflar
-        <textarea name="authors" rows="2" placeholder="Aliyev Vali; Valiyev Sami" required></textarea>
-        <span class="hint">Bir nechta muallif boʻlsa, nuqtali vergul (;) yoki yangi qator bilan ajrating. Vergul muallifni ajratmaydi.</span>
-      </label>
-      <label class="req">Nashr yili<input type="number" name="year" min="1950" max="2100" required></label>
-      <label>Nashr sanasi<input type="date" name="date"></label>
+      <button class="btn primary block" type="submit" id="loginBtn">Kirish</button>
+      <p class="msg" id="loginMsg" role="status" aria-live="polite"></p>
+    </form>
+  </section>
+
+  <div id="panel" hidden>
+
+    <div class="seg" role="tablist" aria-label="Bo'limlar">
+      <button type="button" class="segbtn" id="navForm" role="tab" aria-selected="true">Nashr joylash</button>
+      <button type="button" class="segbtn" id="navList" role="tab" aria-selected="false">Nashrlar <span class="count" id="countBadge">0</span></button>
     </div>
+
+    <!-- ===== Yuklash / tahrirlash ===== -->
+    <section id="viewForm">
+      <div class="editbar" id="editBar" hidden>
+        <span>Tahrirlash rejimi: <strong id="editId"></strong>. PDF ni almashtirish ixtiyoriy.</span>
+        <button class="btn ghost sm" type="button" id="cancelEdit">Bekor qilish</button>
+      </div>
+
+      <form id="form" autocomplete="off">
+
+        <div class="card">
+          <h2><span class="step">1</span> Asosiy ma'lumotlar</h2>
+          <div class="grid">
+            <label class="field">
+              <span class="lbl req">Material turi</span>
+              <select name="item_type" id="item_type" required>
+                <option value="jurnal-maqolasi">Jurnal maqolasi</option>
+                <option value="konferensiya-maqolasi">Konferensiya maqolasi</option>
+                <option value="konferensiya-tezisi">Konferensiya tezisi</option>
+                <option value="darslik">Darslik</option>
+                <option value="oquv-qollanma">O'quv qo'llanma</option>
+                <option value="monografiya">Monografiya</option>
+              </select>
+            </label>
+            <label class="field">
+              <span class="lbl req">Asosiy til</span>
+              <select name="language" id="language">
+                <option value="uz">O'zbekcha</option>
+                <option value="en">Inglizcha</option>
+                <option value="ru">Ruscha</option>
+              </select>
+              <span class="hint">PDF qaysi tilda yozilgan bo'lsa, shuni tanlang.</span>
+            </label>
+            <label class="field full">
+              <span class="lbl req">Mualliflar</span>
+              <textarea name="authors" id="authors" rows="2" maxlength="4000" placeholder="Aliyev Vali; Valiyev Sami" required></textarea>
+              <span class="hint">Bir nechta muallif bo'lsa, nuqtali vergul (;) yoki yangi qator bilan ajrating. Vergul muallifni ajratmaydi.</span>
+            </label>
+            <label class="field">
+              <span class="lbl">Nashr yili</span>
+              <input type="number" name="year" id="year" min="1950" max="2100">
+            </label>
+            <label class="field">
+              <span class="lbl">Nashr sanasi</span>
+              <input type="date" name="date" id="date">
+            </label>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2><span class="step">2</span> Nom, annotatsiya, kalit so'zlar</h2>
+          <p class="hint first">Asosiy tilda hammasi majburiy. Qolgan tillar ixtiyoriy (ko'p tilli sahifa Google uchun foydali).</p>
+          <div class="tabs" id="tabs" role="tablist" aria-label="Tillar"></div>
+          <div id="langPanels"></div>
+        </div>
+
+        <div class="card">
+          <h2><span class="step">3</span> To'plam va nashr tafsilotlari</h2>
+          <p class="hint first">Bir jurnal yoki konferensiyaning bir nechta maqolasini tartibli saqlash uchun to'plamga kiriting. Galochka qo'yilgandagina to'plam maydonlari ochiladi.</p>
+          <div id="collPanels"></div>
+          <div class="grid sect" id="extra"></div>
+        </div>
+
+        <div class="card">
+          <h2><span class="step">4</span> Identifikatorlar <span class="opt">(ixtiyoriy)</span></h2>
+          <div class="grid">
+            <label class="field"><span class="lbl">DOI</span><input name="doi" maxlength="200" placeholder="10.1234/abcd"></label>
+            <label class="field"><span class="lbl">ISSN</span><input name="issn" maxlength="60" placeholder="1234-5678"></label>
+            <label class="field"><span class="lbl">ISBN</span><input name="isbn" maxlength="60"></label>
+            <label class="field"><span class="lbl">UDK</span><input name="udk" maxlength="60"></label>
+            <label class="field"><span class="lbl">BBK</span><input name="bbk" maxlength="60"></label>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2><span class="step">5</span> PDF fayl va adabiyotlar</h2>
+          <label class="field">
+            <span class="lbl req" id="fileLabel">PDF fayl</span>
+            <input type="file" name="file" id="file" accept="application/pdf,.pdf">
+            <span class="hint" id="fileInfo"></span>
+            <span class="hint" id="sizeHint"></span>
+          </label>
+
+          <div class="field refs">
+            <div class="between">
+              <label class="lbl" for="references">Foydalanilgan adabiyotlar <span class="opt">(ixtiyoriy)</span></label>
+              <button class="btn ghost sm" type="button" id="refsBtn">PDF dan o'qish</button>
+            </div>
+            <textarea name="references" id="references" rows="7"></textarea>
+            <span class="hint">Har bir manba yangi qatordan. PDF tanlanganda "Adabiyotlar / Литература / References" bo'limi avtomat o'qiladi, natijani tekshirib chiqing.</span>
+            <p class="small" id="refsMsg" role="status" aria-live="polite"></p>
+          </div>
+
+          <label class="check">
+            <input type="checkbox" id="checks" name="checks" value="yes">
+            <span>PDF tayyor: matni belgilanadigan (skan emas), birinchi betda nom va mualliflar bor.</span>
+          </label>
+        </div>
+
+        <div class="stickybar">
+          <div class="bar" id="bar" aria-hidden="true"><i id="fill"></i></div>
+          <div class="stick-in">
+            <p class="msg" id="msg" role="status" aria-live="polite"></p>
+            <button class="btn primary" type="submit" id="submitBtn">Yuklash</button>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <!-- ===== Ro'yxat ===== -->
+    <section id="viewList" hidden>
+      <div class="card">
+        <div class="toolbar">
+          <input type="search" id="q" placeholder="Nom, muallif yoki ID bo'yicha qidirish" aria-label="Qidirish" maxlength="100">
+          <button class="btn ghost sm" type="button" id="reloadBtn">Yangilash</button>
+        </div>
+        <ul class="items" id="items"></ul>
+        <p class="msg" id="listMsg" role="status" aria-live="polite"></p>
+      </div>
+    </section>
+
   </div>
-
-  <div class="card">
-    <h2>Nom, annotatsiya, kalit soʻzlar</h2>
-    <div id="langs" class="grid"></div>
-  </div>
-
-  <div class="card">
-    <h2>Nashr tafsilotlari</h2>
-    <div class="grid" data-kind="journal">
-      <label class="full req">Jurnal nomi<input type="text" name="journal_name" maxlength="200"></label>
-      <label>Tom<input type="text" name="volume" maxlength="200"></label>
-      <label>Son<input type="text" name="issue" maxlength="200"></label>
-      <label>Betlar<input type="text" name="pages" placeholder="10-15" maxlength="200"></label>
-    </div>
-    <div class="grid" data-kind="conf">
-      <label class="full req">Konferensiya nomi<input type="text" name="conference_org" maxlength="200"></label>
-      <label>Oʻtkazilgan joy<input type="text" name="conference_place" maxlength="200"></label>
-      <label>Oʻtkazilgan sana<input type="text" name="conference_date" maxlength="200"></label>
-      <label>Betlar<input type="text" name="pages" placeholder="10-15" maxlength="200"></label>
-    </div>
-    <div class="grid" data-kind="book">
-      <label>Nashriyot<input type="text" name="publisher" maxlength="200"></label>
-      <label>Nashriyot shahri<input type="text" name="publisher_city" maxlength="200"></label>
-      <label>Nashr (tahrir)<input type="text" name="edition" maxlength="200"></label>
-      <label>Jami betlar<input type="text" name="total_pages" maxlength="200"></label>
-    </div>
-  </div>
-
-  <div class="card">
-    <h2>Identifikatorlar va manbalar <span class="opt">(ixtiyoriy)</span></h2>
-    <div class="grid">
-      <label>DOI<input type="text" name="doi" placeholder="10.1234/abcd" maxlength="200"></label>
-      <label>ISSN<input type="text" name="issn" placeholder="1234-5678" maxlength="60"></label>
-      <label>ISBN<input type="text" name="isbn" maxlength="60"></label>
-      <label>Toʻplam / son nomi<input type="text" name="collection" maxlength="200"></label>
-      <label>UDK<input type="text" name="udk" maxlength="60"></label>
-      <label>BBK<input type="text" name="bbk" maxlength="60"></label>
-      <label class="full">Foydalanilgan adabiyotlar
-        <textarea name="references" rows="5"></textarea>
-        <span class="hint">Har bir manba yangi qatordan.</span>
-      </label>
-    </div>
-  </div>
-
-  <div class="card">
-    <h2>PDF fayl</h2>
-    <label class="req">Fayl<input type="file" name="file" accept="application/pdf,.pdf" required>
-      <span class="hint" id="fileInfo"></span></label>
-    <label class="check" style="margin-top:14px"><input type="checkbox" name="checks" value="yes" required>
-      <span>PDF tayyor: matni belgilanadigan (skan emas), birinchi betda nom va mualliflar bor.</span></label>
-    <button class="go" type="submit" id="go">Yuklash</button>
-    <div class="bar" id="bar"><i id="fill"></i></div>
-    <p class="msg" id="status" role="status" aria-live="polite"></p>
-  </div>
-</form>
-</div>
-
-<script>
-(function () {
-  var API = '/api/upload', KEY = 'adminToken', SCHOLAR = 5000000, BOOK = 25 * 1024 * 1024;
-  var KIND = {'jurnal-maqolasi':'journal','konferensiya-maqolasi':'conf','konferensiya-tezisi':'conf','darslik':'book','oquv-qollanma':'book','monografiya':'book'};
-  var LANG = {uz:'Oʻzbekcha', en:'Inglizcha', ru:'Ruscha'};
-  var $ = function (s) { return document.querySelector(s); };
-  var form = $('#f'), st = $('#status'), btn = $('#go'), bar = $('#bar'), fill = $('#fill');
-
-  function tok() { try { return sessionStorage.getItem(KEY) || ''; } catch (e) { return ''; } }
-  function setTok(t) { try { t ? sessionStorage.setItem(KEY, t) : sessionStorage.removeItem(KEY); } catch (e) {} }
-  function say(t, k) { st.textContent = t; st.className = 'msg ' + (k || ''); }
-  function app(on) { $('#loginCard').hidden = on; form.hidden = !on; $('#logout').hidden = !on; }
-
-  // Til bloklari
-  var html = '';
-  Object.keys(LANG).forEach(function (l) {
-    html += '<div class="full" data-l="' + l + '"><h3 style="margin:6px 0;font-size:1rem"></h3>' +
-      '<label>Nomi<input type="text" name="title_' + l + '" maxlength="300"></label><br>' +
-      '<label>Annotatsiya<textarea name="abstract_' + l + '" rows="4" maxlength="6000"></textarea></label><br>' +
-      '<label>Kalit soʻzlar<input type="text" name="keywords_' + l + '"><span class="hint">Vergul yoki nuqtali vergul bilan ajrating.</span></label></div>';
-  });
-  $('#langs').innerHTML = html;
-
-  function sync() {
-    var kind = KIND[form.item_type.value], main = form.language.value;
-    document.querySelectorAll('[data-kind]').forEach(function (g) {
-      var on = g.dataset.kind === kind;
-      g.hidden = !on;
-      g.querySelectorAll('input').forEach(function (c) { c.disabled = !on; });
-    });
-    if (form.journal_name) form.journal_name.required = kind === 'journal';
-    if (form.conference_org) form.conference_org.required = kind === 'conf';
-    document.querySelectorAll('[data-l]').forEach(function (p) {
-      var l = p.dataset.l, isMain = l === main;
-      p.querySelector('h3').textContent = LANG[l] + (isMain ? ' (asosiy til, majburiy)' : ' (ixtiyoriy)');
-      ['title_', 'abstract_', 'keywords_'].forEach(function (n) { form[n + l].required = isMain; });
-    });
-  }
-  form.item_type.addEventListener('change', sync);
-  form.language.addEventListener('change', sync);
-
-  form.year.value = new Date().getFullYear();
-  form.date.value = new Date().toISOString().slice(0, 10);
-  sync(); app(!!tok());
-
-  $('#loginForm').addEventListener('submit', function (e) {
-    e.preventDefault();
-    var t = $('#token').value.trim();
-    if (t) { setTok(t); $('#token').value = ''; say(''); app(true); }
-  });
-  $('#logout').addEventListener('click', function () { setTok(''); app(false); });
-
-  form.file.addEventListener('change', function () {
-    var f = this.files[0];
-    $('#fileInfo').textContent = f ? f.name + ' — ' + (f.size / 1048576).toFixed(2) + ' MB' : '';
-  });
-
-  form.addEventListener('submit', function (e) {
-    e.preventDefault();
-    if (btn.disabled) return;
-    if (!form.reportValidity()) return;
-
-    var f = form.file.files[0];
-    var limit = KIND[form.item_type.value] === 'book' ? BOOK : SCHOLAR;
-    if (!f || !/\.pdf$/i.test(f.name) && f.type !== 'application/pdf') return say('Faqat PDF fayl tanlang.', 'err');
-    if (f.size > limit) return say(limit === BOOK
-      ? 'PDF 25 MB dan oshmasligi kerak.'
-      : 'Google Scholar 5 MB dan katta fayllarni indekslamaydi. PDF hajmini kamaytiring.', 'err');
-    if (!tok()) return app(false);
-
-    btn.disabled = true; fill.style.width = '0'; bar.style.display = 'block';
-    say('Yuklanmoqda. Sahifani yopmang…', 'info');
-
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', API);
-    xhr.timeout = 180000;
-    xhr.setRequestHeader('X-Admin-Token', tok());
-    xhr.upload.onprogress = function (ev) { if (ev.lengthComputable) fill.style.width = Math.round(ev.loaded / ev.total * 100) + '%'; };
-    function done() { btn.disabled = false; bar.style.display = 'none'; }
-    xhr.onerror = function () { done(); say('Tarmoq xatosi. Ulanishni tekshiring.', 'err'); };
-    xhr.ontimeout = function () { done(); say('Vaqt tugadi. Qayta urinib koʻring.', 'err'); };
-    xhr.onload = function () {
-      var d = {}; try { d = JSON.parse(xhr.responseText); } catch (e) {}
-      done();
-      if (xhr.status === 401 || xhr.status === 403) { setTok(''); app(false); return say('Admin kaliti notoʻgʻri.', 'err'); }
-      if (xhr.status === 413) return say('Fayl serverga sigʻmaydi.', 'err');
-      if (!d.success) return say('Xatolik: ' + (d.error || 'Server xatosi (' + xhr.status + ')'), 'err');
-      say('Yuklandi (ID: ' + d.id + '). 1–2 daqiqadan soʻng saytda paydo boʻladi.' +
-        (d.scholar_pdf === false ? ' Diqqat: PDF 5 MB dan katta, Scholar uni indekslamaydi.' : ''), 'ok');
-      form.reset(); form.year.value = new Date().getFullYear(); form.date.value = new Date().toISOString().slice(0, 10);
-      $('#fileInfo').textContent = ''; sync();
-    };
-    xhr.send(new FormData(form));
-  });
-})();
-</script>
+</main>
 </body>
 </html>
