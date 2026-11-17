@@ -14,6 +14,32 @@
   ],
   "articles": [
     {
+      "id": "fitonim-tushunchasi-va-uning-lisoniy-xususiyatlari-8b005e",
+      "item_type": "konferensiya-tezisi",
+      "language": "uz",
+      "title_uz": "FITONIM TUSHUNCHASI VA UNING LISONIY XUSUSIYATLARI",
+      "abstract_uz": "Ushbu maqolada onomastik birliklar ichida alohida ahamiyatga ega bo‘lgan fitonimlarning xususiyatlari, ularning ahamiyati, tilshunoslik tizimidagi o‘rni hamda ularni tadqiq etishning ahamiyati haqida fikr yuritiladi. Shuningdek, ayrim fitonimlar misolida ularning Olamning lisoniy manzarasida tutgan o‘rni xususida fikr yuritiladi",
+      "keywords_uz": [
+        "Onomastika",
+        "termin",
+        "fitonim",
+        "lisoniy birlik",
+        "olamning lisoniy manzarasi"
+      ],
+      "authors": [
+        "Ikromov Maxamadyusub Tursunali o‘g‘li"
+      ],
+      "year": 2026,
+      "date": "2026-01-26",
+      "conference_org": "Русский язык и литература в Узбекистане: традиции, инновации и культурный диалог",
+      "conference_place": "Хива: Университет Мамун",
+      "conference_date": "26.01.2026",
+      "pages": "1087-1090",
+      "doi": "10.5281/zenodo.19398365",
+      "pdf": "fitonim-tushunchasi-va-uning-lisoniy-xususiyatlari-8b005e.pdf",
+      "pdf_size": 349199
+    },
+    {
       "id": "fitonimlarni-xalq-etnomadaniyatining-shakllanishidagi-roli-950238",
       "item_type": "konferensiya-maqolasi",
       "language": "uz",
