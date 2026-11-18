@@ -16,7 +16,7 @@
     'darslik': 'book', 'oquv-qollanma': 'book', 'monografiya': 'book',
   };
   const PAGE_NAMES = { about: 'Portal haqida', 'editorial-board': "Tahririyat hay'ati", ethics: 'Nashr etikasi', contact: 'Aloqa' };
-  const PATRONYM = /^(?:o['ʻʼ‘’`´]?g['ʻʼ‘’`´]?li|ogli|ugli|qizi|kizi|kyzy|ўғли|қизи|оглы|кызы|угли)$/i;
+  const PATRONYM = /^(?:o['ʻʼ‘’`´]?g['ʻʼ‘’`´]?li|ogli|ugli|ogly|ugly|qizi|kizi|kyzy|ўғли|ўгли|угли|қизи|кизи|оглы|кызы)$/i; // citations.js bilan bir xil
 
   function getToken() { try { return sessionStorage.getItem(KEY) || ''; } catch (_) { return ''; } }
   function setToken(t) { try { t ? sessionStorage.setItem(KEY, t) : sessionStorage.removeItem(KEY); } catch (_) {} }
