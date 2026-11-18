@@ -21,7 +21,8 @@ const AB = { uz: 'Annotatsiya', en: 'Abstract', ru: 'Аннотация' }, KW =
 const OK = { issn: /^\d{4}-\d{3}[\dXx]$/, isbn: /^(?:\d[- ]?){9}[\dXx]$|^(?:\d[- ]?){12}\d$/, doi: /^10\.\d{4,9}\/\S+$/, date: /^\d{4}-\d{2}-\d{2}$/ };
 const PDF_OK = /^[A-Za-z0-9][A-Za-z0-9._-]{0,150}\.pdf$/i;
 const RESERVED = new Set(['article', 'collection', 'collections', 'author', 'authors', 'pdf', 'api', 'stats', 'data', 'css', 'js', 'admin',
-  'journal', 'journals', 'conference', 'conferences', 'news', 'archive', 'search', 'feed', 'oai']);
+  'journal', 'journals', 'conference', 'conferences', 'news', 'archive', 'search', 'feed', 'oai',
+  'field', 'fields', 'organization', 'organizations', 'latest']);
 const LANG_NAME = { uz: "O'zbekcha", en: 'English', ru: 'Русский' };
 const TODAY = new Date().toISOString().slice(0, 10);
 
@@ -31,6 +32,7 @@ const slug = (s) => String(s).toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace
 const translit = (s) => String(s).toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[ʻʼ‘’`'´]/g, '')
   .replace(/[а-яёўқғҳ]/g, (c) => ({ а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'yo', ж: 'j', з: 'z', и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f', х: 'x', ц: 'ts', ч: 'ch', ш: 'sh', щ: 'sh', ъ: '', ы: 'i', ь: '', э: 'e', ю: 'yu', я: 'ya', ў: 'o', қ: 'q', ғ: 'g', ҳ: 'h' }[c] || ''))
   .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+const fieldKey = (f) => translit(f).slice(0, 60);
 const out = (p, h) => { const f = path.join('dist', p); fs.mkdirSync(path.dirname(f), { recursive: true }); fs.writeFileSync(f, h); };
 const meta = (n, v) => (v || v === 0 ? `<meta name="${n}" content="${esc(v)}">\n` : '');
 const prop = (n, v) => (v || v === 0 ? `<meta property="${n}" content="${esc(v)}">\n` : '');
@@ -67,7 +69,13 @@ for (const a of A) {
   }
   a._publisher = (s && s.publisher) || (c && c.publisher) || (k === 'book' ? a.publisher : '') || S.publisher;
   a._info = (a.authors || []).map((n, i) => ((a.author_info || [])[i] || {}));
+  a._field = String(a.field || (s && s.field) || '').trim();
 }
+const HAS_ORGS = A.some((a) => a._info.some((x) => x.org));
+// Fan sohalari (har bir maqolaga bitta; sohalar soni cheklangan)
+const FIELDS = {};
+for (const a of A) if (a._field) { const k = fieldKey(a._field); (FIELDS[k] = FIELDS[k] || { key: k, names: {}, items: [] }).items.push(a); FIELDS[k].names[a._field] = (FIELDS[k].names[a._field] || 0) + 1; }
+const FIELD_LIST = Object.values(FIELDS).map((f) => ({ ...f, name: Object.entries(f.names).sort((x, y) => y[1] - x[1])[0][0] })).sort((x, y) => x.name.localeCompare(y.name, 'uz'));
 
 const lang = (a) => (LANGS.includes(a.language) ? a.language : 'uz');
 const first = (a, k) => a[k + '_' + lang(a)] || LANGS.map((l) => a[k + '_' + l]).find((v) => v && v.length);
@@ -158,6 +166,13 @@ for (const a of A) a.authors.forEach((n, i) => {
   if (inf.org) e.orgs[inf.org] = (e.orgs[inf.org] || 0) + 1;
   if (inf.orcid && !e.orcid) e.orcid = inf.orcid;
 });
+// Muallif profillari (admin panel: Mualliflar): ism bo'yicha bog'lanadi
+const PROFILES = {};
+for (const p of [].concat(D.profiles || [])) if (p && p.name) PROFILES[resolveKey(p.name)] = p;
+for (const e of Object.values(AUTH)) {
+  const pr = PROFILES[e.key];
+  if (pr) { e.profile = pr; if (pr.orcid) e.orcid = pr.orcid; if (pr.org) e.orgs[pr.org] = (e.orgs[pr.org] || 0) + 1000; }
+}
 for (const e of Object.values(AUTH)) {
   const g = GROUP_BY_KEY[e.key];
   e.name = g ? g.name : Object.entries(e.names).sort((x, y) => y[1] - x[1])[0][0];
@@ -175,7 +190,7 @@ function byline(a) {
   const orgs = [...new Set(a._info.map((x) => x.org).filter(Boolean))];
   const sup = (i) => { const o = a._info[i].org; return o && orgs.length > 1 ? `<sup>${orgs.indexOf(o) + 1}</sup>` : ''; };
   return `<ul class="byline">${a.authors.map((n, i) => `<li><a href="${authorHref(n)}">${esc(n)}</a>${sup(i)}${orcidLink(a._info[i].orcid)}</li>`).join('')}</ul>`
-    + (orgs.length ? `<ol class="affils${orgs.length > 1 ? '' : ' one'}">${orgs.map((o) => `<li>${esc(o)}</li>`).join('')}</ol>` : '');
+    + (orgs.length ? `<ol class="affils${orgs.length > 1 ? '' : ' one'}">${orgs.map((o) => `<li>${orgHref(o) ? `<a href="${orgHref(o)}">${esc(o)}</a>` : esc(o)}</li>`).join('')}</ol>` : '');
 }
 
 // ---------- iqtiboslar ----------
@@ -236,7 +251,7 @@ const PAGES = Object.entries(D.pages || {}).filter(([k]) => /^[a-z0-9][a-z0-9-]{
 const JOUR = SER.filter((x) => x._kind === 'journal'), CONF = SER.filter((x) => x._kind === 'conf');
 const LOOSE = C.filter((c) => !serOf(c)); // seriyaga biriktirilmagan to'plamlar
 const NAV = [['/', 'Bosh sahifa'], ...(JOUR.length ? [['/journals/', 'Jurnallar']] : []), ...(CONF.length ? [['/conferences/', 'Konferensiyalar']] : []),
-  ...(LOOSE.length ? [['/collections/', "To'plamlar"]] : []), ['/archive/', 'Arxiv'], ['/authors/', 'Mualliflar'], ...(NEWS.length ? [['/news/', "E'lonlar"]] : []),
+  ...(LOOSE.length ? [['/collections/', "To'plamlar"]] : []), ...(FIELD_LIST.length ? [['/fields/', 'Fan sohalari']] : []), ['/archive/', 'Arxiv'], ['/authors/', 'Mualliflar'], ...(NEWS.length ? [['/news/', "E'lonlar"]] : []),
   ...PAGES.filter(([k]) => k === 'about').map(([k, t]) => [`/${k}/`, t.title])];
 const ICON = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b3c42'/%3E%3Cpath d='M18 18h18a10 10 0 0 1 10 10v18H28a10 10 0 0 1-10-10z' fill='%23fff'/%3E%3Cpath d='M26 30h14M26 37h10' stroke='%230b3c42' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E";
 const I = {
@@ -249,6 +264,7 @@ const I = {
   cal: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
   award: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9" r="6"/><path d="m8.5 14-1.5 7 5-3 5 3-1.5-7"/></svg>',
   arrow: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5"/></svg>',
+  doc: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6M9 9h2"/></svg>',
   rss: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 11a8 8 0 0 1 8 8M5 5a14 14 0 0 1 14 14"/><circle cx="6" cy="18" r="1.4"/></svg>',
   layers: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/></svg>',
 };
@@ -270,7 +286,7 @@ ${scripts.map((s) => `<script src="/js/${s}.js?v=${BUILD}" defer></script>`).joi
 <main id="main">${body}</main>
 <footer class="site-foot"><div class="wrap foot-in">
 <div><p class="foot-brand">${esc(S.name)}</p><p>${esc(S.description || '')}</p>
-<p class="foot-links">${PAGES.map(([k, x]) => `<a href="/${k}/">${esc(x.title)}</a>`).join('')}<a href="/archive/">Arxiv</a><a href="/search/">Qidiruv</a></p></div>
+<p class="foot-links">${PAGES.map(([k, x]) => `<a href="/${k}/">${esc(x.title)}</a>`).join('')}<a href="/archive/">Arxiv</a><a href="/latest/">So'nggi qo'shilganlar</a>${HAS_ORGS ? '<a href="/organizations/">Tashkilotlar</a>' : ''}<a href="/search/">Qidiruv</a></p></div>
 <div><p>${esc(S.publisher)}${S.email ? ` · <a href="mailto:${esc(S.email)}">${esc(S.email)}</a>` : ''}</p>
 <p>Barcha nashrlar ochiq foydalanishda. Litsenziya: <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener noreferrer">CC BY 4.0</a> · <a href="/sitemap.xml">Sayt xaritasi</a></p>
 <p class="foot-links"><a href="/feed.xml">${I.rss} Atom lenta</a><a href="/oai?verb=Identify" rel="nofollow">OAI-PMH</a></p></div>
@@ -356,6 +372,8 @@ ${searchBox("Sarlavha, muallif, kalit so'z yoki DOI bo'yicha qidirish")}
 <div class="wrap">
 ${SER.length ? `<section class="block"><div class="block-h"><h2>Jurnallar va konferensiyalar</h2>${JOUR.length && CONF.length ? `<span class="links"><a href="/journals/">Jurnallar</a><a href="/conferences/">Konferensiyalar</a></span>` : ''}</div><div class="series-grid">${SER.map(serCard).join('')}</div></section>` : ''}
 ${NEWS.length ? `<section class="block"><div class="block-h"><h2>E'lonlar</h2><a href="/news/">Barchasi</a></div><div class="news-grid">${NEWS.slice(0, 3).map(newsCard).join('')}</div></section>` : ''}
+${FIELD_LIST.length ? `<section class="block"><div class="block-h"><h2>Fan sohalari</h2><a href="/fields/">Barchasi</a></div><p class="years fields-chips">${FIELD_LIST.map((f) => `<a class="chip" href="/field/${f.key}/">${esc(f.name)} <span class="muted">${f.items.length}</span></a>`).join('')}</p></section>` : ''}
+<section class="block" data-popular hidden><div class="block-h"><h2>Ko'p o'qilgan maqolalar</h2></div><ol class="popular" data-popular-list></ol></section>
 ${C.length ? `<section class="block"><div class="block-h"><h2>So'nggi son va to'plamlar</h2><a href="/collections/">Barchasi</a></div>${issueGrid(C.slice().sort(byColl).slice(0, 4))}</section>` : ''}
 <section class="block"><div class="block-h"><h2>So'nggi nashrlar</h2><a href="/archive/">Arxiv ${I.arrow}</a></div>${ledger(LATEST, false)}
 ${A.length > LATEST.length ? `<p class="more"><a class="btn ghost" href="/archive/">Barcha ${A.length} ta nashr</a></p>` : ''}
@@ -462,7 +480,7 @@ if (NEWS.length) {
 out('archive/index.html', page({
   t: `Arxiv - ${S.name}`, d: `${S.name}: barcha nashrlar yillar bo'yicha`, p: '/archive/',
   body: `<section class="hero slim"><div class="wrap hero-in"><h1>Arxiv</h1><p class="lead">Barcha ${A.length} ta nashr yillar bo'yicha</p></div></section>
-<div class="wrap block"><ul class="year-grid">${YEARS.map((y) => { const L = A.filter((a) => a.year === y); return `<li><a href="/archive/${y}/"><b>${y}</b><span>${plural(L.length, 'nashr')}</span><span class="muted">${esc([...new Set(L.map((a) => TYPES[a._t]))].join(', '))}</span></a></li>`; }).join('')}</ul></div>`,
+<div class="wrap block"><p class="arch-links"><a class="btn ghost sm" href="/latest/">So'nggi qo'shilganlar</a>${FIELD_LIST.length ? '<a class="btn ghost sm" href="/fields/">Fan sohalari bo\'yicha</a>' : ''}${C.length ? '<a class="btn ghost sm" href="/collections/">Son va to\'plamlar</a>' : ''}</p><ul class="year-grid">${YEARS.map((y) => { const L = A.filter((a) => a.year === y); return `<li><a href="/archive/${y}/"><b>${y}</b><span>${plural(L.length, 'nashr')}</span><span class="muted">${esc([...new Set(L.map((a) => TYPES[a._t]))].join(', '))}</span></a></li>`; }).join('')}</ul></div>`,
 }));
 for (const y of YEARS) {
   const L = A.filter((a) => a.year === y);
@@ -483,23 +501,117 @@ out('search/index.html', page({
 // ---------- mualliflar ----------
 const AU = Object.values(AUTH).sort((x, y) => x.name.localeCompare(y.name, 'uz'));
 const topOrg = (e) => (Object.entries(e.orgs).sort((x, y) => y[1] - x[1])[0] || [''])[0];
+
+// Tashkilotlar (mualliflarning ish joylari): yozilishidagi kichik farqlar bitta sahifaga birlashadi
+const ORGS = {};
+const orgKey = (o) => translit(o).slice(0, 80);
+for (const a of A) a._info.forEach((inf, i) => {
+  if (!inf.org) return;
+  const k = orgKey(inf.org);
+  if (!k) return;
+  const o = (ORGS[k] = ORGS[k] || { key: k, names: {}, items: [], authors: new Set() });
+  o.names[inf.org] = (o.names[inf.org] || 0) + 1;
+  if (!o.items.includes(a)) o.items.push(a);
+  o.authors.add(resolveKey(a.authors[i]));
+});
+for (const e of AU) if (e.profile && e.profile.org) { const k = orgKey(e.profile.org); if (ORGS[k]) ORGS[k].authors.add(e.key); }
+const ORG_LIST = Object.values(ORGS).map((o) => ({ ...o, name: Object.entries(o.names).sort((x, y) => y[1] - x[1])[0][0] })).sort((x, y) => y.items.length - x.items.length || x.name.localeCompare(y.name, 'uz'));
+const orgHref = (name) => (ORGS[orgKey(name)] ? `/organization/${orgKey(name)}/` : '');
+
+// Hammualliflar
+const coauthors = (e) => {
+  const c = {};
+  for (const a of e.items) for (const n of a.authors) { const k = resolveKey(n); if (k !== e.key && AUTH[k]) c[k] = (c[k] || 0) + 1; }
+  return Object.entries(c).sort((x, y) => y[1] - x[1]).map(([k, n]) => [AUTH[k], n]);
+};
+const TYPE_GROUPS = [['journal', 'Jurnal maqolalari'], ['conf', 'Konferensiya materiallari'], ['book', 'Kitoblar va qo\'llanmalar']];
+
 out('authors/index.html', page({
   t: `Mualliflar - ${S.name}`, d: `${S.name} mualliflari ro'yxati`, p: '/authors/',
-  body: `<section class="hero slim"><div class="wrap hero-in"><h1>Mualliflar</h1><p class="lead">${plural(AU.length, 'muallif')}</p></div></section>
-<div class="wrap block"><ul class="authors-grid">${AU.map((e) => `<li><span><a href="/author/${e.key}/">${esc(e.name)}</a>${orcidLink(e.orcid)}${topOrg(e) ? `<span class="au-org">${esc(topOrg(e))}</span>` : ''}</span><span class="muted">${plural(e.items.length, 'nashr')}</span></li>`).join('')}</ul></div>`,
+  body: `<section class="hero slim"><div class="wrap hero-in"><h1>Mualliflar</h1><p class="lead">${plural(AU.length, 'muallif')}${ORG_LIST.length ? ` · <a href="/organizations/">${plural(ORG_LIST.length, 'tashkilot')}</a>` : ''}</p></div></section>
+<div class="wrap block"><ul class="authors-grid">${AU.map((e) => `<li><span><a href="/author/${e.key}/">${esc(e.name)}</a>${orcidLink(e.orcid)}${topOrg(e) ? `<span class="au-org">${esc(topOrg(e))}</span>` : ''}${e.profile && e.profile.interests ? `<span class="au-int">${e.profile.interests.slice(0, 4).map(esc).join(' · ')}</span>` : ''}</span><span class="muted">${plural(e.items.length, 'nashr')}</span></li>`).join('')}</ul></div>`,
 }));
 for (const e of AU) {
-  const other = e.other;
-  const pld = { '@context': 'https://schema.org', ...personLd(e.name, { org: topOrg(e), orcid: e.orcid }) };
+  const other = e.other, pr = e.profile || {}, org = topOrg(e);
+  const links = [e.orcid && ORCID_RE.test(e.orcid) && [`https://orcid.org/${e.orcid}`, 'ORCID'], pr.scholar && [pr.scholar, 'Google Scholar'], pr.researchgate && [pr.researchgate, 'ResearchGate'], pr.website && [pr.website, 'Shaxsiy sahifa']].filter(Boolean);
+  const pld = { '@context': 'https://schema.org', ...personLd(e.name, { org, orcid: e.orcid }) };
   if (other.length) pld.alternateName = other.map(scholarName);
+  if (links.length) pld.sameAs = links.map((l) => l[0]);
+  if (pr.position) pld.jobTitle = pr.position;
+  if (pr.interests) pld.knowsAbout = pr.interests;
+  if (pr.bio) pld.description = clip(pr.bio.join(' '), 300);
+  const co = coauthors(e);
+  const groups = TYPE_GROUPS.map(([k, ttl]) => [ttl, e.items.filter((a) => KIND[a._t] === k)]).filter((g) => g[1].length);
   out(`author/${e.key}/index.html`, page({
-    t: `${e.name} - ${S.name}`, d: `${e.name}: ${plural(e.items.length, 'nashr')}`, p: `/author/${e.key}/`, type: 'profile',
+    t: `${e.name} - ${S.name}`, d: pr.bio ? clip(pr.bio.join(' '), 200) : `${e.name}${org ? ', ' + org : ''}: ${plural(e.items.length, 'nashr')}`, p: `/author/${e.key}/`, type: 'profile',
     head: `<script type="application/ld+json">${JSON.stringify(pld).replace(/</g, '\\u003c')}</script>\n`,
-    body: `<section class="hero slim"><div class="wrap hero-in"><p class="eyebrow"><a href="/authors/">Mualliflar</a></p><h1>${esc(e.name)}${orcidLink(e.orcid)}</h1><p class="lead">${plural(e.items.length, 'nashr')}${other.length ? ` · boshqa yozilishi: ${esc(other.join('; '))}` : ''}</p>
-${factsDl([['Ish joyi', Object.keys(e.orgs).join('; ')], ['ORCID', e.orcid && ORCID_RE.test(e.orcid) ? `<a href="https://orcid.org/${e.orcid}" rel="noopener noreferrer">${e.orcid}</a>` : '', 1]])}</div></section>
-<div class="wrap block">${ledger(e.items)}</div>`,
+    body: `<section class="hero slim"><div class="wrap hero-in"><p class="eyebrow"><a href="/authors/">Mualliflar</a></p><h1>${esc(e.name)}${orcidLink(e.orcid)}</h1>
+<p class="lead">${esc([pr.degree, pr.position].filter(Boolean).join(', ')) || plural(e.items.length, 'nashr')}${other.length ? ` · boshqa yozilishi: ${esc(other.join('; '))}` : ''}</p>
+${factsDl([['Ish joyi', Object.keys(e.orgs).map((o) => (orgHref(o) ? `<a href="${orgHref(o)}">${esc(o)}</a>` : esc(o))).join('; '), 1], ['Nashrlar', e.items.length], ['Hammualliflar', co.length], ['Ko\'rishlar', '<span data-au-views>–</span>', 1], ['Yuklab olishlar', '<span data-au-downloads>–</span>', 1]])}
+${links.length ? `<p class="prof-links">${links.map(([u, n]) => `<a href="${esc(u)}" rel="noopener noreferrer me">${esc(n)}</a>`).join('')}</p>` : ''}</div></section>
+<div class="wrap block au-grid" data-author-stats="${esc(e.items.map((a) => a._id).join(','))}"><div>
+${pr.bio ? `<section class="prose au-bio"><h2>Muallif haqida</h2>${proseHtml(pr.bio)}</section>` : ''}
+${groups.map(([ttl, L]) => `<section class="au-sec"><div class="block-h"><h2>${ttl}</h2><span class="muted">${L.length}</span></div>${ledger(L, false)}</section>`).join('')}
+</div><aside class="side">
+${pr.interests ? `<div class="side-card"><p class="side-h">Ilmiy qiziqishlari</p><p class="kw">${pr.interests.map((x) => `<a class="chip" href="/search/?q=${encodeURIComponent(x)}" rel="nofollow">${esc(x)}</a>`).join(' ')}</p></div>` : ''}
+${co.length ? `<div class="side-card"><p class="side-h">Hammualliflar</p><ul class="co">${co.slice(0, 12).map(([x, n]) => `<li><a href="/author/${x.key}/">${esc(x.name)}</a><span class="muted">${n}</span></li>`).join('')}</ul></div>` : ''}
+${[...new Set(e.items.map((a) => a._field).filter(Boolean))].length ? `<div class="side-card"><p class="side-h">Fan sohalari</p><p class="kw">${[...new Set(e.items.map((a) => a._field).filter(Boolean))].map((f) => `<a class="chip" href="/field/${fieldKey(f)}/">${esc(f)}</a>`).join(' ')}</p></div>` : ''}
+</aside></div>`,
   }));
 }
+
+// ---------- tashkilotlar ----------
+if (ORG_LIST.length) {
+  out('organizations/index.html', page({
+    t: `Tashkilotlar - ${S.name}`, d: `${S.name}: mualliflar ish joylari bo'yicha nashrlar`, p: '/organizations/',
+    body: `<section class="hero slim"><div class="wrap hero-in"><p class="eyebrow"><a href="/authors/">Mualliflar</a></p><h1>Tashkilotlar</h1><p class="lead">Mualliflarning ish joylari bo'yicha nashrlar</p></div></section>
+<div class="wrap block"><ul class="org-grid">${ORG_LIST.map((o) => `<li><a href="/organization/${o.key}/"><strong>${esc(o.name)}</strong><span class="muted">${plural(o.authors.size, 'muallif')} · ${plural(o.items.length, 'nashr')}</span></a></li>`).join('')}</ul></div>`,
+  }));
+  for (const o of ORG_LIST) {
+    const people = [...o.authors].map((k) => AUTH[k]).filter(Boolean).sort((x, y) => x.name.localeCompare(y.name, 'uz'));
+    out(`organization/${o.key}/index.html`, page({
+      t: `${o.name} - ${S.name}`, d: `${o.name}: ${plural(people.length, 'muallif')}, ${plural(o.items.length, 'nashr')}`, p: `/organization/${o.key}/`,
+      head: ld({ '@type': 'Organization', name: o.name, url: `${BASE}/organization/${o.key}/`, ...(Object.keys(o.names).length > 1 ? { alternateName: Object.keys(o.names).filter((n) => n !== o.name) } : {}) }),
+      body: `<section class="hero slim"><div class="wrap hero-in"><p class="eyebrow"><a href="/organizations/">Tashkilotlar</a></p><h1>${esc(o.name)}</h1>${factsDl([['Mualliflar', people.length], ['Nashrlar', o.items.length]])}</div></section>
+<div class="wrap block"><div class="block-h"><h2>Mualliflar</h2></div><ul class="authors-grid">${people.map((e) => `<li><a href="/author/${e.key}/">${esc(e.name)}</a><span class="muted">${plural(e.items.length, 'nashr')}</span></li>`).join('')}</ul></div>
+<div class="wrap block"><div class="block-h"><h2>Nashrlar</h2></div>${ledger(o.items, false)}</div>`,
+    }));
+  }
+}
+
+// ---------- fan sohalari ----------
+// Sohalar soni cheklangan (har bir maqolaga bitta), shuning uchun sahifalar soni ortiqcha ko'paymaydi
+const fieldCard = (a) => `<li class="entry fcard"><div class="entry-top"><span class="badge">${esc(TYPES[a._t])}</span><span class="entry-year">${esc(a.year)}</span>${a.doi ? '<span class="badge soft">DOI</span>' : ''}</div>
+<h3 class="entry-title" lang="${lang(a)}"><a href="/article/${a._id}/">${esc(title(a))}</a></h3><p class="entry-by">${esc(a.authors.join(', '))}</p>
+${abstract(a) ? `<p class="entry-abs" lang="${lang(a)}">${esc(clip(abstract(a), 280))}</p>` : ''}<p class="entry-src">${esc(srcText(a))}</p></li>`;
+if (FIELD_LIST.length) {
+  out('fields/index.html', page({
+    t: `Fan sohalari - ${S.name}`, d: `${S.name}: nashrlar fan sohalari bo'yicha`, p: '/fields/',
+    body: `<section class="hero slim"><div class="wrap hero-in"><h1>Fan sohalari</h1><p class="lead">Nashrlar ilmiy yo'nalishlar bo'yicha</p></div></section>
+<div class="wrap block"><ul class="field-grid">${FIELD_LIST.map((f) => `<li><a href="/field/${f.key}/"><strong>${esc(f.name)}</strong><span class="muted">${plural(f.items.length, 'nashr')}</span></a></li>`).join('')}</ul></div>`,
+  }));
+  for (const f of FIELD_LIST) {
+    out(`field/${f.key}/index.html`, page({
+      t: `${f.name}: ilmiy maqolalar - ${S.name}`, d: `${f.name} sohasidagi ilmiy maqolalar va konferensiya materiallari: ${plural(f.items.length, 'nashr')}`, p: `/field/${f.key}/`,
+      body: `<section class="hero slim"><div class="wrap hero-in"><p class="eyebrow"><a href="/fields/">Fan sohalari</a></p><h1>${esc(f.name)}</h1><p class="lead">${plural(f.items.length, 'nashr')}</p></div></section>
+<div class="wrap block"><ul class="entries">${f.items.slice().sort(byDate).map(fieldCard).join('')}</ul>
+<div class="year-nav"><span class="side-h">Boshqa sohalar</span><p class="years">${FIELD_LIST.filter((x) => x !== f).map((x) => `<a class="chip" href="/field/${x.key}/">${esc(x.name)} <span class="muted">${x.items.length}</span></a>`).join('')}</p></div></div>`,
+    }));
+  }
+}
+
+// ---------- so'nggi qo'shilganlar (saytga joylangan sana bo'yicha) ----------
+// Google Scholar tavsiyasi: yangi qo'shilgan maqolalarni alohida ro'yxatda ko'rsatish (robot ularni tez topadi)
+const addedOn = (a) => a.created || a.date || `${a.year}-01-01`;
+const LAST30 = new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10);
+let LATEST_ADDED = A.filter((a) => addedOn(a) >= LAST30);
+if (LATEST_ADDED.length < 10) LATEST_ADDED = A.slice();
+LATEST_ADDED = LATEST_ADDED.sort((x, y) => addedOn(y).localeCompare(addedOn(x)) || byDate(x, y)).slice(0, 100);
+out('latest/index.html', page({
+  t: `So'nggi qo'shilganlar - ${S.name}`, d: `${S.name}: saytga yaqinda joylangan nashrlar`, p: '/latest/',
+  body: `<section class="hero slim"><div class="wrap hero-in"><p class="eyebrow"><a href="/archive/">Arxiv</a></p><h1>So'nggi qo'shilganlar</h1><p class="lead">Saytga joylangan sanasi bo'yicha (yangi qo'shilganlar yuqorida)</p></div></section>
+<div class="wrap block"><ol class="added">${LATEST_ADDED.map((a) => `<li><time datetime="${esc(addedOn(a))}">${esc(fmtDate(addedOn(a)) || addedOn(a))}</time><div><a href="/article/${a._id}/" lang="${lang(a)}">${esc(title(a))}</a><span class="muted">${esc(a.authors.join(', '))} · ${esc(srcText(a))}</span></div></li>`).join('')}</ol></div>`,
+}));
 
 // ---------- maqola sahifalari ----------
 // O'xshash maqolalar: umumiy kalit so'zlar, bir bo'lim, bir seriya yoki bir muallif
@@ -544,24 +656,30 @@ for (const a of A) {
     k === 'journal' && ['Jurnal', s ? `<a href="${serHref(s)}">${esc(a.journal_name)}</a>` : esc(a.journal_name), 1], k === 'journal' && ['Tom / son', [a.volume, a.issue].filter(Boolean).join(' / ')],
     k === 'conf' && ['Konferensiya', s ? `<a href="${serHref(s)}">${esc(a.conference_org)}</a>` : esc(a.conference_org), 1], k === 'conf' && ["O'tkazilgan joyi", a.conference_place], k === 'conf' && ['Konferensiya sanasi', a.conference_date],
     k === 'book' && ['Nashriyot', a.publisher], k === 'book' && ['Nashr joyi', a.publisher_city], k === 'book' && ['Nashr', a.edition], k === 'book' && ['Hajmi (bet)', a.total_pages],
-    k !== 'book' && ['Betlar', a.pages], ['Bo\'lim', a.section], ['Maqola raqami', artNo(a)], ['Maqola tili', LANG_NAME[L]], ['ISSN', a.issn], ['ISBN', a.isbn], ['UDK', a.udk], ['BBK', a.bbk]].filter((r) => r && r[1]);
+    k !== 'book' && ['Betlar', a.pages], ['Bo\'lim', a.section], ['Fan sohasi', a._field ? `<a href="/field/${fieldKey(a._field)}/">${esc(a._field)}</a>` : '', 1], ['Maqola raqami', artNo(a)], ['Maqola tili', LANG_NAME[L]],
+    ['Hajmi', a.pdf_pages ? `${a.pdf_pages} bet` : ''], ['Saytga joylangan', fmtDate(a.created)], ['Oxirgi o\'zgarish', a.updated && a.updated !== a.created ? fmtDate(a.updated) : ''], ['ISSN', a.issn], ['ISBN', a.isbn], ['UDK', a.udk], ['BBK', a.bbk]].filter((r) => r && r[1]);
   const dl = rows.map((r) => `<div><dt>${r[0]}</dt><dd>${r[2] ? r[1] : esc(r[1])}</dd></div>`).join('')
     + (c ? `<div><dt>${collKind(c) === 'journal' ? 'Son' : "To'plam"}</dt><dd><a href="/collection/${c._id}/">${esc(c.name)}</a></dd></div>` : '')
     + (d ? `<div><dt>DOI</dt><dd><a href="https://doi.org/${encodeURI(d)}" rel="noopener noreferrer">https://doi.org/${esc(d)}</a></dd></div>` : '');
   const alt = order(a).slice(1).filter((l) => a['title_' + l]).map((l) => `<p class="alt-title" lang="${l}">${esc(a['title_' + l])}</p>`).join('');
-  const ab = order(a).filter((l) => a['abstract_' + l]).map((l) => `<section class="abs" lang="${l}"><h2>${AB[l]}</h2><p>${esc(a['abstract_' + l])}</p>${a['keywords_' + l]?.length ? `<p class="kw"><strong>${KW[l]}:</strong> ${a['keywords_' + l].map((w) => `<span class="chip">${esc(w)}</span>`).join(' ')}</p>` : ''}</section>`).join('');
+  const ab = order(a).filter((l) => a['abstract_' + l]).map((l) => `<section class="abs" lang="${l}"><h2>${AB[l]}</h2><p>${esc(a['abstract_' + l])}</p>${a['keywords_' + l]?.length ? `<p class="kw"><strong>${KW[l]}:</strong> ${a['keywords_' + l].map((w) => `<a class="chip" href="/search/?q=${encodeURIComponent(w)}" rel="nofollow">${esc(w)}</a>`).join(' ')}</p>` : ''}</section>`).join('');
 
   const cm = citeMeta(a, k, url);
   const cites = CITE.all(cm);
   const bibB64 = Buffer.from(CITE.bibtex(cm), 'utf8').toString('base64');
   const risB64 = Buffer.from(CITE.ris(cm), 'utf8').toString('base64');
+  // EndNote (Refer/tagged) formati
+  const enw = [`%0 ${k === 'book' ? 'Book' : k === 'conf' ? 'Conference Proceedings' : 'Journal Article'}`, `%T ${title(a)}`, ...a.authors.map((n) => `%A ${scholarName(n)}`),
+    a.journal_name && `%J ${a.journal_name}`, k === 'conf' && a.conference_org && `%B ${a.conference_org}`, a.volume && `%V ${a.volume}`, a.issue && `%N ${a.issue}`, a.pages && `%P ${a.pages}`,
+    `%D ${a.year}`, a._publisher && `%I ${a._publisher}`, a.issn && `%@ ${a.issn}`, a.isbn && `%@ ${a.isbn}`, d && `%R ${d}`, `%U ${url}`, ...kws(a).map((w) => `%K ${w}`), abstract(a) && `%X ${abstract(a)}`, `%G ${L}`].filter(Boolean).join('\n') + '\n';
+  const enwB64 = Buffer.from(enw, 'utf8').toString('base64');
   const size = a.pdf_size ? `${(a.pdf_size / 1048576).toFixed(1)} MB` : '';
 
   const citeBox = `<section class="panel" id="cite"><h2>${I.quote} Iqtibos keltirish</h2>
 <div class="cite" data-cite><div class="cite-bar"><label for="citeStyle">Uslub</label><select id="citeStyle" data-cite-select>${cites.map((s) => `<option value="${s.id}">${esc(s.name)}</option>`).join('')}</select>
 <button type="button" class="btn sm" data-cite-copy hidden>Nusxa olish</button></div>
 ${cites.map((s, i) => `<div class="cite-item${i === 0 ? ' on' : ''}" data-style="${s.id}"><p class="cite-name">${esc(s.name)}</p><p class="cite-text">${s.html}</p></div>`).join('')}
-<p class="cite-files"><a href="data:application/x-bibtex;charset=utf-8;base64,${bibB64}" download="${esc(a._id)}.bib">BibTeX (.bib)</a><a href="data:application/x-research-info-systems;charset=utf-8;base64,${risB64}" download="${esc(a._id)}.ris">RIS / EndNote / Zotero (.ris)</a></p></div></section>`;
+<p class="cite-files"><a href="data:application/x-bibtex;charset=utf-8;base64,${bibB64}" download="${esc(a._id)}.bib">BibTeX (.bib)</a><a href="data:application/x-research-info-systems;charset=utf-8;base64,${risB64}" download="${esc(a._id)}.ris">RIS / Zotero / Mendeley (.ris)</a><a href="data:application/x-endnote-refer;charset=utf-8;base64,${enwB64}" download="${esc(a._id)}.enw">EndNote (.enw)</a></p></div></section>`;
 
   const viewer = a.pdf ? `<section class="panel viewer" id="read" data-viewer data-src="${pdfPath(a)}" data-title="${esc(title(a))}">
 <div class="viewer-h"><h2>${I.pdf} Maqolani o'qish</h2>
@@ -582,7 +700,7 @@ ${cites.map((s, i) => `<div class="cite-item${i === 0 ? ' on' : ''}" data-style=
 ${a.pdf ? `<div class="side-card"><a class="btn block" href="${pdfPath(a)}" target="_blank" rel="noopener">${I.pdf} To'liq matn (PDF)</a>
 <a class="btn ghost block" href="${pdfPath(a)}?dl=1" data-dl>${I.down} Yuklab olish${size ? ` <span class="muted">${size}</span>` : ''}</a></div>` : ''}
 <div class="side-card stats" data-stats="${esc(a._id)}"><div><span class="stat-i">${I.eye}</span><b data-views>–</b><span>ko'rishlar</span></div><div><span class="stat-i">${I.down}</span><b data-downloads>–</b><span>yuklab olishlar</span></div></div>
-<div class="side-card"><p class="side-h">Ushbu sahifada</p><nav class="toc-side" aria-label="Sahifa bo'limlari"><a href="#abstract">Annotatsiya</a>${a.pdf ? '<a href="#read">Maqolani o\'qish</a>' : ''}${refs.length ? '<a href="#references">Adabiyotlar</a>' : ''}<a href="#cite">Iqtibos keltirish</a>${rel.length ? '<a href="#related">O\'xshash maqolalar</a>' : ''}</nav>
+<div class="side-card"><p class="side-h">Ushbu sahifada</p><nav class="toc-side" aria-label="Sahifa bo'limlari"><a href="#abstract">Annotatsiya</a><a href="#fulltext" data-ft-only hidden>Maqola matni</a>${a.pdf ? '<a href="#read">Maqolani o\'qish</a>' : ''}${refs.length ? '<a href="#references">Adabiyotlar</a>' : ''}<a href="#cite">Iqtibos keltirish</a>${rel.length ? '<a href="#related">O\'xshash maqolalar</a>' : ''}</nav>
 <button type="button" class="btn ghost sm block" data-share>${I.link} Havolani nusxalash</button></div>
 <div class="side-card"><a class="btn ghost sm block" href="/article/${a._id}/certificate/" rel="nofollow">${I.award} Nashr sertifikati</a></div>
 <div class="side-card lic"><p>Ochiq foydalanish · <a href="https://creativecommons.org/licenses/by/4.0/" rel="license noopener noreferrer">CC BY 4.0</a></p></div>
@@ -600,6 +718,9 @@ ${byline(a)}
 <p class="paper-src">${esc(srcText(a))}${a.year ? `, ${esc(a.year)}` : ''}</p></header>
 <dl class="facts card-facts">${dl}</dl>
 <div id="abstract">${ab}</div>
+<section class="panel fulltext" id="fulltext" data-fulltext hidden lang="${L}"><h2>${I.doc} Maqola matni</h2>
+<p class="ft-note">Matn PDF fayldan avtomatik olingan. Jadval, formula va rasmlar uchun PDF nusxaga qarang.</p>
+<div class="ft-body" data-fulltext-body></div><button type="button" class="btn ghost sm ft-more" data-ft-more hidden>Matnni to'liq ko'rsatish</button></section>
 ${viewer}${refsBox}${citeBox}${relBox}
 </article>${aside}</div></div>`,
   }));
@@ -636,7 +757,7 @@ out('404.html', page({ t: 'Sahifa topilmadi', d: S.name, p: '/404.html', body: `
 out('data/index.json', JSON.stringify({ built: new Date().toISOString(), articles: Object.fromEntries(A.map((a) => [a.id, { pdf: a.pdf || null, ...(a.pdf_aliases?.length ? { aliases: a.pdf_aliases } : {}) }])) }));
 
 // Qidiruv sahifasi uchun ixcham indeks
-out('data/search.json', JSON.stringify(A.slice().sort(byDate).map((a) => ({ u: `/article/${a._id}/`, t: title(a), a: a.authors.join(', '), s: srcText(a), y: a.year, ty: TYPES[a._t], d: doi(a), l: lang(a), k: searchText(a) + ' ' + doi(a).toLowerCase() }))));
+out('data/search.json', JSON.stringify(A.slice().sort(byDate).map((a) => ({ i: a._id, u: `/article/${a._id}/`, t: title(a), a: a.authors.join(', '), s: srcText(a), y: a.year, ty: TYPES[a._t], d: doi(a), l: lang(a), k: searchText(a) + ' ' + doi(a).toLowerCase() }))));
 
 // Atom lenta: so'nggi 50 nashr
 const isoTime = (a) => `${a.created || a.date || `${a.year}-01-01`}T00:00:00Z`;
@@ -671,7 +792,9 @@ out('data/oai.json', JSON.stringify({
 const urls = [['/'], ...(C.length ? [['/collections/']] : []), ...C.map((c) => [`/collection/${c._id}/`]), ['/authors/'], ...AU.map((e) => [`/author/${e.key}/`]),
   ...(JOUR.length ? [['/journals/']] : []), ...(CONF.length ? [['/conferences/']] : []),
   ...SER.flatMap((x) => [[serHref(x)], ...(paras(x.guidelines).length ? [[serHref(x) + 'guidelines/']] : []), ...(paras(x.ethics).length ? [[serHref(x) + 'ethics/']] : [])]),
-  ['/archive/'], ...YEARS.map((y) => [`/archive/${y}/`]), ...(NEWS.length ? [['/news/'], ...NEWS.map((n) => [`/news/${n._id}/`, n.date])] : []),
+  ['/archive/'], ...YEARS.map((y) => [`/archive/${y}/`]), ['/latest/'],
+  ...(FIELD_LIST.length ? [['/fields/'], ...FIELD_LIST.map((f) => [`/field/${f.key}/`])] : []),
+  ...(ORG_LIST.length ? [['/organizations/'], ...ORG_LIST.map((o) => [`/organization/${o.key}/`])] : []), ...(NEWS.length ? [['/news/'], ...NEWS.map((n) => [`/news/${n._id}/`, n.date])] : []),
   ...A.map((a) => [`/article/${a._id}/`, a.updated || a.date]), ...PAGES.map(([k]) => [`/${k}/`])];
 out('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(([u, m]) => `<url><loc>${BASE}${u}</loc>${m && OK.date.test(m) ? `<lastmod>${esc(m)}</lastmod>` : ''}</url>`).join('\n')}\n</urlset>\n`);
 // Birlashtirilgan mualliflarning eski sahifalari asosiy sahifaga 301 bilan yo'naltiriladi

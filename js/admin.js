@@ -4,7 +4,9 @@
   const KEY = 'admin_token_v3';
   const IDLE_MS = 20 * 60 * 1000;
   let idleTimer = null;
-  const state = { articles: [], collections: [], series: [], news: [], site: {}, pages: {}, stats: {}, editingId: null, collEditing: null, seriesEditing: null, newsEditing: null, pdfInfo: null };
+  const state = { articles: [], collections: [], series: [], news: [], site: {}, pages: {}, stats: {}, editingId: null, collEditing: null, seriesEditing: null, newsEditing: null, pdfInfo: null, profiles: [], ftIds: new Set(), fullText: null, profEditing: null };
+  // O'zbekiston OAK fan tarmoqlari nomlari (tavsiya; boshqa nom ham yozish mumkin)
+  const FIELDS_DEFAULT = ['Fizika-matematika fanlari', 'Kimyo fanlari', 'Biologiya fanlari', 'Geologiya-mineralogiya fanlari', 'Texnika fanlari', "Qishloq xo'jaligi fanlari", 'Tarix fanlari', 'Iqtisodiyot fanlari', 'Falsafa fanlari', 'Filologiya fanlari', 'Geografiya fanlari', 'Yuridik fanlar', 'Pedagogika fanlari', 'Tibbiyot fanlari', 'Farmatsevtika fanlari', 'Veterinariya fanlari', "San'atshunoslik fanlari", 'Arxitektura', 'Psixologiya fanlari', 'Harbiy fanlar', 'Sotsiologiya fanlari', 'Siyosiy fanlar'];
 
   const LANGS = [
     { code: 'uz', label: "O'zbekcha" },
@@ -322,12 +324,15 @@
       state.pages = data.pages || {};
       state.series = Array.isArray(data.series) ? data.series : [];
       state.news = Array.isArray(data.news) ? data.news : [];
+      state.profiles = Array.isArray(data.profiles) ? data.profiles : [];
+      $('profBadge').textContent = state.profiles.length;
+      loadFtIds();
       $('countBadge').textContent = state.articles.length;
       $('collBadge').textContent = state.collections.length;
       $('seriesBadge').textContent = state.series.length;
       $('newsBadge').textContent = state.news.length;
       if (!state.editingId) renderCollectionPanels();
-      renderList(); renderColls(); renderPages(); renderSeries(); renderNews(); fillSelects();
+      renderList(); renderColls(); renderPages(); renderSeries(); renderNews(); fillSelects(); renderProfiles();
       msg($('listMsg'), '');
       loadStats();
       return true;
@@ -372,16 +377,23 @@
             <p class="item-title"><a class="link" href="/article/${esc(a.id)}/" target="_blank">${esc(t)}</a></p>
             <p class="item-meta">${esc((a.authors || []).join(', '))} • ${esc(a.year)} • ID: <code>${esc(a.id)}</code>${coll ? ` • To'plam: <strong>${esc(coll.name)}</strong>` : ''}</p>
             <p class="item-meta">${s ? `Ko'rishlar: <strong>${s.views}</strong> • Yuklab olishlar: <strong>${s.downloads}</strong>` : "Ko'rishlar: 0 • Yuklab olishlar: 0"}</p>
-            ${iss.length ? `<p class="tags">${iss.map((x) => `<span class="tag warn">${esc(x)}</span>`).join('')}</p>` : '<p class="tags"><span class="tag ok">Google Scholar uchun tayyor</span></p>'}
+            <p class="tags">${iss.length ? iss.map((x) => `<span class="tag warn">${esc(x)}</span>`).join('') : '<span class="tag ok">Google Scholar uchun tayyor</span>'}${state.ftIds.has(a.id) ? '<span class="tag ok">To\'liq matn saytda</span>' : (a.pdf ? '<span class="tag">To\'liq matn yo\'q</span>' : '')}</p>
           </div>
           <div class="item-acts">
             <button type="button" class="btn ghost sm" data-edit="${esc(a.id)}">Tahrirlash</button>
+            ${a.pdf ? `<button type="button" class="btn ghost sm" data-ft="${esc(a.id)}" title="PDF dan to'liq matnni qayta olish">Matn</button>` : ''}
             <button type="button" class="btn danger sm" data-del="${esc(a.id)}">O'chirish</button>
           </div>
         </li>`;
     }).join('');
     ul.querySelectorAll('[data-edit]').forEach((b) => (b.onclick = () => startEdit(b.dataset.edit)));
     ul.querySelectorAll('[data-del]').forEach((b) => (b.onclick = () => deleteArticle(b.dataset.del)));
+    ul.querySelectorAll('[data-ft]').forEach((b) => (b.onclick = async () => {
+      b.disabled = true; msg($('listMsg'), "To'liq matn PDF dan olinmoqda...", 'info');
+      try { const r = await makeFullText(b.dataset.ft); msg($('listMsg'), `To'liq matn saqlandi (${r.chars} belgi). Maqola sahifasida darhol ko'rinadi.`, 'ok'); }
+      catch (e) { msg($('listMsg'), 'Xatolik: ' + e.message, 'err'); }
+      finally { b.disabled = false; renderList(); }
+    }));
   }
 
   // ---------- Tahrirlash ----------
@@ -405,6 +417,8 @@
     $('authors').value = (a.authors || []).join('; ');
     $('author_info').value = (a.authors || []).map((n, i) => { const x = (a.author_info || [])[i] || {}; return x.org || x.orcid ? [x.org || '', x.orcid || ''].join(' | ').replace(/ \| $/, '') : ''; }).join('\n').replace(/\n+$/, '');
     $('section').value = a.section || '';
+    $('field').value = a.field || '';
+    state.fullText = null; msg($('ftMsg'), state.ftIds.has(a.id) ? "Bu maqolaning to'liq matni saytda bor. Yangi PDF tanlansa, matn ham yangilanadi." : '', 'info');
     $('year').value = a.year || '';
     $('date').value = a.date || '';
     LANGS.forEach(({ code }) => {
@@ -449,6 +463,7 @@
     $('authorHint').hidden = true;
     $('dateHint').hidden = true;
     $('references').dataset.auto = '';
+    state.fullText = null; $('pdf_pages').value = ''; msg($('ftMsg'), '');
     msg($('refsMsg'), ''); msg($('msg'), '');
     renderExtraFields(); renderCollectionPanels(); refreshCapsHints();
   }
@@ -546,6 +561,10 @@
     if ($('nw_collection')) $('nw_collection').innerHTML = opt('', '— Biriktirilmagan —', $('nw_collection').value) + state.collections.map((c) => opt(c.id, c.name, $('nw_collection').value)).join('');
     const secs = [...new Set(state.articles.map((a) => a.section).filter(Boolean))].sort();
     if ($('sectionList')) $('sectionList').innerHTML = secs.map((x) => `<option value="${esc(x)}"></option>`).join('');
+    const flds = [...new Set([...FIELDS_DEFAULT, ...state.articles.map((a) => a.field), ...state.series.map((x) => x.field)].filter(Boolean))].sort((a, b) => a.localeCompare(b, 'uz'));
+    if ($('fieldList')) $('fieldList').innerHTML = flds.map((x) => `<option value="${esc(x)}"></option>`).join('');
+    const orgs = [...new Set([...state.articles.flatMap((a) => (a.author_info || []).map((x) => x && x.org)), ...state.profiles.map((x) => x.org)].filter(Boolean))].sort();
+    if ($('orgList')) $('orgList').innerHTML = orgs.map((x) => `<option value="${esc(x)}"></option>`).join('');
   }
   function renderSeries() {
     const ul = $('seriesItems');
@@ -560,7 +579,7 @@
     }).join('');
     ul.querySelectorAll('[data-sedit]').forEach((b) => (b.onclick = () => openSeries(b.dataset.sedit)));
   }
-  const SR_TEXT = ['type', 'short', 'name', 'issn', 'eissn', 'founded', 'frequency', 'languages', 'scope', 'publisher', 'email', 'address'];
+  const SR_TEXT = ['type', 'short', 'name', 'issn', 'eissn', 'founded', 'frequency', 'languages', 'scope', 'field', 'publisher', 'email', 'address'];
   function openSeries(id) {
     const x = id ? state.series.find((s) => s.id === id) : null;
     state.seriesEditing = x ? x.id : null;
@@ -653,6 +672,93 @@
     } catch (err) { msg($('newsMsg'), 'Xatolik: ' + err.message, 'err'); }
   }
 
+  // ---------- To'liq matn (PDF dan HTML ga) ----------
+  async function loadFtIds() {
+    try { const d = await api('/api/fulltext'); state.ftIds = new Set(d.ids || []); renderList(); } catch (_) {}
+  }
+  async function extractFullText(file) {
+    const lib = await loadPdfJs();
+    return window.FullText.fromFile(file, lib);
+  }
+  async function saveFullText(id, ft) {
+    if (!ft || !ft.blocks || !ft.blocks.length) throw new Error("PDF dan matn olinmadi");
+    const r = await postJson('/api/fulltext', { id, blocks: ft.blocks });
+    state.ftIds.add(id);
+    return r;
+  }
+  async function pdfFileOf(a) {
+    const r = await fetch(`/pdf/${encodeURIComponent(a.pdf)}`, { cache: 'no-store' });
+    if (!r.ok) throw new Error('PDF ni yuklab bo\'lmadi');
+    return new File([await r.blob()], a.pdf, { type: 'application/pdf' });
+  }
+  async function makeFullText(id) {
+    const a = state.articles.find((x) => x.id === id);
+    if (!a || !a.pdf) throw new Error("Maqolaning PDF fayli yo'q");
+    return saveFullText(id, await extractFullText(await pdfFileOf(a)));
+  }
+  async function makeAllFullTexts() {
+    const todo = state.articles.filter((a) => a.pdf && !state.ftIds.has(a.id));
+    if (!todo.length) { msg($('listMsg'), "Barcha maqolalarning to'liq matni saytda bor.", 'ok'); return; }
+    if (!confirm(`${todo.length} ta maqola uchun PDF dan to'liq matn olinadi va maqola sahifalariga qo'yiladi. Davom etilsinmi?`)) return;
+    $('ftAllBtn').disabled = true;
+    let ok = 0, bad = 0;
+    for (const [i, a] of todo.entries()) {
+      msg($('listMsg'), `To'liq matn: ${i + 1} / ${todo.length} — ${a.title_uz || a.title_en || a.title_ru || a.id}`, 'info');
+      try { await makeFullText(a.id); ok++; } catch (e) { bad++; console.warn(a.id, e); }
+    }
+    $('ftAllBtn').disabled = false;
+    renderList();
+    msg($('listMsg'), `Tayyor: ${ok} ta maqolaning to'liq matni saqlandi${bad ? `, ${bad} tasida xatolik (PDF skan qilingan bo'lishi mumkin)` : ''}.`, bad ? 'err' : 'ok');
+  }
+
+  // ---------- Muallif profillari ----------
+  function authorNames() {
+    const seen = {}, out = [];
+    state.articles.forEach((a) => (a.authors || []).forEach((n) => { const k = fold(scholarName(n)); if (!seen[k]) { seen[k] = 1; out.push(n); } }));
+    return out.sort((x, y) => x.localeCompare(y, 'uz'));
+  }
+  const profileOf = (n) => state.profiles.find((p) => fold(scholarName(p.name)) === fold(scholarName(n)) || sameGroup(p.name, n));
+  function renderProfiles() {
+    const q = fold($('profQ').value), ul = $('profItems');
+    const names = authorNames().filter((n) => !q || fold(n).includes(q));
+    ul.innerHTML = names.map((n) => {
+      const p = profileOf(n), cnt = state.articles.filter((a) => (a.authors || []).some((x) => fold(scholarName(x)) === fold(scholarName(n)))).length;
+      return `<li class="item"><div><p class="item-title">${esc(n)}</p><p class="item-meta">${cnt} ta nashr${p && p.org ? ' • ' + esc(p.org) : ''}</p>
+        <p class="tags">${p ? '<span class="tag ok">Profil bor</span>' : '<span class="tag">Profil yo\'q</span>'}</p></div>
+        <div class="item-acts"><button type="button" class="btn ghost sm" data-pedit="${esc(n)}">${p ? 'Tahrirlash' : "Profil qo'shish"}</button></div></li>`;
+    }).join('') || `<li class="item"><span class="item-meta">Muallif topilmadi.</span></li>`;
+    ul.querySelectorAll('[data-pedit]').forEach((b) => (b.onclick = () => openProfile(b.dataset.pedit)));
+  }
+  const PF = ['name', 'degree', 'position', 'org', 'orcid', 'scholar', 'researchgate', 'website'];
+  function openProfile(n) {
+    const p = profileOf(n) || {};
+    state.profEditing = p.name || null;
+    fillSelects();
+    $('profFormTitle').textContent = `Muallif profili: ${n}`;
+    PF.forEach((f) => { $(`pf_${f}`).value = f === 'name' ? (p.name || n) : (p[f] || ''); });
+    if (!p.org) { const a = state.articles.find((x) => (x.authors || []).some((y, i) => fold(scholarName(y)) === fold(scholarName(n)) && x.author_info && x.author_info[i] && x.author_info[i].org)); if (a) { const i = a.authors.findIndex((y) => fold(scholarName(y)) === fold(scholarName(n))); $('pf_org').value = a.author_info[i].org; } }
+    $('pf_bio').value = (p.bio || []).join('\n\n');
+    $('pf_interests').value = (p.interests || []).join(', ');
+    $('profDelete').hidden = !p.name;
+    msg($('profFormMsg'), '');
+    $('profForm').hidden = false;
+    $('profForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  async function saveProfile(e) {
+    e.preventDefault();
+    const body = { action: 'save', old_name: state.profEditing || '', bio: $('pf_bio').value, interests: $('pf_interests').value };
+    PF.forEach((f) => { body[f] = $(`pf_${f}`).value.trim(); });
+    $('profSave').disabled = true; msg($('profFormMsg'), 'Saqlanmoqda...', 'info');
+    try { await postJson('/api/profiles', body); msg($('profFormMsg'), 'Saqlandi. 1-2 daqiqada muallif sahifasida aks etadi.', 'ok'); state.profEditing = body.name; await loadArticles(); }
+    catch (err) { msg($('profFormMsg'), 'Xatolik: ' + err.message, 'err'); }
+    finally { $('profSave').disabled = false; }
+  }
+  async function deleteProfile() {
+    if (!state.profEditing || !confirm(`"${state.profEditing}" profilini o'chirasizmi? Muallifning maqolalari saytda qoladi.`)) return;
+    try { await postJson('/api/profiles', { action: 'delete', name: state.profEditing }); $('profForm').hidden = true; msg($('profMsg'), "Profil o'chirildi.", 'ok'); await loadArticles(); }
+    catch (err) { msg($('profMsg'), 'Xatolik: ' + err.message, 'err'); }
+  }
+
   // ---------- Sahifalar bo'limi ----------
   function pageBlock(k, p) {
     return `<div class="pageblock" data-key="${esc(k)}">
@@ -735,7 +841,7 @@
   }
 
   // ---------- Umumiy ----------
-  const VIEWS = { form: ['viewForm', 'navForm'], list: ['viewList', 'navList'], series: ['viewSeries', 'navSeries'], coll: ['viewColl', 'navColl'], news: ['viewNews', 'navNews'], pages: ['viewPages', 'navPages'] };
+  const VIEWS = { form: ['viewForm', 'navForm'], list: ['viewList', 'navList'], series: ['viewSeries', 'navSeries'], coll: ['viewColl', 'navColl'], news: ['viewNews', 'navNews'], prof: ['viewProf', 'navProf'], pages: ['viewPages', 'navPages'] };
   function switchView(v) {
     Object.entries(VIEWS).forEach(([k, [sec, nav]]) => {
       $(sec).hidden = k !== v;
@@ -781,6 +887,12 @@
   $('navColl').onclick = () => switchView('coll');
   $('navSeries').onclick = () => switchView('series');
   $('navNews').onclick = () => switchView('news');
+  $('navProf').onclick = () => switchView('prof');
+  $('profQ').oninput = renderProfiles;
+  $('profForm').onsubmit = saveProfile;
+  $('profCancel').onclick = () => { $('profForm').hidden = true; };
+  $('profDelete').onclick = deleteProfile;
+  $('ftAllBtn').onclick = makeAllFullTexts;
   $('newSeriesBtn').onclick = () => openSeries(null);
   $('seriesCancel').onclick = () => { $('seriesForm').hidden = true; };
   $('seriesDelete').onclick = () => state.seriesEditing && deleteSeries(state.seriesEditing);
@@ -850,6 +962,13 @@
     const info = await extractRefs(f);
     renderPdfCheck(f, info);
     if (info && info.firstChars > 200) $('checks').checked = true;
+    $('pdf_pages').value = info && info.pages ? info.pages : '';
+    state.fullText = null;
+    msg($('ftMsg'), "To'liq matn PDF dan olinmoqda...", 'info');
+    try {
+      state.fullText = await extractFullText(f);
+      msg($('ftMsg'), state.fullText.chars > 300 ? `To'liq matn olindi: ${state.fullText.blocks.length} ta xatboshi, ${state.fullText.chars} belgi. Saqlangandan keyin maqola sahifasida chiqadi.` : "PDF da matn deyarli yo'q (skan bo'lishi mumkin): to'liq matn sahifaga qo'yilmaydi.", state.fullText.chars > 300 ? 'ok' : 'err');
+    } catch (e) { msg($('ftMsg'), "To'liq matnni olishda xatolik: " + e.message, 'err'); }
   };
   $('refsBtn').onclick = async () => {
     let f = $('file').files[0];
@@ -899,9 +1018,15 @@
       $('fill').style.width = '40%';
       msg($('msg'), state.editingId ? "O'zgarishlar saqlanmoqda..." : 'Nashr yuklanmoqda...', 'info');
       const data = await api('/api/upload', { method: 'POST', body: fd });
+      $('fill').style.width = '80%';
+      let ftNote = '';
+      if (state.fullText && state.fullText.chars > 300 && data.id) {
+        try { await saveFullText(data.id, state.fullText); ftNote = " To'liq matn ham saqlandi."; }
+        catch (e) { ftNote = " To'liq matnni saqlab bo'lmadi: " + e.message + ' ("Nashrlar" bo\'limidagi "Matn" tugmasi bilan qayta urinib ko\'ring).'; }
+      }
       $('fill').style.width = '100%';
       const refsN = $('references').value.split('\n').filter((s) => s.trim()).length;
-      msg($('msg'), (state.editingId ? 'Maqola yangilandi!' : 'Maqola joylandi!') + ` ${refsN ? refsN + " ta adabiyot saqlandi. " : ''}1-2 daqiqada saytda aks etadi.` + (data.scholar_pdf === false ? ' Diqqat: PDF 5 MB dan katta, Google Scholar uni indekslamaydi.' : ''), 'ok');
+      msg($('msg'), (state.editingId ? 'Maqola yangilandi!' : 'Maqola joylandi!') + ` ${refsN ? refsN + " ta adabiyot saqlandi. " : ''}1-2 daqiqada saytda aks etadi.` + ftNote + (data.scholar_pdf === false ? ' Diqqat: PDF 5 MB dan katta, Google Scholar uni indekslamaydi.' : ''), 'ok');
       const keep = $('msg').textContent;
       cancelEditMode();
       msg($('msg'), keep, 'ok');

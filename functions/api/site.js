@@ -4,7 +4,8 @@
 import { json, clean, UserError, isAdmin, updateData, ghReady } from '../../lib/common.js';
 
 const RESERVED = new Set(['article', 'collection', 'collections', 'author', 'authors', 'pdf', 'api', 'stats', 'data', 'css', 'js', 'admin', 'year',
-  'journal', 'journals', 'conference', 'conferences', 'news', 'archive', 'search', 'feed', 'oai']);
+  'journal', 'journals', 'conference', 'conferences', 'news', 'archive', 'search', 'feed', 'oai',
+  'field', 'fields', 'organization', 'organizations', 'latest']);
 const KEY_RE = /^[a-z0-9][a-z0-9-]{1,39}$/;
 
 // Muallif ismlarini birlashtirish: [{ name, variants: [..], show_variants: bool }]

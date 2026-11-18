@@ -93,6 +93,8 @@ export async function onRequestPost({ request, env }) {
     if (info.some((x) => x.org || x.orcid)) article.author_info = info;
     const section = g('section', 120).replace(/\s+/g, ' ');
     if (section) article.section = section;
+    const field = g('field', 120).replace(/\s+/g, ' ');
+    if (field) article.field = field;
     if (date) article.date = date;
 
     for (const f of FIELDS[kind]) { const v = g(f, 200); if (v) article[f] = v; }
@@ -169,6 +171,8 @@ export async function onRequestPost({ request, env }) {
       wrote = true;
       article.pdf = key;
       article.pdf_size = file.size;
+      const pp = parseInt(g('pdf_pages', 5), 10);
+      if (pp > 0 && pp < 5000) article.pdf_pages = pp;
     }
 
     await updateData(env, editId ? `Tahrirlandi: ${article.id}` : `Yangi nashr: ${article.id}`, (data) => {
@@ -182,7 +186,7 @@ export async function onRequestPost({ request, env }) {
         if (idx === -1) throw new UserError('Tahrirlanayotgan maqola topilmadi');
         const p = data.articles[idx];
         const keep = {};
-        for (const f of ['pdf', 'pdf_size', 'pdf_aliases', 'created']) if (p[f] !== undefined) keep[f] = p[f];
+        for (const f of ['pdf', 'pdf_size', 'pdf_pages', 'pdf_aliases', 'created']) if (p[f] !== undefined) keep[f] = p[f];
         data.articles[idx] = { ...keep, ...article, id: editId, updated: new Date().toISOString().slice(0, 10) };
         if (!hasNewFile) { data.articles[idx].pdf = p.pdf; data.articles[idx].pdf_size = p.pdf_size; }
       } else {

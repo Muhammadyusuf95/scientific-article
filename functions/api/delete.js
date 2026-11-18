@@ -86,7 +86,14 @@ export async function onRequestPost({ request, env }) {
       const getRes = await fetch(api + ref, { headers: gh });
       if (!getRes.ok) throw new Error(`GitHub o'qish xatosi: ${getRes.status}`);
       const cur = await getRes.json();
-      const data = JSON.parse(b64decode(cur.content));
+      // 1 MB dan katta fayl uchun GitHub mazmunni bermaydi: blob orqali o'qiladi
+      let b64 = cur.content;
+      if (!b64 && cur.sha) {
+        const blob = await fetch(`${(env.GITHUB_API_BASE || 'https://api.github.com').replace(/\/$/, '')}/repos/${env.GITHUB_REPO}/git/blobs/${cur.sha}`, { headers: gh });
+        if (!blob.ok) throw new Error(`GitHub blob xatosi: ${blob.status}`);
+        b64 = (await blob.json()).content;
+      }
+      const data = JSON.parse(b64decode(b64));
       if (!Array.isArray(data.articles)) throw new Error("articles.json da 'articles' massivi yo'q");
 
       const i = data.articles.findIndex((a) => a.id === id);
@@ -114,6 +121,7 @@ export async function onRequestPost({ request, env }) {
     if (key) {
       try { await archiveObject(env, key); } catch (e) { console.error(e); }
     }
+    try { await env.R2_OMBOR.delete(`text/${id}.json`); } catch (e) { console.error(e); }
     return json({ success: true });
   } catch (err) {
     if (err instanceof UserError) return json({ success: false, error: err.message }, 400);

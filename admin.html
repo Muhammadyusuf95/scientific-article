@@ -7,9 +7,10 @@
 <meta name="referrer" content="no-referrer">
 <meta name="color-scheme" content="light dark">
 <title>Admin panel</title>
-<link rel="stylesheet" href="/css/admin.css?v=5">
-<script src="/js/refs.js?v=5" defer></script>
-<script src="/js/admin.js?v=5" defer></script>
+<link rel="stylesheet" href="/css/admin.css?v=6">
+<script src="/js/refs.js?v=6" defer></script>
+<script src="/js/fulltext.js?v=1" defer></script>
+<script src="/js/admin.js?v=6" defer></script>
 </head>
 <body>
 
@@ -53,6 +54,7 @@
       <button type="button" class="segbtn" id="navSeries" role="tab" aria-selected="false">Jurnal va konferensiyalar <span class="count" id="seriesBadge">0</span></button>
       <button type="button" class="segbtn" id="navColl" role="tab" aria-selected="false">Son va to'plamlar <span class="count" id="collBadge">0</span></button>
       <button type="button" class="segbtn" id="navNews" role="tab" aria-selected="false">E'lonlar <span class="count" id="newsBadge">0</span></button>
+      <button type="button" class="segbtn" id="navProf" role="tab" aria-selected="false">Muallif profillari <span class="count" id="profBadge">0</span></button>
       <button type="button" class="segbtn" id="navPages" role="tab" aria-selected="false">Sahifalar</button>
     </div>
 
@@ -123,6 +125,8 @@
           <div class="grid sect">
             <label class="field"><span class="lbl">Bo'lim (fan sohasi)</span><input name="section" id="section" maxlength="120" list="sectionList" placeholder="Tilshunoslik"><datalist id="sectionList"></datalist>
               <span class="hint">Son mundarijasida maqolalar shu bo'limlar bo'yicha guruhlanadi.</span></label>
+            <label class="field"><span class="lbl">Fan sohasi</span><input name="field" id="field" maxlength="120" list="fieldList" placeholder="Filologiya fanlari"><datalist id="fieldList"></datalist>
+              <span class="hint">Saytdagi "Fan sohalari" sahifasida maqola shu soha ostida chiqadi. Bo'sh qolsa, jurnal yoki konferensiyaning sohasi olinadi.</span></label>
           </div>
           <div class="grid sect" id="extra"></div>
         </div>
@@ -162,6 +166,8 @@
             <p class="small" id="refsMsg" role="status" aria-live="polite"></p>
           </div>
 
+          <input type="hidden" name="pdf_pages" id="pdf_pages">
+          <p class="small" id="ftMsg" role="status" aria-live="polite"></p>
           <label class="check">
             <input type="checkbox" id="checks" name="checks" value="yes">
             <span>PDF tayyor: matni belgilanadigan (skan emas), birinchi betda nom va mualliflar bor.</span>
@@ -184,6 +190,7 @@
         <div class="toolbar">
           <input type="search" id="q" placeholder="Nom, muallif yoki ID bo'yicha qidirish" aria-label="Qidirish" maxlength="100">
           <button class="btn ghost sm" type="button" id="reloadBtn">Yangilash</button>
+          <button class="btn ghost sm" type="button" id="ftAllBtn" title="To'liq matni yo'q maqolalar uchun PDF dan matn olib, maqola sahifasiga qo'yadi">To'liq matnlarni yaratish</button>
         </div>
         <ul class="items" id="items"></ul>
         <p class="msg" id="listMsg" role="status" aria-live="polite"></p>
@@ -259,6 +266,7 @@
           <label class="field"><span class="lbl">Davriyligi</span><input id="sr_frequency" maxlength="80" placeholder="Yiliga 4 marta"></label>
           <label class="field"><span class="lbl">Nashr tillari</span><input id="sr_languages" maxlength="120" placeholder="O'zbek, rus, ingliz"></label>
           <label class="field"><span class="lbl">Ilmiy yo'nalishlar</span><input id="sr_scope" maxlength="300" placeholder="Tilshunoslik, adabiyotshunoslik"></label>
+          <label class="field"><span class="lbl">Asosiy fan sohasi</span><input id="sr_field" maxlength="120" list="fieldList" placeholder="Filologiya fanlari"><span class="hint">Maqolada fan sohasi ko'rsatilmasa, shu olinadi.</span></label>
           <label class="field"><span class="lbl">Nashriyot / muassis</span><input id="sr_publisher" maxlength="200"></label>
           <label class="field"><span class="lbl">E-pochta</span><input id="sr_email" type="email" maxlength="120"></label>
           <label class="field full"><span class="lbl">Manzil</span><input id="sr_address" maxlength="300"></label>
@@ -310,6 +318,37 @@
           <button class="btn danger" type="button" id="newsDelete" hidden>O'chirish</button>
         </div>
         <p class="msg" id="newsFormMsg" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+    <!-- ===== Muallif profillari ===== -->
+    <section id="viewProf" hidden>
+      <div class="card">
+        <h2 style="margin:0 0 6px">Muallif profillari</h2>
+        <p class="hint">Profil muallif sahifasida chiqadi: ilmiy daraja, lavozim, ish joyi, qisqacha ma'lumot, ilmiy qiziqishlar va ORCID, Google Scholar, ResearchGate havolalari. Google bu ma'lumotlardan muallifni aniqlashda foydalanadi.</p>
+        <input type="search" id="profQ" placeholder="Muallifni qidirish" aria-label="Muallifni qidirish" maxlength="100" style="margin:8px 0 4px">
+        <ul class="items" id="profItems"></ul>
+        <p class="msg" id="profMsg" role="status" aria-live="polite"></p>
+      </div>
+      <form class="card" id="profForm" hidden autocomplete="off">
+        <h2 id="profFormTitle">Muallif profili</h2>
+        <div class="grid">
+          <label class="field full"><span class="lbl req">Muallif (maqoladagi yozilishi)</span><input id="pf_name" maxlength="200" required></label>
+          <label class="field"><span class="lbl">Ilmiy daraja, unvon</span><input id="pf_degree" maxlength="200" placeholder="Filologiya fanlari doktori (DSc), professor"></label>
+          <label class="field"><span class="lbl">Lavozimi</span><input id="pf_position" maxlength="200" placeholder="Kafedra mudiri"></label>
+          <label class="field full"><span class="lbl">Ish joyi</span><input id="pf_org" maxlength="300" list="orgList"><datalist id="orgList"></datalist></label>
+          <label class="field full"><span class="lbl">Muallif haqida</span><textarea id="pf_bio" rows="4" maxlength="8000"></textarea><span class="hint">Xatboshilarni bo'sh qator bilan ajrating.</span></label>
+          <label class="field full"><span class="lbl">Ilmiy qiziqishlari</span><input id="pf_interests" maxlength="2000" placeholder="lingvokulturologiya, frazeologiya, onomastika"><span class="hint">Vergul bilan ajrating.</span></label>
+          <label class="field"><span class="lbl">ORCID</span><input id="pf_orcid" maxlength="60" placeholder="0000-0002-1825-0097"></label>
+          <label class="field"><span class="lbl">Google Scholar profili</span><input id="pf_scholar" maxlength="400" placeholder="https://scholar.google.com/citations?user=..."></label>
+          <label class="field"><span class="lbl">ResearchGate</span><input id="pf_researchgate" maxlength="400" placeholder="https://www.researchgate.net/profile/..."></label>
+          <label class="field"><span class="lbl">Shaxsiy sahifa</span><input id="pf_website" maxlength="400" placeholder="https://..."></label>
+        </div>
+        <div class="row-acts">
+          <button class="btn primary" type="submit" id="profSave">Saqlash</button>
+          <button class="btn ghost" type="button" id="profCancel">Bekor qilish</button>
+          <button class="btn danger" type="button" id="profDelete" hidden>Profilni o'chirish</button>
+        </div>
+        <p class="msg" id="profFormMsg" role="status" aria-live="polite"></p>
       </form>
     </section>
     <!-- ===== Sahifalar ===== -->

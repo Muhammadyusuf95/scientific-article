@@ -137,4 +137,50 @@
   // ---------- Sertifikatni chop etish ----------
   var pr = $('[data-print]');
   if (pr) { pr.hidden = false; pr.addEventListener('click', function () { window.print(); }); }
+
+  // ---------- To'liq matn: uzun bo'lsa qisqartirib ko'rsatish (matn HTML da to'liq turadi) ----------
+  var ft = $('[data-fulltext]');
+  if (ft && !ft.hidden) {
+    var ftBody = $('[data-fulltext-body]', ft), ftBtn = $('[data-ft-more]', ft);
+    if (ftBody && ftBtn && ftBody.scrollHeight > 900) {
+      ftBody.classList.add('clip'); ftBtn.hidden = false;
+      ftBtn.addEventListener('click', function () {
+        var open = ftBody.classList.toggle('clip');
+        ftBtn.textContent = open ? 'Matnni to\'liq ko\'rsatish' : 'Qisqartirish';
+        if (open) ft.scrollIntoView({ block: 'start' });
+      });
+    }
+  }
+
+  var fmtN = function (n) { return Number(n || 0).toLocaleString('uz-UZ'); };
+  var escH = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+
+  // ---------- Muallif sahifasi: jami ko'rishlar va yuklab olishlar ----------
+  var au = $('[data-author-stats]');
+  if (au) {
+    var ids = au.getAttribute('data-author-stats');
+    if (ids) fetch('/stats?ids=' + encodeURIComponent(ids)).then(function (r) { return r.json(); }).then(function (d) {
+      if (!d || !d.success) return;
+      var v = $('[data-au-views]'), dl = $('[data-au-downloads]');
+      if (v) v.textContent = fmtN(d.total.views);
+      if (dl) dl.textContent = fmtN(d.total.downloads);
+    }).catch(function () {});
+  }
+
+  // ---------- Bosh sahifa: ko'p o'qilgan maqolalar ----------
+  var pop = $('[data-popular]');
+  if (pop) {
+    Promise.all([fetch('/stats?top=6').then(function (r) { return r.json(); }), fetch('/data/search.json').then(function (r) { return r.json(); })])
+      .then(function (res) {
+        var top = (res[0] && res[0].items) || [], idx = {};
+        (res[1] || []).forEach(function (r) { idx[r.i] = r; });
+        var rows = top.filter(function (x) { return idx[x.id]; });
+        if (rows.length < 3) return;
+        $('[data-popular-list]', pop).innerHTML = rows.map(function (x) {
+          var r = idx[x.id];
+          return '<li><a href="' + escH(r.u) + '" lang="' + escH(r.l) + '">' + escH(r.t) + '</a><span class="muted">' + escH(r.a) + ' · ' + fmtN(x.views) + ' ko\'rish · ' + fmtN(x.downloads) + ' yuklab olish</span></li>';
+        }).join('');
+        pop.hidden = false;
+      }).catch(function () {});
+  }
 })();

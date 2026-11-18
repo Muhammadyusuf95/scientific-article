@@ -31,6 +31,17 @@ Admin panel > **E'lonlar**: konferensiyaga maqola qabul qilish va yangiliklar (`
 ## Lokal sinov
 `DATA_FILE=boshqa.json node build.js` - boshqa ma'lumot fayli bilan yig'ish (repodagi `articles.json` o'zgarmaydi).
 
+## To'liq matn maqola sahifasida
+PDF tanlanganda admin panel uning matnini xatboshi va sarlavhalar bilan ajratib oladi (kolontitul, bet raqami, telefon va e-pochta qatorlari olib tashlanadi) va R2 ga `text/<id>.json` sifatida saqlaydi. `functions/article/_middleware.js` matnni maqola sahifasiga server tomonida qo'yadi va `citation_fulltext_html_url` tegini qo'shadi: Google va Google Scholar matnni sahifaning o'zida to'liq o'qiydi. PDF (`citation_pdf_url`) avvalgidek qoladi.
+Eski maqolalar uchun: **Nashrlar** bo'limidagi "To'liq matnlarni yaratish" tugmasi (yoki har bir maqoladagi "Matn" tugmasi). Bu `articles.json` ni o'zgartirmaydi va saytni qayta yig'ishni talab qilmaydi.
+
+## Fan sohalari, tashkilotlar, muallif profillari
+* Maqola (yoki jurnal/konferensiya) uchun **Fan sohasi**: `/fields/` va `/field/<soha>/` sahifalari (annotatsiya parchasi bilan).
+* Mualliflarning ish joylari bo'yicha `/organizations/` va `/organization/<nom>/`.
+* Admin panel > **Muallif profillari**: ilmiy daraja, lavozim, ish joyi, muallif haqida, ilmiy qiziqishlar, ORCID, Google Scholar, ResearchGate. Muallif sahifasida hammualliflar, nashrlar turlar bo'yicha va jami ko'rishlar/yuklab olishlar chiqadi.
+* `/latest/`: saytga joylangan sanasi bo'yicha so'nggi qo'shilganlar. Maqolada bet soni, joylangan va oxirgi o'zgartirilgan sana, EndNote (.enw) eksporti.
+* `/stats?ids=a,b` va `/stats?top=10` (ochiq): muallif sahifasi va bosh sahifadagi "Ko'p o'qilgan maqolalar" uchun.
+
 ## PDF manzillari
 PDF almashtirilganda manzil o'zgarmaydi (eski nusxa R2 dagi `deleted/` papkasiga arxivlanadi). Eski nom bilan so'ralgan PDF amaldagisiga 301 bilan yo'naltiriladi.
 

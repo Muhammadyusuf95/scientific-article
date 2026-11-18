@@ -275,3 +275,39 @@ svg{width:1.1em;height:1.1em;fill:none;stroke:currentColor;stroke-width:2;stroke
 .cur-cover,.cur-cover *,.issue *{text-decoration:none}
 @media(max-width:600px){.hero .facts{grid-template-columns:repeat(2,minmax(0,1fr));gap:.7rem 1rem}.hero .facts dd{font-size:.94rem}}
 .wrap.block{padding-inline:1.25rem}
+
+/* ===== 3-bosqich: to'liq matn, fan sohalari, tashkilotlar, muallif profili ===== */
+.fulltext h3{font:700 1.08rem/1.4 var(--serif);margin:1.4rem 0 .5rem}
+.fulltext p{font:1.03rem/1.75 var(--serif);margin:0 0 .85rem;text-align:justify;hyphens:auto;overflow-wrap:anywhere}
+.ft-note{font:.86rem/1.4 var(--sans)!important;color:var(--mute);text-align:left!important;margin:-.3rem 0 1rem!important}
+.ft-body.clip{max-height:34rem;overflow:hidden;-webkit-mask-image:linear-gradient(#000 75%,transparent);mask-image:linear-gradient(#000 75%,transparent)}
+.ft-more{margin-top:.6rem}
+@media(max-width:600px){.fulltext p{text-align:left}}
+.kw a.chip{text-decoration:none}.kw a.chip:hover{background:var(--accent);color:#fff}
+.affils a{color:var(--mute)}
+.arch-links{display:flex;flex-wrap:wrap;gap:.5rem;margin:0 0 1.2rem}
+.field-grid,.org-grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(16rem,1fr));gap:.8rem}
+.field-grid a,.org-grid a{display:grid;gap:.25rem;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:var(--r-sm);padding:.9rem 1rem;color:var(--ink);text-decoration:none;box-shadow:var(--shadow)}
+.org-grid a{border-left-color:var(--amber)}
+.field-grid a:hover,.org-grid a:hover{border-color:var(--accent)}
+.field-grid strong,.org-grid strong{font:700 1rem/1.35 var(--serif)}.field-grid .muted,.org-grid .muted{font-size:.86rem}
+.fields-chips .chip{font-size:.92rem;padding:.3rem .8rem}
+.entry-abs{margin:.35rem 0 .2rem;color:var(--ink);font:.95rem/1.6 var(--serif);opacity:.85}
+.popular{list-style:none;counter-reset:pp;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(20rem,1fr));gap:.8rem}
+.popular li{counter-increment:pp;position:relative;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:.9rem 1rem .9rem 3rem;display:grid;gap:.2rem}
+.popular li::before{content:counter(pp);position:absolute;left:1rem;top:.85rem;font:700 1.3rem var(--serif);color:var(--accent)}
+.popular a{font:700 1rem/1.4 var(--serif);color:var(--ink);text-decoration:none}.popular a:hover{color:var(--brand);text-decoration:underline}.popular .muted{font-size:.84rem}
+.added{list-style:none;margin:0;padding:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.added li{display:grid;grid-template-columns:6.5rem minmax(0,1fr);gap:1rem;padding:.85rem 1.2rem;border-top:1px solid var(--line)}.added li:first-child{border-top:0}
+.added time{font-weight:650;color:var(--accent);font-variant-numeric:tabular-nums;font-size:.92rem}
+.added div{display:grid;gap:.15rem;min-width:0}.added a{font:700 1rem/1.4 var(--serif);color:var(--ink);text-decoration:none;overflow-wrap:anywhere}.added a:hover{color:var(--brand)}.added .muted{font-size:.86rem}
+@media(max-width:600px){.added li{grid-template-columns:1fr;gap:.2rem}}
+.au-int{display:block;font-size:.8rem;color:var(--accent);font-weight:600;margin-top:.15rem}
+.au-grid{display:grid;grid-template-columns:minmax(0,1fr) 19rem;gap:2rem;align-items:start}
+.au-bio{max-width:none;margin-bottom:1.5rem}.au-bio h2{font:700 1.2rem var(--serif);margin:0 0 .8rem}
+.au-sec+.au-sec{margin-top:1.6rem}.au-sec .ledger .yr{grid-template-columns:5rem 1fr}
+.co{list-style:none;margin:0;padding:0;display:grid;gap:.35rem}.co li{display:flex;justify-content:space-between;gap:.6rem;font-size:.94rem}.co a{color:var(--ink)}
+.prof-links{display:flex;flex-wrap:wrap;gap:.5rem;margin:1.2rem 0 0}
+.prof-links a{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);padding:.35rem .8rem;border-radius:99px;text-decoration:none;font-weight:600;font-size:.88rem}
+.prof-links a:hover{background:rgba(255,255,255,.22)}
+@media(max-width:980px){.au-grid{grid-template-columns:1fr}.au-grid .side{position:static}}

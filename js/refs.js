@@ -30,9 +30,10 @@
       if (typeof it.str !== 'string') return;
       var y = it.transform[5], x = it.transform[4], h = it.height || 10;
       if (lastY !== null && Math.abs(y - lastY) > Math.max(2, h * 0.45)) { rows.push(cur); cur = null; prevEnd = null; }
-      if (!cur) cur = { t: '', h: 0, y: y };
+      if (!cur) cur = { t: '', h: 0, y: y, x: x, x2: x };
       if (cur.t && prevEnd !== null && !/\s$/.test(cur.t) && !/^\s/.test(it.str) && x - prevEnd > h * 0.12) cur.t += ' ';
       cur.t += it.str; if (it.str.trim() && h > cur.h) cur.h = h;
+      if (it.str.trim()) cur.x2 = Math.max(cur.x2, x + (it.width || 0));
       lastY = y; prevEnd = x + (it.width || 0);
     });
     if (cur) rows.push(cur);

@@ -15,6 +15,7 @@ export async function onRequestGet({ request, env }) {
       pages: data.pages,
       series: data.series || [],
       news: data.news || [],
+      profiles: data.profiles || [],
     });
   } catch (err) {
     console.error(err);

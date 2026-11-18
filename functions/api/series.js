@@ -7,7 +7,7 @@ import { json, clean, slugify, UserError, ID_RE, isAdmin, updateData, ghReady } 
 
 const ISSN = /^\d{4}-\d{3}[\dXx]$/;
 const ORCID = /^\d{4}-\d{4}-\d{4}-\d{3}[\dX]$/;
-const TEXT = { short: 20, issn: 9, eissn: 9, founded: 4, frequency: 80, languages: 120, scope: 300, publisher: 200, email: 120, address: 300 };
+const TEXT = { short: 20, issn: 9, eissn: 9, founded: 4, frequency: 80, languages: 120, scope: 300, publisher: 200, email: 120, address: 300, field: 120 };
 const paras = (v) => String(Array.isArray(v) ? v.join('\n\n') : clean(v, 30000)).split(/\n\s*\n/).map((p) => p.replace(/[ \t]+/g, ' ').trim()).filter(Boolean).slice(0, 60);
 
 function editors(raw) {
