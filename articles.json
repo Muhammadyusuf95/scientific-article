@@ -9,6 +9,45 @@
   "collections": [],
   "articles": [
     {
+      "id": "fitonimlarda-xalqning-dunyoqarashi-va-etnomadaniy-qadriyatla-613c6b",
+      "item_type": "konferensiya-maqolasi",
+      "language": "uz",
+      "title_uz": "Fitonimlarda xalqning dunyoqarashi va etnomadaniy qadriyatlarning aks etishi",
+      "abstract_uz": "Ushbu maqolada onomastik va onomasiologik birlik hisoblangan fitonimlarning xalqning turmush tarzi, dunyoqarashi, urf-odatlari, milliy va etnomadaniy qadriyatlaridagi o’rni tadqiq etilgan bo’lib. Ushbu maqola fitonimlarning shunchaki onomasiologik birlik sifatida o’simliklarning nomini anglatibgina qolmay, balki uni xalqning madaniyati va turmush tarzi bilan aloqalarini ochib berish uchun xizmat qiladi. Fitonimlarning madaniyatdagi ahamiyati, xalqning hayot tarzidagi o‘rni bevosita xalq og’zaki ijodi namunalari, tarixiy yozma manbalar va tabobatga oid materiallar asosida tahlilga tortildi. Aniqlangan ma’lumotlar etnomadaniy aspektda tahlil qilinib fitonimlarning xalqimiz hayotidagi o’rni, turmush tarzimiz va urf - odatlarimizda aks etishi, madaniyatimiz shakllanishidagi roli aniqlandi.\r\nYakunda ushbu mavzuning dolzarbligi va keng tadqiq etish ehtiyoji ilmiy xulosalandi",
+      "keywords_uz": [
+        "fitonim",
+        "etnomadaniyat",
+        "etnosemantika",
+        "folklor",
+        "etnos",
+        "onomastika",
+        "onomasiologiya"
+      ],
+      "authors": [
+        "Ikromov M.T."
+      ],
+      "year": 2026,
+      "date": "2026-02-25",
+      "conference_org": "«Борбордук Азия элдеринин  өнүгүшүндөгү  байыркы кол жазмалар жана алардын эл аралык деңгээлдеги ролу: тил, адабият, маданият жана билим берүү маселелери (XI-XXIи кылымга чейин)»",
+      "conference_place": "ОШ МАМЛЕКЕТТИК УНИВЕРСИТЕТИ",
+      "conference_date": "25.02.2026",
+      "pages": "873-879",
+      "doi": "10.5281/zenodo.22254541",
+      "references": [
+        "Дьякова Т. А. \"Этнокультурная основа использования фитонимов лексико- семантической группы «Дикорастущие травы» (на материале сборника М. Матусовского «Земля моих отцов-Донбасс») // Вопросы журналистики, педагогики, языкознания. 38.4 (2019): – C. 508-515.",
+        "Аникина Т.В. Словообразовательная структура фитонимической лексики в английском и русском языках // Научный результат. Вопросы теоретической и прикладной лингвистики. – Т. 4, № 4, 2018. – С. 3–13.",
+        "Гималетдинова Р. Р. Фитонимы в башкирской и русской языковой картине мира/ III Международная научная конференция. Актуальные вопросы филологических наук. – Казань. 2015. – С. 39.",
+        "Постовалова В.И. Картина мира в жизнедеятельности человека // Роль человеческого фактора в языке: Язык и картина мира / отв. ред Б.А. Серебренников. – Москва: Наука, 1988. С. 11.",
+        "Соколова Т.С. Фольклорная версия языковой картины мира // Вестник Тамбовского университета. Серия: Гуманитарные науки.",
+        "Суперанская А.В. Общая теория имени собственного. – Изд. 2-е, испр. – Москва: URSS, 2007. – C. 189.",
+        "Суперанская А.В. Общая теория имени собственного. – Изд. 2-е, испр. – Москва: URSS, 2007. – C. 186, 189.",
+        "Хошимхўжаева М.М. Оламнинг лисоний тасвирида фитонимлар (инглиз, рус ва ўзбек тиллари мисолида). Филол. фан. фалс. док. ... дисс. автореф. – Тошкент, 2018. – Б. 22."
+      ],
+      "pdf": "fitonimlarda-xalqning-dunyoqarashi-va-etnomadaniy-qadriyatla-613c6b.pdf",
+      "pdf_size": 257985,
+      "created": "2026-11-18"
+    },
+    {
       "pdf": "fitonimlarning-ramziy-va-etnomadaniy-xususiyatlari-c98742-mwlopcjr.pdf",
       "pdf_size": 417615,
       "id": "fitonimlarning-ramziy-va-etnomadaniy-xususiyatlari-c98742",
