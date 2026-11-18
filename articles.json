@@ -5,13 +5,7 @@
     "publisher": "Ilmiy Maqolalar Portali",
     "url": "https://uzlibrary.uz"
   },
-  "collections": [
-    {
-      "id": "filologiyaning-dolzarb-masalalari-2026",
-      "name": "“Filologiyaning dolzarb masalalari” konferensiya to'plami",
-      "type": "conf"
-    }
-  ],
+  "collections": [],
   "articles": [
     {
       "id": "fitonimlarning-ramziy-va-etnomadaniy-xususiyatlari-c98742",
