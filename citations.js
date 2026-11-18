@@ -14,7 +14,13 @@ const stripDot = (s) => s.replace(/[.\s]+$/, '');
 const qt = (t) => '“' + (/[.!?]$/.test(t) ? t : t + '.') + '”';
 
 // ---------- Ismlar ----------
-const PATRONYM = /^(?:o['ʻʼ‘’`´]?g['ʻʼ‘’`´]?li|ogli|ugli|qizi|kizi|kyzy|ўғли|қизи|оглы|кызы|угли)$/i;
+// Ota ismi ko'rsatkichlari ("o'g'li", "qizi" va h.k.). Google Scholar ularni ism deb o'qiydi va ortiqcha
+// bosh harf qo'shadi (MTO Ikromov) yoki familiya deb oladi (MT Ugli), shuning uchun metama'lumotdan olib tashlanadi.
+const PATRONYM = /^(?:o['ʻʼ‘’`´]?g['ʻʼ‘’`´]?li|ogli|ugli|ogly|ugly|qizi|kizi|kyzy|ўғли|ўгли|угли|қизи|кизи|оглы|кызы)$/i;
+const cleanTok = (t) => String(t).replace(/^[,;:]+|[,;:]+$/g, '');
+// BUTUN KATTA HARFDA yozilgan so'zni "Bosh harf bilan" ko'rinishga keltiradi (IKROMOV -> Ikromov)
+const capTok = (t) => (t.length > 1 && t === t.toUpperCase() && t !== t.toLowerCase()
+  ? t.toLowerCase().replace(/(^|-)(\p{L})/gu, (m, a, b) => a + b.toUpperCase()) : t);
 function initial(tok) {
   return tok.split('-').map((part) => {
     const t = part.replace(/\./g, '');
@@ -29,10 +35,13 @@ function parseName(full) {
   let family = s, given = '';
   if (s.includes(',')) { const k = s.indexOf(','); family = s.slice(0, k).trim(); given = s.slice(k + 1).trim(); }
   else { const sp = s.indexOf(' '); if (sp > 0) { family = s.slice(0, sp); given = s.slice(sp + 1).trim(); } }
-  const toks = given.split(' ').filter(Boolean);
-  const ini = toks.filter((t) => !PATRONYM.test(t)).map(initial).filter(Boolean);
+  family = capTok(cleanTok(family));
+  const toks = given.split(' ').map(cleanTok).filter((t) => t && !PATRONYM.test(t)).map(capTok);
+  const ini = toks.map(initial).filter(Boolean);
   return { family, toks, ini };
 }
+// Google Scholar uchun yagona shakl: "Familiya, Ism Otasining ismi" (o'g'li/qizi siz)
+const scholarName = (full) => { const n = parseName(full); return n.toks.length ? `${n.family}, ${n.toks.join(' ')}` : n.family; };
 const dots = (n) => n.ini.map((x) => x.split('-').map((p) => p + '.').join('-')).join(' ');
 const compact = (n) => n.ini.map((x) => x.replace(/-/g, '')).join('');
 const famInit = (n) => n.family + (n.ini.length ? ', ' + dots(n) : '');         // Aliyev, V. S.
@@ -276,4 +285,4 @@ function ris(meta) {
   return L.join('\r\n') + '\r\n';
 }
 
-module.exports = { all, bibtex, ris, STYLES, parseName };
+module.exports = { all, bibtex, ris, STYLES, parseName, scholarName, PATRONYM };
