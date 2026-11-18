@@ -10,6 +10,17 @@
 
   function norm(s) { return String(s).replace(/[ʻʼ’‘`´]/g, "'").replace(/\s+/g, ' ').trim(); }
 
+  // Bitta manbani tozalash: raqam, ortiqcha bo'shliq, URL dagi bo'shliq va kuzatuv (utm) parametrlari
+  function clean(r) {
+    var s = String(r).replace(/\s+/g, ' ').trim();
+    s = s.replace(/^(?:\[\d{1,3}\]|\d{1,3}\s*[.)])\s*/, '');
+    s = s.replace(/https?:\s+\/\//g, function (m) { return m.replace(/\s+/g, ''); });
+    s = s.replace(/https?:\/\/\S+/g, function (u) {
+      return u.replace(/([?&])(?:utm_[a-z]+|fbclid|gclid|yclid)(?:=[^&\s]*)?(&)?/gi, function (m, p1, p2) { return p2 ? p1 : ''; }).replace(/[?&]$/, '');
+    });
+    return s.replace(/\s+,/g, ',').trim();
+  }
+
   function toLines(items) {
     var lines = [], cur = '', lastY = null, prevEnd = null;
     items.forEach(function (it) {
@@ -39,10 +50,23 @@
     var marked = body.filter(function (l) { return MARK.test(l); }).length;
     var out = [], buf = '', last = 0;
     if (marked >= 2) {
+      // Qatorda keyingi raqam bilan boshlangan manba yopishib qolgan bo'lsa ("... – Б.9. 5. Ходжиева ..."), ajratadi
+      var feed = function (text) {
+        for (;;) {
+          var re = new RegExp('(^|\\s)' + (last + 1) + '\\s*[.)]\\s+(?=[\\p{Lu}«"“\\[])', 'u');
+          var mm = re.exec(text);
+          if (!mm || (mm.index === 0 && !buf)) { buf = glue(buf, text); return; }
+          var before = text.slice(0, mm.index).trim();
+          if (before) buf = glue(buf, before);
+          if (buf) out.push(buf);
+          buf = ''; last++;
+          text = text.slice(mm.index + mm[0].length).trim();
+        }
+      };
       body.forEach(function (l) {
         var m = MARK.exec(l), n = m ? parseInt(m[1] || m[2], 10) : 0;
-        if (m && n > last && n <= last + 3) { if (buf) out.push(buf); buf = l.slice(m[0].length).trim(); last = n; }
-        else buf = glue(buf, l);
+        if (m && n > last && n <= last + 3) { if (buf) out.push(buf); buf = ''; last = n; feed(l.slice(m[0].length).trim()); }
+        else feed(l);
       });
     } else {
       body.forEach(function (l) {
@@ -52,7 +76,12 @@
       });
     }
     if (buf) out.push(buf);
-    return out.map(function (s) { return s.replace(/\s+/g, ' ').trim(); }).filter(function (s) { return s.length >= 15; }).slice(0, MAX_REFS);
+    var seen = {};
+    return out.map(clean).filter(function (s) {
+      var k = s.toLowerCase();
+      if (s.length < 15 || seen[k]) return false;
+      seen[k] = 1; return true;
+    }).slice(0, MAX_REFS);
   }
 
   function parseDoc(pageLines) {
@@ -88,6 +117,6 @@
     return { pages: n, firstChars: chars, firstPage: first.join(' '), found: r.found, refs: r.refs };
   }
 
-  var api = { fromFile: fromFile, parseDoc: parseDoc, split: split, toLines: toLines };
+  var api = { fromFile: fromFile, parseDoc: parseDoc, split: split, toLines: toLines, clean: clean };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.RefsExtract = api;
 })(typeof window !== 'undefined' ? window : globalThis);

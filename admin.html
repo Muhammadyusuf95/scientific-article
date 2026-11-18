@@ -7,8 +7,9 @@
 <meta name="referrer" content="no-referrer">
 <meta name="color-scheme" content="light dark">
 <title>Admin panel</title>
-<link rel="stylesheet" href="/css/admin.css?v=3">
-<script src="/js/admin.js?v=3" defer></script>
+<link rel="stylesheet" href="/css/admin.css?v=4">
+<script src="/js/refs.js?v=4" defer></script>
+<script src="/js/admin.js?v=4" defer></script>
 </head>
 <body>
 
@@ -49,6 +50,8 @@
     <div class="seg" role="tablist" aria-label="Bo'limlar">
       <button type="button" class="segbtn" id="navForm" role="tab" aria-selected="true">Nashr joylash</button>
       <button type="button" class="segbtn" id="navList" role="tab" aria-selected="false">Nashrlar <span class="count" id="countBadge">0</span></button>
+      <button type="button" class="segbtn" id="navColl" role="tab" aria-selected="false">To'plamlar <span class="count" id="collBadge">0</span></button>
+      <button type="button" class="segbtn" id="navPages" role="tab" aria-selected="false">Sahifalar</button>
     </div>
 
     <!-- ===== Yuklash / tahrirlash ===== -->
@@ -133,13 +136,18 @@
             <span class="hint" id="sizeHint"></span>
           </label>
 
+          <div class="scholar" id="pdfCheck" hidden>
+            <p class="lbl">Google Scholar uchun PDF tekshiruvi</p>
+            <ul class="checks" id="pdfCheckList"></ul>
+          </div>
+
           <div class="field refs">
             <div class="between">
-              <label class="lbl" for="references">Foydalanilgan adabiyotlar <span class="opt">(ixtiyoriy)</span></label>
+              <label class="lbl" for="references">Foydalanilgan adabiyotlar (References) <span class="opt">(Google Scholar: har bir manba alohida qatorda)</span></label>
               <button class="btn ghost sm" type="button" id="refsBtn">PDF dan o'qish</button>
             </div>
-            <textarea name="references" id="references" rows="7"></textarea>
-            <span class="hint">Har bir manba yangi qatordan. PDF tanlanganda "Adabiyotlar / Литература / References" bo'limi avtomat o'qiladi, natijani tekshirib chiqing.</span>
+            <textarea name="references" id="references" rows="8" spellcheck="false"></textarea>
+            <span class="hint">Har bir manba yangi qatordan, raqamsiz yoziladi. Bo'sh qoldirilsa, saqlash paytida ro'yxat PDF oxiridagi "Foydalanilgan adabiyotlar / References / Литература" bo'limidan avtomatik olinadi: raqamlar olib tashlanadi, bir-biriga yopishgan manbalar ajratiladi, bo'lingan qatorlar birlashtiriladi.</span>
             <p class="small" id="refsMsg" role="status" aria-live="polite"></p>
           </div>
 
@@ -169,6 +177,74 @@
         <ul class="items" id="items"></ul>
         <p class="msg" id="listMsg" role="status" aria-live="polite"></p>
       </div>
+    </section>
+
+    <!-- ===== To'plamlar ===== -->
+    <section id="viewColl" hidden>
+      <div class="card">
+        <div class="between">
+          <h2 style="margin:0">To'plamlar</h2>
+          <button class="btn primary sm" type="button" id="newCollBtn">+ Yangi to'plam</button>
+        </div>
+        <p class="hint">To'plam sahifasining manzili (ID) yaratilganda belgilanadi va keyin o'zgarmaydi. To'plam o'chirilsa, undagi maqolalar saytda qoladi, faqat to'plamdan chiqariladi.</p>
+        <ul class="items" id="collItems"></ul>
+        <p class="msg" id="collMsg" role="status" aria-live="polite"></p>
+      </div>
+
+      <form class="card" id="collForm" hidden autocomplete="off">
+        <h2 id="collFormTitle">To'plamni tahrirlash</h2>
+        <input type="hidden" id="c_id">
+        <div class="grid">
+          <label class="field full"><span class="lbl req">To'plam nomi</span><input id="c_name" maxlength="200" required></label>
+          <label class="field"><span class="lbl">Turi</span>
+            <select id="c_type"><option value="conf">Konferensiya materiallari</option><option value="journal">Jurnal soni</option></select></label>
+          <label class="field"><span class="lbl">Yil</span><input id="c_year" maxlength="4" inputmode="numeric" placeholder="2026"></label>
+          <label class="field"><span class="lbl">Sana</span><input id="c_date" maxlength="60" placeholder="13-14.10.2026"></label>
+          <label class="field"><span class="lbl">O'tkazilgan joyi / shahar</span><input id="c_place" maxlength="200"></label>
+          <label class="field"><span class="lbl">Nashriyot / tashkilotchi</span><input id="c_publisher" maxlength="200"></label>
+          <label class="field"><span class="lbl">Mas'ul muharrir</span><input id="c_editor" maxlength="300"></label>
+          <label class="field"><span class="lbl">ISSN</span><input id="c_issn" maxlength="20" placeholder="1234-5678"></label>
+          <label class="field"><span class="lbl">ISBN</span><input id="c_isbn" maxlength="30"></label>
+          <label class="field full"><span class="lbl">Qisqacha tavsif</span><textarea id="c_description" rows="3" maxlength="3000"></textarea></label>
+        </div>
+        <div class="field" id="c_articlesWrap" hidden>
+          <p class="lbl">To'plamdagi maqolalar</p>
+          <div class="pick" id="c_articles"></div>
+          <span class="hint">Belgilangan maqolalar shu to'plamga kiradi, belgisi olinganlari to'plamdan chiqariladi.</span>
+        </div>
+        <div class="row-acts">
+          <button class="btn primary" type="submit" id="collSave">Saqlash</button>
+          <button class="btn ghost" type="button" id="collCancel">Bekor qilish</button>
+          <button class="btn danger" type="button" id="collDelete" hidden>To'plamni o'chirish</button>
+        </div>
+        <p class="msg" id="collFormMsg" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <!-- ===== Sahifalar ===== -->
+    <section id="viewPages" hidden>
+      <form class="card" id="siteForm" autocomplete="off">
+        <h2>Sayt ma'lumotlari</h2>
+        <div class="grid">
+          <label class="field"><span class="lbl req">Sayt nomi</span><input id="s_name" maxlength="120" required></label>
+          <label class="field"><span class="lbl">Nashr qiluvchi tashkilot</span><input id="s_publisher" maxlength="200"></label>
+          <label class="field full"><span class="lbl">Qisqacha tavsif</span><textarea id="s_description" rows="2" maxlength="400"></textarea></label>
+          <label class="field"><span class="lbl">Aloqa e-pochtasi</span><input id="s_email" type="email" maxlength="120"></label>
+        </div>
+        <h2 style="margin-top:22px">Ma'lumot sahifalari</h2>
+        <p class="hint first">Har bir xatboshini bo'sh qator bilan ajrating. "Tahririyat hay'ati" sahifasiga a'zolarning F.I.Sh., ilmiy darajasi va ish joyini yozing: bu sayt ishonchliligi uchun muhim.</p>
+        <div id="pagesBox"></div>
+        <details class="addpage">
+          <summary>+ Yangi sahifa qo'shish</summary>
+          <div class="grid" style="margin-top:12px">
+            <label class="field"><span class="lbl">Manzil (lotin harflarida)</span><input id="np_key" maxlength="40" placeholder="open-access"></label>
+            <label class="field"><span class="lbl">Sarlavha</span><input id="np_title" maxlength="120" placeholder="Ochiq foydalanish siyosati"></label>
+          </div>
+          <button class="btn ghost sm" type="button" id="np_add">Qo'shish</button>
+        </details>
+        <div class="row-acts"><button class="btn primary" type="submit" id="siteSave">Saqlash</button></div>
+        <p class="msg" id="siteMsg" role="status" aria-live="polite"></p>
+      </form>
     </section>
 
   </div>

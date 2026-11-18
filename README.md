@@ -1,5 +1,19 @@
-# Yangi maqola qo'shish
-1. PDF ni `maqolalar/` papkasiga qo'ying (<5 MB, matni qidiriladigan, birinchi betda sarlavha, ostida mualliflar, oxirida Adabiyotlar).
-2. `articles.json` ga yangi yozuv qo'shing (`namuna-1` ga qarang). Annotatsiya majburiy.
-3. GitHub'ga yuklang: Netlify `node build.js` ni o'zi ishga tushiradi.
-`url` maydonini bo'sh qoldiring: Netlify manzilni o'zi beradi. Custom domen ulasangiz, ham o'zi yangilanadi.
+# Ilmiy Maqolalar Portali (uzlibrary.uz)
+
+Cloudflare Pages: build buyrug'i `node build.js`, chiqish papkasi `dist`. PDF fayllar R2 (`R2_OMBOR`) da saqlanadi.
+
+## Admin panel (`/admin.html`)
+* **Nashr joylash**: yangi maqola yoki tahrirlash. PDF tanlanganda Google Scholar tekshiruvi (hajm, matn qatlami, sarlavha va mualliflar birinchi betda, adabiyotlar bo'limi) avtomatik o'tkaziladi.
+* **Foydalanilgan adabiyotlar (References)**: maydon bo'sh qolsa, saqlash paytida ro'yxat PDF oxiridan avtomatik olinadi (har bir manba alohida qatorda).
+* **Nashrlar**: ro'yxat, ko'rishlar va yuklab olishlar soni, Google Scholar bo'yicha ogohlantirishlar.
+* **To'plamlar**: yaratish, tahrirlash, maqolalarni biriktirish, o'chirish (maqolalar saytda qoladi).
+* **Sahifalar**: sayt nomi, tavsifi, "Portal haqida", "Tahririyat hay'ati", "Nashr etikasi", "Aloqa" va yangi sahifalar.
+
+## PDF manzillari
+PDF almashtirilganda manzil o'zgarmaydi (eski nusxa R2 dagi `deleted/` papkasiga arxivlanadi). Eski nom bilan so'ralgan PDF amaldagisiga 301 bilan yo'naltiriladi.
+
+## Statistika
+Ko'rishlar va yuklab olishlar R2 dagi `stats/` papkasida saqlanadi. Ixtiyoriy: Cloudflare D1 bazasi `STATS_DB` nomi bilan ulansa, avtomatik o'shanga o'tadi.
+
+## Kerakli sozlamalar (Cloudflare Pages > Settings > Variables and Secrets)
+`ADMIN_TOKEN`, `GITHUB_TOKEN` (maxfiy), `GITHUB_REPO` (wrangler.toml da), ixtiyoriy `GITHUB_BRANCH`.
