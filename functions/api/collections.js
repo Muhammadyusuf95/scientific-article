@@ -1,11 +1,11 @@
 // functions/api/collections.js -> POST /api/collections
 // To'plamlarni yaratish, tahrirlash va o'chirish (admin kaliti /api/_middleware.js da tekshiriladi).
-//   { action: "save",   id?, name, type, year?, place?, publisher?, issn?, isbn?, description? }
+//   { action: "save",   id?, name, type, series?, volume?, number?, year?, place?, publisher?, issn?, isbn?, description? }
 //   { action: "delete", id, confirm }   -> to'plam o'chadi, ichidagi maqolalar saytda qoladi
 import { json, clean, slugify, UserError, ID_RE, isAdmin, updateData, ghReady } from '../../lib/common.js';
 
 const TYPES = ['conf', 'journal'];
-const OPTIONAL = { year: 4, place: 200, publisher: 200, issn: 20, isbn: 30, description: 3000, editor: 300, date: 60 };
+const OPTIONAL = { series: 120, volume: 20, number: 20, year: 4, place: 200, publisher: 200, issn: 20, isbn: 30, description: 3000, editor: 300, date: 60 };
 
 export async function onRequestPost({ request, env }) {
   try {
@@ -58,6 +58,11 @@ export async function onRequestPost({ request, env }) {
     if (fields.issn && !/^\d{4}-\d{3}[\dXx]$/.test(fields.issn)) throw new UserError("ISSN formati noto'g'ri (masalan 1234-5678)");
 
     const { result } = await updateData(env, id ? `To'plam tahrirlandi: ${id}` : `Yangi to'plam: ${name}`, (data) => {
+      if (fields.series) {
+        const s = (data.series || []).find((x) => x.id === fields.series);
+        if (!s) throw new UserError('Tanlangan jurnal yoki konferensiya topilmadi');
+        fields.type = s.type === 'journal' ? 'journal' : 'conf'; // son turi seriyaga mos bo'ladi
+      }
       if (id) {
         const i = data.collections.findIndex((c) => c.id === id);
         if (i < 0) throw new UserError("To'plam topilmadi");

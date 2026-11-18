@@ -13,6 +13,8 @@ export async function onRequestGet({ request, env }) {
       collections: data.collections,
       site: data.site,
       pages: data.pages,
+      series: data.series || [],
+      news: data.news || [],
     });
   } catch (err) {
     console.error(err);

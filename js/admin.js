@@ -4,7 +4,7 @@
   const KEY = 'admin_token_v3';
   const IDLE_MS = 20 * 60 * 1000;
   let idleTimer = null;
-  const state = { articles: [], collections: [], site: {}, pages: {}, stats: {}, editingId: null, collEditing: null, pdfInfo: null };
+  const state = { articles: [], collections: [], series: [], news: [], site: {}, pages: {}, stats: {}, editingId: null, collEditing: null, seriesEditing: null, newsEditing: null, pdfInfo: null };
 
   const LANGS = [
     { code: 'uz', label: "O'zbekcha" },
@@ -163,8 +163,21 @@
     const chkJ = $('chkJournalColl'), chkC = $('chkConfColl');
     chkJ.onchange = () => { if (chkJ.checked) chkC.checked = false; $('bodyJournalColl').hidden = !chkJ.checked; $('bodyConfColl').hidden = !chkC.checked; };
     chkC.onchange = () => { if (chkC.checked) chkJ.checked = false; $('bodyConfColl').hidden = !chkC.checked; $('bodyJournalColl').hidden = !chkJ.checked; };
-    $('selJournalColl').onchange = function () { const o = this.options[this.selectedIndex]; $('inpJournalColl').value = o && o.dataset.name ? o.dataset.name : ''; };
-    $('selConfColl').onchange = function () { const o = this.options[this.selectedIndex]; $('inpConfColl').value = o && o.dataset.name ? o.dataset.name : ''; };
+    $('selJournalColl').onchange = function () { const o = this.options[this.selectedIndex]; $('inpJournalColl').value = o && o.dataset.name ? o.dataset.name : ''; fillFromColl(this.value); };
+    $('selConfColl').onchange = function () { const o = this.options[this.selectedIndex]; $('inpConfColl').value = o && o.dataset.name ? o.dataset.name : ''; fillFromColl(this.value); };
+  }
+  // Son tanlanganda maqolaning bo'sh maydonlari son va jurnal/konferensiya ma'lumotidan to'ldiriladi
+  function fillFromColl(id) {
+    const c = state.collections.find((x) => x.id === id);
+    if (!c) return;
+    const s = state.series.find((x) => x.id === c.series);
+    const set = (el, v) => { if (el && !el.value && v) el.value = v; };
+    set($('f_journal_name'), s && s.type === 'journal' ? s.name : (c.type === 'journal' ? c.name : ''));
+    set($('f_volume'), c.volume); set($('f_issue'), c.number);
+    set($('f_conference_org'), c.type !== 'journal' ? c.name : '');
+    set($('f_conference_place'), c.place); set($('f_conference_date'), c.date);
+    set(document.querySelector('[name="issn"]'), c.issn || (s && (s.issn || s.eissn)));
+    set(document.querySelector('[name="isbn"]'), c.isbn);
   }
   function getSelectedCollectionData() {
     if ($('chkJournalColl')?.checked) return { id: $('selJournalColl').value.trim(), name: $('inpJournalColl').value.trim(), type: 'journal' };
@@ -307,10 +320,14 @@
       state.collections = Array.isArray(data.collections) ? data.collections : [];
       state.site = data.site || {};
       state.pages = data.pages || {};
+      state.series = Array.isArray(data.series) ? data.series : [];
+      state.news = Array.isArray(data.news) ? data.news : [];
       $('countBadge').textContent = state.articles.length;
       $('collBadge').textContent = state.collections.length;
+      $('seriesBadge').textContent = state.series.length;
+      $('newsBadge').textContent = state.news.length;
       if (!state.editingId) renderCollectionPanels();
-      renderList(); renderColls(); renderPages();
+      renderList(); renderColls(); renderPages(); renderSeries(); renderNews(); fillSelects();
       msg($('listMsg'), '');
       loadStats();
       return true;
@@ -386,6 +403,8 @@
     renderExtraFields();
 
     $('authors').value = (a.authors || []).join('; ');
+    $('author_info').value = (a.authors || []).map((n, i) => { const x = (a.author_info || [])[i] || {}; return x.org || x.orcid ? [x.org || '', x.orcid || ''].join(' | ').replace(/ \| $/, '') : ''; }).join('\n').replace(/\n+$/, '');
+    $('section').value = a.section || '';
     $('year').value = a.year || '';
     $('date').value = a.date || '';
     LANGS.forEach(({ code }) => {
@@ -449,7 +468,7 @@
   }
 
   // ---------- To'plamlar bo'limi ----------
-  const C_FIELDS = ['name', 'type', 'year', 'date', 'place', 'publisher', 'editor', 'issn', 'isbn', 'description'];
+  const C_FIELDS = ['name', 'type', 'series', 'volume', 'number', 'year', 'date', 'place', 'publisher', 'editor', 'issn', 'isbn', 'description'];
   function renderColls() {
     const ul = $('collItems');
     if (!state.collections.length) { ul.innerHTML = `<li class="item"><span class="item-meta">Hali to'plam yo'q.</span></li>`; return; }
@@ -457,7 +476,7 @@
       const n = state.articles.filter((a) => a.collection === c.id).length;
       return `<li class="item"><div>
           <p class="item-title"><a class="link" href="/collection/${esc(c.id)}/" target="_blank">${esc(c.name)}</a></p>
-          <p class="item-meta">${c.type === 'journal' ? 'Jurnal soni' : 'Konferensiya'} • ${n} ta nashr${c.year ? ' • ' + esc(c.year) : ''} • ID: <code>${esc(c.id)}</code></p></div>
+          <p class="item-meta">${c.type === 'journal' ? 'Jurnal soni' : 'Konferensiya'}${seriesName(c.series) ? ` • <strong>${esc(seriesName(c.series))}</strong>` : ''}${c.volume || c.number ? ` • ${[c.volume && c.volume + '-tom', c.number && c.number + '-son'].filter(Boolean).join(', ')}` : ''} • ${n} ta nashr${c.year ? ' • ' + esc(c.year) : ''} • ID: <code>${esc(c.id)}</code></p></div>
         <div class="item-acts"><button type="button" class="btn ghost sm" data-cedit="${esc(c.id)}">Tahrirlash</button>
         <button type="button" class="btn danger sm" data-cdel="${esc(c.id)}">O'chirish</button></div></li>`;
     }).join('');
@@ -468,6 +487,7 @@
     const c = id ? state.collections.find((x) => x.id === id) : null;
     state.collEditing = c ? c.id : null;
     $('collFormTitle').textContent = c ? `To'plamni tahrirlash: ${c.name}` : "Yangi to'plam";
+    fillSelects();
     C_FIELDS.forEach((f) => { $(`c_${f}`).value = c ? (c[f] || '') : (f === 'type' ? 'conf' : ''); });
     $('c_id').value = c ? c.id : '';
     $('collDelete').hidden = !c;
@@ -514,6 +534,123 @@
       openColl(r.id);
     } catch (err) { msg($('collFormMsg'), 'Xatolik: ' + err.message, 'err'); }
     finally { $('collSave').disabled = false; }
+  }
+
+  // ---------- Jurnal va konferensiyalar (seriyalar) ----------
+  const seriesName = (id) => { const x = state.series.find((s) => s.id === id); return x ? x.name : ''; };
+  const opt = (v, t, sel) => `<option value="${esc(v)}"${v === sel ? ' selected' : ''}>${esc(t)}</option>`;
+  function fillSelects() {
+    const sOpts = (sel) => opt('', '— Biriktirilmagan —', sel) + state.series.map((x) => opt(x.id, `${x.type === 'journal' ? 'Jurnal' : 'Konferensiya'}: ${x.name}`, sel)).join('');
+    if ($('c_series')) $('c_series').innerHTML = sOpts($('c_series').value);
+    if ($('nw_series')) $('nw_series').innerHTML = sOpts($('nw_series').value);
+    if ($('nw_collection')) $('nw_collection').innerHTML = opt('', '— Biriktirilmagan —', $('nw_collection').value) + state.collections.map((c) => opt(c.id, c.name, $('nw_collection').value)).join('');
+    const secs = [...new Set(state.articles.map((a) => a.section).filter(Boolean))].sort();
+    if ($('sectionList')) $('sectionList').innerHTML = secs.map((x) => `<option value="${esc(x)}"></option>`).join('');
+  }
+  function renderSeries() {
+    const ul = $('seriesItems');
+    if (!state.series.length) { ul.innerHTML = `<li class="item"><span class="item-meta">Hali jurnal yoki konferensiya qo'shilmagan.</span></li>`; return; }
+    ul.innerHTML = state.series.map((x) => {
+      const colls = state.collections.filter((c) => c.series === x.id);
+      const n = state.articles.filter((a) => colls.some((c) => c.id === a.collection)).length;
+      const path = `/${x.type === 'journal' ? 'journal' : 'conference'}/${x.id}/`;
+      return `<li class="item"><div><p class="item-title"><a class="link" href="${esc(path)}" target="_blank">${esc(x.name)}</a></p>
+        <p class="item-meta">${x.type === 'journal' ? 'Jurnal' : 'Konferensiya'}${x.issn ? ' • ISSN ' + esc(x.issn) : ''}${x.eissn ? ' • eISSN ' + esc(x.eissn) : ''} • ${colls.length} ta son • ${n} ta maqola • ID: <code>${esc(x.id)}</code></p></div>
+        <div class="item-acts"><button type="button" class="btn ghost sm" data-sedit="${esc(x.id)}">Tahrirlash</button></div></li>`;
+    }).join('');
+    ul.querySelectorAll('[data-sedit]').forEach((b) => (b.onclick = () => openSeries(b.dataset.sedit)));
+  }
+  const SR_TEXT = ['type', 'short', 'name', 'issn', 'eissn', 'founded', 'frequency', 'languages', 'scope', 'publisher', 'email', 'address'];
+  function openSeries(id) {
+    const x = id ? state.series.find((s) => s.id === id) : null;
+    state.seriesEditing = x ? x.id : null;
+    $('seriesFormTitle').textContent = x ? `Tahrirlash: ${x.name}` : "Yangi jurnal yoki konferensiya";
+    SR_TEXT.forEach((f) => { $(`sr_${f}`).value = x ? (x[f] || '') : (f === 'type' ? 'journal' : ''); });
+    ['description', 'guidelines', 'ethics'].forEach((f) => { $(`sr_${f}`).value = x ? (x[f] || []).join('\n\n') : ''; });
+    $('sr_editors').value = x ? (x.editors || []).map((m) => [m.name, m.role, m.org, m.degree, m.orcid].map((v) => v || '').join(' | ').replace(/( \| )+$/, '')).join('\n') : '';
+    $('sr_indexing').value = x ? (x.indexing || []).map((m) => [m.name, m.url].filter(Boolean).join(' | ')).join('\n') : '';
+    $('seriesDelete').hidden = !x;
+    msg($('seriesFormMsg'), '');
+    $('seriesForm').hidden = false;
+    $('seriesForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  async function saveSeries(e) {
+    e.preventDefault();
+    const body = { action: 'save', id: state.seriesEditing || '' };
+    SR_TEXT.forEach((f) => { body[f] = $(`sr_${f}`).value.trim(); });
+    ['description', 'guidelines', 'ethics'].forEach((f) => { body[f] = $(`sr_${f}`).value; });
+    const cells = (t) => t.split('|').map((v) => v.trim());
+    body.editors = $('sr_editors').value.split('\n').map((l) => l.trim()).filter(Boolean).map((l) => { const [name, role, org, degree, orcid] = cells(l); return { name, role, org, degree, orcid }; });
+    body.indexing = $('sr_indexing').value.split('\n').map((l) => l.trim()).filter(Boolean).map((l) => { const [name, url] = cells(l); return { name, url }; });
+    $('seriesSave').disabled = true;
+    msg($('seriesFormMsg'), 'Saqlanmoqda...', 'info');
+    try {
+      const r = await postJson('/api/series', body);
+      msg($('seriesFormMsg'), 'Saqlandi. 1-2 daqiqada saytda aks etadi.', 'ok');
+      await loadArticles();
+      openSeries(r.id);
+    } catch (err) { msg($('seriesFormMsg'), 'Xatolik: ' + err.message, 'err'); }
+    finally { $('seriesSave').disabled = false; }
+  }
+  async function deleteSeries(id) {
+    const x = state.series.find((s) => s.id === id);
+    if (!x) return;
+    const n = state.collections.filter((c) => c.series === id).length;
+    if (!confirm(`"${x.name}" ni o'chirasizmi?${n ? `\n\nUnga biriktirilgan ${n} ta son saytda qoladi, faqat biriktirilmagan holga o'tadi.` : ''}`)) return;
+    try {
+      await postJson('/api/series', { action: 'delete', id, confirm: id });
+      $('seriesForm').hidden = true;
+      msg($('seriesMsg'), "O'chirildi. 1-2 daqiqada saytda aks etadi.", 'ok');
+      await loadArticles();
+    } catch (err) { msg($('seriesMsg'), 'Xatolik: ' + err.message, 'err'); }
+  }
+
+  // ---------- E'lonlar ----------
+  const NW_FIELDS = ['kind', 'title', 'date', 'deadline', 'event_date', 'place', 'series', 'collection', 'link', 'link_text'];
+  function renderNews() {
+    const ul = $('newsItems'), today = new Date().toISOString().slice(0, 10);
+    if (!state.news.length) { ul.innerHTML = `<li class="item"><span class="item-meta">Hali e'lon yo'q.</span></li>`; return; }
+    ul.innerHTML = state.news.map((n) => `<li class="item"><div><p class="item-title"><a class="link" href="/news/${esc(n.id)}/" target="_blank">${esc(n.title)}</a></p>
+      <p class="item-meta">${esc(n.date || '')}${n.kind === 'cfp' ? ' • Maqolalar qabuli' : ' • Yangilik'}${n.deadline ? ` • muddat: ${esc(n.deadline)}` : ''}</p>
+      ${n.deadline ? `<p class="tags"><span class="tag ${n.deadline >= today ? 'ok' : 'warn'}">${n.deadline >= today ? 'Qabul ochiq' : 'Muddat o\'tgan'}</span></p>` : ''}</div>
+      <div class="item-acts"><button type="button" class="btn ghost sm" data-nedit="${esc(n.id)}">Tahrirlash</button></div></li>`).join('');
+    ul.querySelectorAll('[data-nedit]').forEach((b) => (b.onclick = () => openNews(b.dataset.nedit)));
+  }
+  function openNews(id) {
+    const n = id ? state.news.find((x) => x.id === id) : null;
+    state.newsEditing = n ? n.id : null;
+    fillSelects();
+    $('newsFormTitle').textContent = n ? `Tahrirlash: ${n.title}` : "Yangi e'lon";
+    NW_FIELDS.forEach((f) => { $(`nw_${f}`).value = n ? (n[f] || '') : (f === 'kind' ? 'cfp' : f === 'date' ? new Date().toISOString().slice(0, 10) : ''); });
+    $('nw_text').value = n ? (n.text || []).join('\n\n') : '';
+    $('newsDelete').hidden = !n;
+    msg($('newsFormMsg'), '');
+    $('newsForm').hidden = false;
+    $('newsForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  async function saveNews(e) {
+    e.preventDefault();
+    const body = { action: 'save', id: state.newsEditing || '', text: $('nw_text').value };
+    NW_FIELDS.forEach((f) => { body[f] = $(`nw_${f}`).value.trim(); });
+    $('newsSave').disabled = true;
+    msg($('newsFormMsg'), 'Saqlanmoqda...', 'info');
+    try {
+      const r = await postJson('/api/news', body);
+      msg($('newsFormMsg'), 'Saqlandi. 1-2 daqiqada saytda aks etadi.', 'ok');
+      await loadArticles();
+      openNews(r.id);
+    } catch (err) { msg($('newsFormMsg'), 'Xatolik: ' + err.message, 'err'); }
+    finally { $('newsSave').disabled = false; }
+  }
+  async function deleteNews(id) {
+    const n = state.news.find((x) => x.id === id);
+    if (!n || !confirm(`"${n.title}" e'lonini o'chirasizmi?`)) return;
+    try {
+      await postJson('/api/news', { action: 'delete', id, confirm: id });
+      $('newsForm').hidden = true;
+      msg($('newsMsg'), "E'lon o'chirildi.", 'ok');
+      await loadArticles();
+    } catch (err) { msg($('newsMsg'), 'Xatolik: ' + err.message, 'err'); }
   }
 
   // ---------- Sahifalar bo'limi ----------
@@ -598,7 +735,7 @@
   }
 
   // ---------- Umumiy ----------
-  const VIEWS = { form: ['viewForm', 'navForm'], list: ['viewList', 'navList'], coll: ['viewColl', 'navColl'], pages: ['viewPages', 'navPages'] };
+  const VIEWS = { form: ['viewForm', 'navForm'], list: ['viewList', 'navList'], series: ['viewSeries', 'navSeries'], coll: ['viewColl', 'navColl'], news: ['viewNews', 'navNews'], pages: ['viewPages', 'navPages'] };
   function switchView(v) {
     Object.entries(VIEWS).forEach(([k, [sec, nav]]) => {
       $(sec).hidden = k !== v;
@@ -642,6 +779,17 @@
   $('navForm').onclick = () => switchView('form');
   $('navList').onclick = () => { switchView('list'); loadArticles(); };
   $('navColl').onclick = () => switchView('coll');
+  $('navSeries').onclick = () => switchView('series');
+  $('navNews').onclick = () => switchView('news');
+  $('newSeriesBtn').onclick = () => openSeries(null);
+  $('seriesCancel').onclick = () => { $('seriesForm').hidden = true; };
+  $('seriesDelete').onclick = () => state.seriesEditing && deleteSeries(state.seriesEditing);
+  $('seriesForm').onsubmit = saveSeries;
+  $('newNewsBtn').onclick = () => openNews(null);
+  $('newsCancel').onclick = () => { $('newsForm').hidden = true; };
+  $('newsDelete').onclick = () => state.newsEditing && deleteNews(state.newsEditing);
+  $('newsForm').onsubmit = saveNews;
+  $('authors').addEventListener('input', () => { const n = $('authors').value.split(/[;\n]+/).filter((x) => x.trim()).length; $('author_info').rows = Math.min(Math.max(2, n), 8); });
   $('navPages').onclick = () => switchView('pages');
   $('reloadBtn').onclick = loadArticles;
   $('q').oninput = renderList;

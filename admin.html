@@ -7,9 +7,9 @@
 <meta name="referrer" content="no-referrer">
 <meta name="color-scheme" content="light dark">
 <title>Admin panel</title>
-<link rel="stylesheet" href="/css/admin.css?v=4">
+<link rel="stylesheet" href="/css/admin.css?v=5">
 <script src="/js/refs.js?v=5" defer></script>
-<script src="/js/admin.js?v=4" defer></script>
+<script src="/js/admin.js?v=5" defer></script>
 </head>
 <body>
 
@@ -50,7 +50,9 @@
     <div class="seg" role="tablist" aria-label="Bo'limlar">
       <button type="button" class="segbtn" id="navForm" role="tab" aria-selected="true">Nashr joylash</button>
       <button type="button" class="segbtn" id="navList" role="tab" aria-selected="false">Nashrlar <span class="count" id="countBadge">0</span></button>
-      <button type="button" class="segbtn" id="navColl" role="tab" aria-selected="false">To'plamlar <span class="count" id="collBadge">0</span></button>
+      <button type="button" class="segbtn" id="navSeries" role="tab" aria-selected="false">Jurnal va konferensiyalar <span class="count" id="seriesBadge">0</span></button>
+      <button type="button" class="segbtn" id="navColl" role="tab" aria-selected="false">Son va to'plamlar <span class="count" id="collBadge">0</span></button>
+      <button type="button" class="segbtn" id="navNews" role="tab" aria-selected="false">E'lonlar <span class="count" id="newsBadge">0</span></button>
       <button type="button" class="segbtn" id="navPages" role="tab" aria-selected="false">Sahifalar</button>
     </div>
 
@@ -91,6 +93,11 @@
               <textarea name="authors" id="authors" rows="2" maxlength="4000" placeholder="Aliyev Vali; Valiyev Sami" required></textarea>
               <span class="hint">Bir nechta muallif bo'lsa, nuqtali vergul (;) yoki yangi qator bilan ajrating. Vergul muallifni ajratmaydi.</span>
             </label>
+            <label class="field full">
+              <span class="lbl">Mualliflar haqida <span class="opt">(ixtiyoriy: ish joyi va ORCID)</span></span>
+              <textarea name="author_info" id="author_info" rows="2" maxlength="20000" spellcheck="false" placeholder="Andijon davlat universiteti | 0000-0002-1825-0097"></textarea>
+              <span class="hint">Har bir qator yuqoridagi tartibdagi bitta muallifga mos keladi: "Ish joyi | ORCID". Ish joyi Google Scholar'ga muallif tashkiloti sifatida beriladi, ORCID belgisi maqola sahifasida ko'rinadi.</span>
+            </label>
             <label class="field">
               <span class="lbl">Nashr yili</span>
               <input type="number" name="year" id="year" min="1950" max="2100">
@@ -113,6 +120,10 @@
           <h2><span class="step">3</span> To'plam va nashr tafsilotlari</h2>
           <p class="hint first">Bir jurnal yoki konferensiyaning bir nechta maqolasini tartibli saqlash uchun to'plamga kiriting. Galochka qo'yilgandagina to'plam maydonlari ochiladi.</p>
           <div id="collPanels"></div>
+          <div class="grid sect">
+            <label class="field"><span class="lbl">Bo'lim (fan sohasi)</span><input name="section" id="section" maxlength="120" list="sectionList" placeholder="Tilshunoslik"><datalist id="sectionList"></datalist>
+              <span class="hint">Son mundarijasida maqolalar shu bo'limlar bo'yicha guruhlanadi.</span></label>
+          </div>
           <div class="grid sect" id="extra"></div>
         </div>
 
@@ -195,7 +206,11 @@
         <h2 id="collFormTitle">To'plamni tahrirlash</h2>
         <input type="hidden" id="c_id">
         <div class="grid">
-          <label class="field full"><span class="lbl req">To'plam nomi</span><input id="c_name" maxlength="200" required></label>
+          <label class="field full"><span class="lbl req">Son yoki to'plam nomi</span><input id="c_name" maxlength="200" required placeholder="Filologiya masalalari, 2026, 2-son"></label>
+          <label class="field full"><span class="lbl">Jurnal yoki konferensiya</span><select id="c_series"></select>
+            <span class="hint">Tanlansa, son o'sha jurnal yoki konferensiya sahifasida (joriy son va arxivda) chiqadi, maqolalardagi bo'sh qolgan jurnal nomi, tom, son va ISSN shu yerdan olinadi.</span></label>
+          <label class="field"><span class="lbl">Tom (Volume)</span><input id="c_volume" maxlength="20" placeholder="1"></label>
+          <label class="field"><span class="lbl">Son (Issue)</span><input id="c_number" maxlength="20" placeholder="2"></label>
           <label class="field"><span class="lbl">Turi</span>
             <select id="c_type"><option value="conf">Konferensiya materiallari</option><option value="journal">Jurnal soni</option></select></label>
           <label class="field"><span class="lbl">Yil</span><input id="c_year" maxlength="4" inputmode="numeric" placeholder="2026"></label>
@@ -221,6 +236,82 @@
       </form>
     </section>
 
+    <!-- ===== Jurnal va konferensiyalar ===== -->
+    <section id="viewSeries" hidden>
+      <div class="card">
+        <div class="between">
+          <h2 style="margin:0">Jurnal va konferensiyalar</h2>
+          <button class="btn primary sm" type="button" id="newSeriesBtn">+ Qo'shish</button>
+        </div>
+        <p class="hint">Har bir jurnal yoki doimiy konferensiyaning o'z sahifasi bo'ladi: tavsif, ISSN, tahririyat, indekslanish, mualliflar uchun talablar, joriy son va arxiv. Sonlar "Son va to'plamlar" bo'limida shu yerga biriktiriladi.</p>
+        <ul class="items" id="seriesItems"></ul>
+        <p class="msg" id="seriesMsg" role="status" aria-live="polite"></p>
+      </div>
+      <form class="card" id="seriesForm" hidden autocomplete="off">
+        <h2 id="seriesFormTitle">Yangi jurnal yoki konferensiya</h2>
+        <div class="grid">
+          <label class="field"><span class="lbl">Turi</span><select id="sr_type"><option value="journal">Ilmiy jurnal</option><option value="conf">Konferensiya (doimiy)</option></select></label>
+          <label class="field"><span class="lbl">Qisqa nomi</span><input id="sr_short" maxlength="20" placeholder="FM"><span class="hint">Muqovada va maqola raqamida ishlatiladi (FM-1-2-003).</span></label>
+          <label class="field full"><span class="lbl req">To'liq nomi</span><input id="sr_name" maxlength="250" required></label>
+          <label class="field"><span class="lbl">ISSN (bosma)</span><input id="sr_issn" maxlength="9" placeholder="1234-5678"></label>
+          <label class="field"><span class="lbl">ISSN (onlayn)</span><input id="sr_eissn" maxlength="9" placeholder="1234-5678"></label>
+          <label class="field"><span class="lbl">Tashkil etilgan yil</span><input id="sr_founded" maxlength="4" inputmode="numeric"></label>
+          <label class="field"><span class="lbl">Davriyligi</span><input id="sr_frequency" maxlength="80" placeholder="Yiliga 4 marta"></label>
+          <label class="field"><span class="lbl">Nashr tillari</span><input id="sr_languages" maxlength="120" placeholder="O'zbek, rus, ingliz"></label>
+          <label class="field"><span class="lbl">Ilmiy yo'nalishlar</span><input id="sr_scope" maxlength="300" placeholder="Tilshunoslik, adabiyotshunoslik"></label>
+          <label class="field"><span class="lbl">Nashriyot / muassis</span><input id="sr_publisher" maxlength="200"></label>
+          <label class="field"><span class="lbl">E-pochta</span><input id="sr_email" type="email" maxlength="120"></label>
+          <label class="field full"><span class="lbl">Manzil</span><input id="sr_address" maxlength="300"></label>
+          <label class="field full"><span class="lbl">Tavsif</span><textarea id="sr_description" rows="4" maxlength="20000"></textarea><span class="hint">Xatboshilarni bo'sh qator bilan ajrating.</span></label>
+          <label class="field full"><span class="lbl">Tahririyat</span><textarea id="sr_editors" rows="5" maxlength="20000" spellcheck="false" placeholder="Usmanov Farhod | Bosh muharrir | Andijon davlat universiteti | Filologiya fanlari doktori (DSc) | 0000-0002-1825-0097"></textarea>
+            <span class="hint">Har bir a'zo alohida qatorda: F.I.Sh. | Lavozimi | Ish joyi | Ilmiy darajasi | ORCID. Oxirgi uchtasi ixtiyoriy.</span></label>
+          <label class="field full"><span class="lbl">Indekslanish va bazalar</span><textarea id="sr_indexing" rows="3" maxlength="6000" spellcheck="false" placeholder="Google Scholar | https://scholar.google.com/..."></textarea>
+            <span class="hint">Har bir baza alohida qatorda: Nomi | Havola (havola ixtiyoriy). Faqat haqiqatda indekslangan bazalarni yozing.</span></label>
+          <label class="field full"><span class="lbl">Mualliflar uchun talablar</span><textarea id="sr_guidelines" rows="5" maxlength="30000"></textarea></label>
+          <label class="field full"><span class="lbl">Nashr etikasi</span><textarea id="sr_ethics" rows="4" maxlength="30000"></textarea></label>
+        </div>
+        <div class="row-acts">
+          <button class="btn primary" type="submit" id="seriesSave">Saqlash</button>
+          <button class="btn ghost" type="button" id="seriesCancel">Bekor qilish</button>
+          <button class="btn danger" type="button" id="seriesDelete" hidden>O'chirish</button>
+        </div>
+        <p class="msg" id="seriesFormMsg" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+    <!-- ===== E'lonlar ===== -->
+    <section id="viewNews" hidden>
+      <div class="card">
+        <div class="between">
+          <h2 style="margin:0">E'lonlar</h2>
+          <button class="btn primary sm" type="button" id="newNewsBtn">+ Yangi e'lon</button>
+        </div>
+        <p class="hint">Konferensiyaga maqola qabul qilish, yangi son chiqqani va boshqa yangiliklar. Qabul muddati o'tmagan e'lonlar bosh sahifada "Qabul ochiq" belgisi bilan chiqadi.</p>
+        <ul class="items" id="newsItems"></ul>
+        <p class="msg" id="newsMsg" role="status" aria-live="polite"></p>
+      </div>
+      <form class="card" id="newsForm" hidden autocomplete="off">
+        <h2 id="newsFormTitle">Yangi e'lon</h2>
+        <div class="grid">
+          <label class="field"><span class="lbl">Turi</span><select id="nw_kind"><option value="cfp">Maqolalar qabuli (konferensiya / son)</option><option value="news">Yangilik</option></select></label>
+          <label class="field"><span class="lbl">E'lon sanasi</span><input id="nw_date" type="date"></label>
+          <label class="field full"><span class="lbl req">Sarlavha</span><input id="nw_title" maxlength="300" required></label>
+          <label class="field"><span class="lbl">Maqola qabul qilish muddati</span><input id="nw_deadline" type="date"></label>
+          <label class="field"><span class="lbl">O'tkaziladigan sana</span><input id="nw_event_date" maxlength="80" placeholder="25.12.2026"></label>
+          <label class="field"><span class="lbl">O'tkaziladigan joy</span><input id="nw_place" maxlength="200"></label>
+          <label class="field"><span class="lbl">Jurnal yoki konferensiya</span><select id="nw_series"></select></label>
+          <label class="field"><span class="lbl">Son yoki to'plam</span><select id="nw_collection"></select></label>
+          <label class="field full"><span class="lbl req">Matn</span><textarea id="nw_text" rows="6" maxlength="30000"></textarea><span class="hint">Xatboshilarni bo'sh qator bilan ajrating.</span></label>
+          <label class="field"><span class="lbl">Havola (ro'yxatdan o'tish, talablar)</span><input id="nw_link" maxlength="500" placeholder="https://..."></label>
+          <label class="field"><span class="lbl">Havola matni</span><input id="nw_link_text" maxlength="60" placeholder="Ro'yxatdan o'tish"></label>
+        </div>
+        <div class="row-acts">
+          <button class="btn primary" type="submit" id="newsSave">Saqlash</button>
+          <button class="btn ghost" type="button" id="newsCancel">Bekor qilish</button>
+          <button class="btn danger" type="button" id="newsDelete" hidden>O'chirish</button>
+        </div>
+        <p class="msg" id="newsFormMsg" role="status" aria-live="polite"></p>
+      </form>
+    </section>
     <!-- ===== Sahifalar ===== -->
     <section id="viewPages" hidden>
       <form class="card" id="siteForm" autocomplete="off">

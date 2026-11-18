@@ -99,4 +99,42 @@
       });
     });
   }
+
+  // ---------- Umumiy qidiruv (/search/): /data/search.json bo'yicha ----------
+  var gform = $('[data-gsearch]'), gbox = $('[data-results]');
+  if (gform && gbox) {
+    var ginput = $('input', gform), gcount = $('[data-gcount]'), DATA = null, timer = null;
+    var nrm = function (s) { return String(s || '').toLowerCase().replace(/[ʻʼ‘’`´']/g, '').replace(/\s+/g, ' ').trim(); };
+    var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+    var item = function (r) {
+      return '<li class="entry"><div class="entry-top"><span class="badge">' + esc(r.ty) + '</span><span class="entry-year">' + esc(r.y) + '</span>' + (r.d ? '<span class="badge soft">DOI</span>' : '') + '</div>'
+        + '<h3 class="entry-title" lang="' + esc(r.l) + '"><a href="' + esc(r.u) + '">' + esc(r.t) + '</a></h3><p class="entry-by">' + esc(r.a) + '</p><p class="entry-src">' + esc(r.s) + '</p></li>';
+    };
+    var render = function () {
+      var words = nrm(ginput.value).split(' ').filter(Boolean);
+      if (!words.length) { gbox.innerHTML = '<p class="empty">Qidirish uchun so\'z kiriting.</p>'; if (gcount) gcount.textContent = ''; return; }
+      if (!DATA) { gbox.innerHTML = '<p class="empty">Yuklanmoqda...</p>'; return; }
+      var hits = DATA.filter(function (r) { return words.every(function (w) { return r._k.indexOf(w) >= 0; }); });
+      if (gcount) gcount.textContent = hits.length + ' ta natija';
+      gbox.innerHTML = hits.length ? '<ul class="entries">' + hits.slice(0, 200).map(item).join('') + '</ul>' + (hits.length > 200 ? '<p class="empty">Dastlabki 200 ta natija ko\'rsatildi. So\'rovni aniqlashtiring.</p>' : '')
+        : '<p class="empty">Hech narsa topilmadi. Boshqa so\'z bilan qidirib ko\'ring.</p>';
+    };
+    var sync = function () {
+      var q = ginput.value.trim(), u = new URL(location.href);
+      if (q) u.searchParams.set('q', q); else u.searchParams.delete('q');
+      history.replaceState(null, '', u);
+    };
+    fetch('/data/search.json').then(function (r) { return r.json(); }).then(function (d) {
+      DATA = d.map(function (r) { r._k = nrm(r.k); return r; }); render();
+    }).catch(function () { gbox.innerHTML = '<p class="empty">Qidiruv indeksini yuklab bo\'lmadi. <a href="/archive/">Arxiv</a> orqali ko\'ring.</p>'; });
+    gform.addEventListener('submit', function (e) { e.preventDefault(); sync(); render(); });
+    ginput.addEventListener('input', function () { clearTimeout(timer); timer = setTimeout(function () { sync(); render(); }, 180); });
+    var gq = new URLSearchParams(location.search).get('q');
+    if (gq) ginput.value = gq;
+    render();
+  }
+
+  // ---------- Sertifikatni chop etish ----------
+  var pr = $('[data-print]');
+  if (pr) { pr.hidden = false; pr.addEventListener('click', function () { window.print(); }); }
 })();

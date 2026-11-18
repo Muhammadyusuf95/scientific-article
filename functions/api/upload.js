@@ -15,6 +15,7 @@ const FIELDS = {
   conf: ['conference_org', 'conference_place', 'conference_date', 'pages'],
   book: ['publisher', 'publisher_city', 'edition', 'total_pages'],
 };
+const ORCID = /^\d{4}-\d{4}-\d{4}-\d{3}[\dX]$/;
 const OK = {
   issn: /^\d{4}-\d{3}[\dXx]$/,
   isbn: /^(?:\d[- ]?){9}[\dXx]$|^(?:\d[- ]?){12}\d$/,
@@ -80,6 +81,18 @@ export async function onRequestPost({ request, env }) {
     const date = /^\d{4}-\d{2}-\d{2}$/.test(dateIn) ? dateIn : '';
     if (date && Number(date.slice(0, 4)) !== year) throw new UserError(`Nashr yili (${year}) va nashr sanasi (${date}) bir-biriga mos emas`);
     Object.assign(article, { authors, year });
+
+    // Mualliflar haqida: har bir qator tartib bo'yicha bitta muallifga mos ("Ish joyi | ORCID")
+    const infoLines = clean(form.get('author_info'), 20000).split('\n').map((s) => s.trim());
+    const info = authors.map((n, i) => {
+      const [org = '', orcidRaw = ''] = (infoLines[i] || '').split('|').map((x) => x.trim());
+      const orcid = orcidRaw.replace(/^https?:\/\/orcid\.org\//i, '').toUpperCase();
+      if (orcid && !ORCID.test(orcid)) throw new UserError(`${i + 1}-muallif ORCID raqami noto'g'ri (namuna: 0000-0002-1825-0097)`);
+      return { ...(org ? { org: org.slice(0, 300) } : {}), ...(orcid ? { orcid } : {}) };
+    });
+    if (info.some((x) => x.org || x.orcid)) article.author_info = info;
+    const section = g('section', 120).replace(/\s+/g, ' ');
+    if (section) article.section = section;
     if (date) article.date = date;
 
     for (const f of FIELDS[kind]) { const v = g(f, 200); if (v) article[f] = v; }
