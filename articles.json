@@ -1,9 +1,10 @@
 {
   "site": {
-    "name": "Ilmiy Maqolalar Portali",
-    "description": "Ilmiy jurnal maqolalari va konferensiya materiallari to'plami. Barcha nashrlar ochiq foydalanish uchun.",
-    "publisher": "Ilmiy Maqolalar Portali",
-    "url": "https://uzlibrary.uz"
+    "name": "Ilmiy ishlar portali",
+    "description": "Ushbu saytga individual mualliflarning ilmiy ishlari, konferensiya to'plamlari mualliflar va tashkilotchilarning roziligiga asosan joylab boriladi. Ushbbu saytga joylangan materiallar google hamda google scholar bazalarida indekslanishi ko'zda tutilgan.",
+    "publisher": "Jismoniy shaxs",
+    "url": "https://uzlibrary.uz",
+    "email": "mukhammadyusuf@mail.ru"
   },
   "collections": [],
   "articles": [
@@ -136,30 +137,25 @@
   ],
   "pages": {
     "about": {
-      "title": "Portal haqida",
+      "title": "Open access (OA) ilmiy ishlar ombori",
       "text": [
-        "Ilmiy Maqolalar Portali ilmiy jurnal maqolalari va konferensiya materiallarini ochiq foydalanish uchun joylashtiradi.",
+        "Ilmiy ishlar portalii ilmiy jurnal maqolalari va konferensiya materiallarini ochiq foydalanish uchun joylashtiradi.",
         "Barcha nashrlarning to'liq matni ro'yxatdan o'tmasdan, bepul o'qish va yuklab olish uchun mavjud."
       ]
     },
-    "editorial-board": {
-      "title": "Tahririyat hay'ati",
-      "text": [
-        "Tahririyat a'zolari ro'yxati shu yerga yoziladi."
-      ]
-    },
     "ethics": {
-      "title": "Nashr etikasi",
+      "title": "Saytda materiallarni joylashtirish talabi:",
       "text": [
         "Portalda joylashtirilgan maqolalar original bo'lishi, boshqa nashrlarda e'lon qilinmagan bo'lishi va mualliklik huquqlarini buzmasligi kerak.",
         "Boshqa mualliflarning ishlaridan foydalanilganda, foydalanilgan adabiyotlar ro'yxatida ularga to'g'ri havola keltirilishi shart.",
-        "Plagiat, ma'lumotlarni soxtalashtirish va mualliflikni noto'g'ri ko'rsatish holatlari aniqlansa, maqola portaldan olib tashlanadi."
+        "Plagiat, ma'lumotlarni soxtalashtirish va mualliflikni noto'g'ri ko'rsatish holatlari aniqlansa, maqola portaldan olib tashlanadi.",
+        "Ushbu saytga joylangan ilmiy ishlar uchun joylash uchun rozilik bergan muallif va tashkilotchilar mas'uldir!"
       ]
     },
     "contact": {
       "title": "Aloqa",
       "text": [
-        "Elektron pochta: article@mail.ru"
+        "+998973329333"
       ]
     }
   }
