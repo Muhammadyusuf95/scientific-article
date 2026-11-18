@@ -28,7 +28,7 @@ function baseHeaders(object, name, download) {
   headers.set('Accept-Ranges', 'bytes');
   headers.set('Cache-Control', 'public, max-age=600, must-revalidate');
   headers.set('X-Content-Type-Options', 'nosniff');
-  headers.set('X-Robots-Tag', 'all');
+  headers.set('X-Robots-Tag', download ? 'noindex' : 'all');
   headers.delete('X-Frame-Options');
   return headers;
 }
