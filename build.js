@@ -78,22 +78,59 @@ for (const x of A) {
 }
 if (bad.length) { console.error(bad.join('\n')); process.exit(1); }
 
-// Bir xil familiyali, lekin ismi turlicha yozilgan mualliflar (Google Scholar ularni har xil odam deb biladi)
+// ---------- muallif ismlarini birlashtirish (admin panel: Sahifalar > Muallif ismlari) ----------
+// site.author_groups: [{ name: "Asosiy ism", variants: ["Boshqa yozilish", ...], show_variants: true|false }]
+// Metama'lumot (citation_author) o'zgarmaydi: har bir maqola o'z PDF idagi yozuvni saqlaydi.
+// Faqat saytdagi muallif sahifasi bitta bo'ladi, eski manzil asosiysiga 301 bilan yo'naltiriladi.
+const GROUPS = [], KEYMAP = {};
+for (const g of [].concat(S.author_groups || [])) {
+  const name = String((g && g.name) || '').trim(), k = authorKey(name);
+  if (!name || !k) continue;
+  const grp = { key: k, name, variants: [].concat(g.variants || []).map((v) => String(v).trim()).filter(Boolean), show: g.show_variants === true };
+  GROUPS.push(grp);
+  for (const v of grp.variants) {
+    const vk = authorKey(v);
+    if (!vk || vk === k) continue;
+    if (KEYMAP[vk] && KEYMAP[vk] !== k) warn.push(`Muallif ismi ikki guruhga kiritilgan: "${v}"`);
+    else KEYMAP[vk] = k;
+  }
+}
+for (const g of GROUPS) if (KEYMAP[g.key]) warn.push(`Asosiy ism boshqa guruhda "boshqa yozilish" sifatida ham turibdi: "${g.name}"`);
+const GROUP_BY_KEY = Object.fromEntries(GROUPS.map((g) => [g.key, g]));
+const resolveKey = (n) => { const k = authorKey(n) || 'muallif'; return KEYMAP[k] || k; };
+
+// Bir xil familiyali, lekin ismi turlicha yozilgan mualliflar (Google Scholar ularni har xil odam deb biladi).
+// Admin panelda birlashtirilgan ismlar uchun ogohlantirish berilmaydi.
 const byFamily = {};
-for (const a of A) for (const n of a.authors) { const f = translit(nameParts(n).family); (byFamily[f] = byFamily[f] || new Set()).add(scholarName(n)); }
-for (const [f, set] of Object.entries(byFamily)) if (set.size > 1) warn.push(`Muallif ismi turlicha yozilgan (${f}): ${[...set].join(' | ')}`);
+for (const a of A) for (const n of a.authors) {
+  const f = translit(nameParts(n).family), rk = resolveKey(n);
+  const m = (byFamily[f] = byFamily[f] || {});
+  (m[rk] = m[rk] || new Set()).add(scholarName(n));
+}
+for (const [f, m] of Object.entries(byFamily)) {
+  const keys = Object.keys(m), all = [...new Set(keys.flatMap((k) => [...m[k]]))];
+  const loose = keys.filter((k) => !GROUP_BY_KEY[k] && m[k].size > 1);
+  if (keys.length > 1 || loose.length) warn.push(`Muallif ismi turlicha yozilgan (${f}): ${all.join(' | ')}. Bitta odam bo'lsa, admin panelda "Muallif ismlari" bo'limida birlashtiring.`);
+}
 if (warn.length) console.warn('OGOHLANTIRISH:\n  ' + warn.join('\n  '));
 
 // ---------- mualliflar ----------
 const AUTH = {};
 for (const a of A) for (const n of a.authors) {
-  const k = authorKey(n) || 'muallif';
+  const k = resolveKey(n);
   const e = (AUTH[k] = AUTH[k] || { key: k, names: {}, items: [] });
   e.names[n] = (e.names[n] || 0) + 1;
   if (!e.items.includes(a)) e.items.push(a);
 }
-for (const e of Object.values(AUTH)) e.name = Object.entries(e.names).sort((x, y) => y[1] - x[1])[0][0];
-const authorHref = (n) => `/author/${authorKey(n) || 'muallif'}/`;
+for (const e of Object.values(AUTH)) {
+  const g = GROUP_BY_KEY[e.key];
+  e.name = g ? g.name : Object.entries(e.names).sort((x, y) => y[1] - x[1])[0][0];
+  // "Boshqa yozilishi": guruhda faqat show_variants yoqilgan bo'lsa; o'g'li/qizi yoki katta-kichik harf farqi hisobga olinmaydi
+  const seenN = new Set([scholarName(e.name).toLowerCase()]);
+  const cand = g ? (g.show ? [...g.variants, ...Object.keys(e.names)] : []) : Object.keys(e.names);
+  e.other = cand.filter((n) => { const s2 = scholarName(n).toLowerCase(); if (seenN.has(s2)) return false; seenN.add(s2); return true; });
+}
+const authorHref = (n) => `/author/${resolveKey(n)}/`;
 const authorLinks = (a) => a.authors.map((n) => `<a href="${authorHref(n)}">${esc(n)}</a>`).join(', ');
 
 // ---------- iqtiboslar ----------
@@ -239,10 +276,12 @@ out('authors/index.html', page({
 <div class="wrap block"><ul class="authors-grid">${AU.map((e) => `<li><a href="/author/${e.key}/">${esc(e.name)}</a><span class="muted">${plural(e.items.length, 'nashr')}</span></li>`).join('')}</ul></div>`,
 }));
 for (const e of AU) {
-  const other = Object.keys(e.names).filter((n) => n !== e.name);
+  const other = e.other;
+  const pld = { '@context': 'https://schema.org', ...personLd(e.name) };
+  if (other.length) pld.alternateName = other.map(scholarName);
   out(`author/${e.key}/index.html`, page({
     t: `${e.name} - ${S.name}`, d: `${e.name}: ${plural(e.items.length, 'nashr')}`, p: `/author/${e.key}/`, type: 'profile',
-    head: `<script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@type': 'Person', name: e.name, url: `${BASE}/author/${e.key}/` }).replace(/</g, '\\u003c')}</script>\n`,
+    head: `<script type="application/ld+json">${JSON.stringify(pld).replace(/</g, '\\u003c')}</script>\n`,
     body: `<section class="hero slim"><div class="wrap hero-in"><p class="eyebrow"><a href="/authors/">Mualliflar</a></p><h1>${esc(e.name)}</h1><p class="lead">${plural(e.items.length, 'nashr')}${other.length ? ` · boshqa yozilishi: ${esc(other.join('; '))}` : ''}</p></div></section>
 <div class="wrap block">${ledger(e.items)}</div>`,
   }));
@@ -348,6 +387,9 @@ out('data/index.json', JSON.stringify({ built: new Date().toISOString(), article
 const urls = [['/'], ...(C.length ? [['/collections/']] : []), ...C.map((c) => [`/collection/${c._id}/`]), ['/authors/'], ...AU.map((e) => [`/author/${e.key}/`]),
   ...A.map((a) => [`/article/${a._id}/`, a.updated || a.date]), ...PAGES.map(([k]) => [`/${k}/`])];
 out('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(([u, m]) => `<url><loc>${BASE}${u}</loc>${m && OK.date.test(m) ? `<lastmod>${esc(m)}</lastmod>` : ''}</url>`).join('\n')}\n</urlset>\n`);
+// Birlashtirilgan mualliflarning eski sahifalari asosiy sahifaga 301 bilan yo'naltiriladi
+const REDIR = Object.entries(KEYMAP).filter(([v, k]) => AUTH[k] && !AUTH[v]).flatMap(([v, k]) => [`/author/${v}/ /author/${k}/ 301`, `/author/${v} /author/${k}/ 301`]);
+if (REDIR.length) out('_redirects', REDIR.join('\n') + '\n');
 out('robots.txt', `User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /admin.html\nDisallow: /stats\nDisallow: /*?dl=1\n\nSitemap: ${BASE}/sitemap.xml\n`);
 out('_headers', `/*
   X-Content-Type-Options: nosniff

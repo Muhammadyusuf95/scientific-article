@@ -1,10 +1,31 @@
 // functions/api/site.js -> POST /api/site
 // Sayt nomi/tavsifi va ma'lumot sahifalarini (Portal haqida, Tahririyat hay'ati, Nashr etikasi, Aloqa ...) tahrirlash.
-//   { site: { name, description, publisher, email }, pages: { "<kalit>": { title, text: "paragraf\n\nparagraf" } } }
+//   { site: { name, description, publisher, email, author_groups }, pages: { "<kalit>": { title, text: "paragraf\n\nparagraf" } } }
 import { json, clean, UserError, isAdmin, updateData, ghReady } from '../../lib/common.js';
 
 const RESERVED = new Set(['article', 'collection', 'author', 'pdf', 'api', 'stats', 'data', 'css', 'js', 'admin', 'year']);
 const KEY_RE = /^[a-z0-9][a-z0-9-]{1,39}$/;
+
+// Muallif ismlarini birlashtirish: [{ name, variants: [..], show_variants: bool }]
+function cleanGroups(raw) {
+  if (!Array.isArray(raw)) throw new UserError("Muallif ismlari ro'yxati noto'g'ri");
+  const fold = (x) => x.toLowerCase().replace(/[ʻʼ‘’`´']/g, '').replace(/\s+/g, ' ').trim();
+  const used = new Set(), out = [];
+  for (const g of raw.slice(0, 100)) {
+    const name = clean(g && g.name, 200);
+    const variants = [...new Set([].concat((g && g.variants) || []).map((v) => clean(v, 200)).filter(Boolean))].slice(0, 20);
+    if (!name && !variants.length) continue;
+    if (!name) throw new UserError("Muallif ismlari: asosiy ism bo'sh qolgan guruh bor");
+    const vs = variants.filter((v) => fold(v) !== fold(name));
+    if (!vs.length) throw new UserError(`"${name}" uchun kamida bitta boshqa yozilish kiriting`);
+    for (const x of [name, ...vs]) {
+      if (used.has(fold(x))) throw new UserError(`"${x}" bir nechta guruhda takrorlangan`);
+      used.add(fold(x));
+    }
+    out.push({ name, variants: vs, show_variants: g.show_variants === true });
+  }
+  return out;
+}
 
 export async function onRequestPost({ request, env }) {
   try {
@@ -31,6 +52,10 @@ export async function onRequestPost({ request, env }) {
     }
 
     await updateData(env, 'Sayt sahifalari yangilandi', (data) => {
+      if (site && site.author_groups !== undefined) {
+        const groups = cleanGroups(site.author_groups);
+        if (groups.length) data.site.author_groups = groups; else delete data.site.author_groups;
+      }
       if (site) {
         for (const [f, max] of [['name', 120], ['description', 400], ['publisher', 200], ['email', 120]]) {
           if (site[f] !== undefined) {

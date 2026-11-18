@@ -7,6 +7,7 @@ Cloudflare Pages: build buyrug'i `node build.js`, chiqish papkasi `dist`. PDF fa
 * **Foydalanilgan adabiyotlar (References)**: maydon bo'sh qolsa, saqlash paytida ro'yxat PDF oxiridan avtomatik olinadi (har bir manba alohida qatorda).
 * **Nashrlar**: ro'yxat, ko'rishlar va yuklab olishlar soni, Google Scholar bo'yicha ogohlantirishlar.
 * **To'plamlar**: yaratish, tahrirlash, maqolalarni biriktirish, o'chirish (maqolalar saytda qoladi).
+* **Sahifalar > Muallif ismlari**: bir muallifning turlicha yozilgan ismlarini birlashtirish. Saytda bitta muallif sahifasi qoladi, eski sahifa 301 bilan yo'naltiriladi; "boshqa yozilishlar"ni ko'rsatish ixtiyoriy. `citation_author` o'zgarmaydi (har bir maqola PDF dagi yozuvni saqlaydi).
 * **Sahifalar**: sayt nomi, tavsifi, "Portal haqida", "Tahririyat hay'ati", "Nashr etikasi", "Aloqa" va yangi sahifalar.
 
 ## PDF manzillari

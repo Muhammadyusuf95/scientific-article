@@ -73,8 +73,8 @@
     list.forEach((n) => {
       const f = fold(nameParts(n).family);
       if (!known[f]) return;
-      const diff = [...known[f]].filter((k) => fold(scholarName(k)) !== fold(scholarName(n)));
-      if (diff.length) out.push(`"${n}" boshqa nashrlarda ${diff.map((k) => `"${k}"`).join(', ')} deb yozilgan. Bir odam bo'lsa, hamma joyda bir xil yozing: Google Scholar turlicha yozilgan ismlarni turli muallif deb hisoblaydi.`);
+      const diff = [...known[f]].filter((k) => fold(scholarName(k)) !== fold(scholarName(n)) && !sameGroup(k, n));
+      if (diff.length) out.push(`"${n}" boshqa nashrlarda ${diff.map((k) => `"${k}"`).join(', ')} deb yozilgan. Bir odam bo'lsa, ismni PDF dagidek qoldiring va "Sahifalar > Muallif ismlari" bo'limida birlashtiring.`);
     });
     return out;
   }
@@ -525,8 +525,41 @@
       <label class="field"><span class="hint">Matn</span><textarea data-ptext rows="5">${esc((p.text || []).join('\n\n'))}</textarea></label>
     </div>`;
   }
+  // ---------- Muallif ismlarini birlashtirish ----------
+  function groupBlock(g) {
+    return `<div class="pageblock" data-group>
+      <div class="between"><span class="lbl">Muallif</span><button type="button" class="btn danger sm" data-gremove>O'chirish</button></div>
+      <label class="field"><span class="hint">Asosiy ism (sahifada shu ko'rinadi)</span><input data-gname maxlength="200" value="${esc(g.name || '')}" placeholder="Ikromov, Muhammadyusuf Tursunali o'g'li"></label>
+      <label class="field"><span class="hint">Boshqa yozilishlari (har biri yangi qatorda)</span><textarea data-gvars rows="2" placeholder="Ikromov, Maxamadyusub Tursunali o'g'li">${esc((g.variants || []).join('\n'))}</textarea></label>
+      <label class="check"><input type="checkbox" data-gshow${g.show_variants ? ' checked' : ''}> Boshqa yozilishlarni muallif sahifasida ko'rsatish</label>
+    </div>`;
+  }
+  function bindGroupRemove() {
+    $('groupsBox').querySelectorAll('[data-gremove]').forEach((b) => (b.onclick = () => b.closest('[data-group]').remove()));
+  }
+  function renderGroups() {
+    $('groupsBox').innerHTML = (state.site.author_groups || []).map(groupBlock).join('');
+    bindGroupRemove();
+  }
+  function readGroups() {
+    return [...$('groupsBox').querySelectorAll('[data-group]')].map((el) => ({
+      name: el.querySelector('[data-gname]').value.trim(),
+      variants: el.querySelector('[data-gvars]').value.split(/[;\n]+/).map((x) => x.trim()).filter(Boolean),
+      show_variants: el.querySelector('[data-gshow]').checked,
+    })).filter((g) => g.name || g.variants.length);
+  }
+  // Birlashtirilgan ismlar (ogohlantirishda hisobga olinadi)
+  function sameGroup(a, b) {
+    const fa = fold(scholarName(a)), fb = fold(scholarName(b));
+    return (state.site.author_groups || []).some((g) => {
+      const all = [g.name, ...(g.variants || [])].map((x) => fold(scholarName(x)));
+      return all.includes(fa) && all.includes(fb);
+    });
+  }
+
   let removedPages = [];
   function renderPages() {
+    renderGroups();
     $('s_name').value = state.site.name || '';
     $('s_publisher').value = state.site.publisher || '';
     $('s_description').value = state.site.description || '';
@@ -555,7 +588,7 @@
     msg($('siteMsg'), 'Saqlanmoqda...', 'info');
     try {
       await postJson('/api/site', {
-        site: { name: $('s_name').value, publisher: $('s_publisher').value, description: $('s_description').value, email: $('s_email').value },
+        site: { name: $('s_name').value, publisher: $('s_publisher').value, description: $('s_description').value, email: $('s_email').value, author_groups: readGroups() },
         pages, remove: removedPages,
       });
       msg($('siteMsg'), 'Saqlandi. 1-2 daqiqada saytda aks etadi.', 'ok');
@@ -618,6 +651,10 @@
   $('collDelete').onclick = () => state.collEditing && deleteColl(state.collEditing);
   $('collForm').onsubmit = saveColl;
   $('siteForm').onsubmit = saveSite;
+  $('g_add').onclick = () => {
+    $('groupsBox').insertAdjacentHTML('beforeend', groupBlock({ name: '', variants: [], show_variants: false }));
+    bindGroupRemove();
+  };
   $('np_add').onclick = () => {
     const k = $('np_key').value.trim().toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '');
     const t = $('np_title').value.trim();

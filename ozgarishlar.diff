@@ -1,0 +1,248 @@
+diff --git a/README.md b/README.md
+index 3ae9872..41bfc50 100644
+--- a/README.md
++++ b/README.md
+@@ -7,6 +7,7 @@ Cloudflare Pages: build buyrug'i `node build.js`, chiqish papkasi `dist`. PDF fa
+ * **Foydalanilgan adabiyotlar (References)**: maydon bo'sh qolsa, saqlash paytida ro'yxat PDF oxiridan avtomatik olinadi (har bir manba alohida qatorda).
+ * **Nashrlar**: ro'yxat, ko'rishlar va yuklab olishlar soni, Google Scholar bo'yicha ogohlantirishlar.
+ * **To'plamlar**: yaratish, tahrirlash, maqolalarni biriktirish, o'chirish (maqolalar saytda qoladi).
++* **Sahifalar > Muallif ismlari**: bir muallifning turlicha yozilgan ismlarini birlashtirish. Saytda bitta muallif sahifasi qoladi, eski sahifa 301 bilan yo'naltiriladi; "boshqa yozilishlar"ni ko'rsatish ixtiyoriy. `citation_author` o'zgarmaydi (har bir maqola PDF dagi yozuvni saqlaydi).
+ * **Sahifalar**: sayt nomi, tavsifi, "Portal haqida", "Tahririyat hay'ati", "Nashr etikasi", "Aloqa" va yangi sahifalar.
+ 
+ ## PDF manzillari
+diff --git a/admin.html b/admin.html
+index 40ff3e5..3c42da5 100644
+--- a/admin.html
++++ b/admin.html
+@@ -231,6 +231,10 @@
+           <label class="field full"><span class="lbl">Qisqacha tavsif</span><textarea id="s_description" rows="2" maxlength="400"></textarea></label>
+           <label class="field"><span class="lbl">Aloqa e-pochtasi</span><input id="s_email" type="email" maxlength="120"></label>
+         </div>
++        <h2 style="margin-top:22px">Muallif ismlari</h2>
++        <p class="hint first">Bir muallifning ismi turli nashrlarda har xil yozilgan bo'lsa (masalan, Muhammadyusuf / Maxamadyusub), bu yerda birlashtiring. Saytda bitta muallif sahifasi qoladi, eski sahifa unga yo'naltiriladi. Google Scholar uchun metama'lumot o'zgarmaydi: har bir maqola o'z PDF idagi yozuvni saqlaydi.</p>
++        <div id="groupsBox"></div>
++        <button class="btn ghost sm" type="button" id="g_add">+ Muallif qo'shish</button>
+         <h2 style="margin-top:22px">Ma'lumot sahifalari</h2>
+         <p class="hint first">Har bir xatboshini bo'sh qator bilan ajrating. "Tahririyat hay'ati" sahifasiga a'zolarning F.I.Sh., ilmiy darajasi va ish joyini yozing: bu sayt ishonchliligi uchun muhim.</p>
+         <div id="pagesBox"></div>
+diff --git a/build.js b/build.js
+index d08c2ca..f193f58 100644
+--- a/build.js
++++ b/build.js
+@@ -78,22 +78,59 @@ for (const x of A) {
+ }
+ if (bad.length) { console.error(bad.join('\n')); process.exit(1); }
+ 
+-// Bir xil familiyali, lekin ismi turlicha yozilgan mualliflar (Google Scholar ularni har xil odam deb biladi)
++// ---------- muallif ismlarini birlashtirish (admin panel: Sahifalar > Muallif ismlari) ----------
++// site.author_groups: [{ name: "Asosiy ism", variants: ["Boshqa yozilish", ...], show_variants: true|false }]
++// Metama'lumot (citation_author) o'zgarmaydi: har bir maqola o'z PDF idagi yozuvni saqlaydi.
++// Faqat saytdagi muallif sahifasi bitta bo'ladi, eski manzil asosiysiga 301 bilan yo'naltiriladi.
++const GROUPS = [], KEYMAP = {};
++for (const g of [].concat(S.author_groups || [])) {
++  const name = String((g && g.name) || '').trim(), k = authorKey(name);
++  if (!name || !k) continue;
++  const grp = { key: k, name, variants: [].concat(g.variants || []).map((v) => String(v).trim()).filter(Boolean), show: g.show_variants === true };
++  GROUPS.push(grp);
++  for (const v of grp.variants) {
++    const vk = authorKey(v);
++    if (!vk || vk === k) continue;
++    if (KEYMAP[vk] && KEYMAP[vk] !== k) warn.push(`Muallif ismi ikki guruhga kiritilgan: "${v}"`);
++    else KEYMAP[vk] = k;
++  }
++}
++for (const g of GROUPS) if (KEYMAP[g.key]) warn.push(`Asosiy ism boshqa guruhda "boshqa yozilish" sifatida ham turibdi: "${g.name}"`);
++const GROUP_BY_KEY = Object.fromEntries(GROUPS.map((g) => [g.key, g]));
++const resolveKey = (n) => { const k = authorKey(n) || 'muallif'; return KEYMAP[k] || k; };
++
++// Bir xil familiyali, lekin ismi turlicha yozilgan mualliflar (Google Scholar ularni har xil odam deb biladi).
++// Admin panelda birlashtirilgan ismlar uchun ogohlantirish berilmaydi.
+ const byFamily = {};
+-for (const a of A) for (const n of a.authors) { const f = translit(nameParts(n).family); (byFamily[f] = byFamily[f] || new Set()).add(scholarName(n)); }
+-for (const [f, set] of Object.entries(byFamily)) if (set.size > 1) warn.push(`Muallif ismi turlicha yozilgan (${f}): ${[...set].join(' | ')}`);
++for (const a of A) for (const n of a.authors) {
++  const f = translit(nameParts(n).family), rk = resolveKey(n);
++  const m = (byFamily[f] = byFamily[f] || {});
++  (m[rk] = m[rk] || new Set()).add(scholarName(n));
++}
++for (const [f, m] of Object.entries(byFamily)) {
++  const keys = Object.keys(m), all = [...new Set(keys.flatMap((k) => [...m[k]]))];
++  const loose = keys.filter((k) => !GROUP_BY_KEY[k] && m[k].size > 1);
++  if (keys.length > 1 || loose.length) warn.push(`Muallif ismi turlicha yozilgan (${f}): ${all.join(' | ')}. Bitta odam bo'lsa, admin panelda "Muallif ismlari" bo'limida birlashtiring.`);
++}
+ if (warn.length) console.warn('OGOHLANTIRISH:\n  ' + warn.join('\n  '));
+ 
+ // ---------- mualliflar ----------
+ const AUTH = {};
+ for (const a of A) for (const n of a.authors) {
+-  const k = authorKey(n) || 'muallif';
++  const k = resolveKey(n);
+   const e = (AUTH[k] = AUTH[k] || { key: k, names: {}, items: [] });
+   e.names[n] = (e.names[n] || 0) + 1;
+   if (!e.items.includes(a)) e.items.push(a);
+ }
+-for (const e of Object.values(AUTH)) e.name = Object.entries(e.names).sort((x, y) => y[1] - x[1])[0][0];
+-const authorHref = (n) => `/author/${authorKey(n) || 'muallif'}/`;
++for (const e of Object.values(AUTH)) {
++  const g = GROUP_BY_KEY[e.key];
++  e.name = g ? g.name : Object.entries(e.names).sort((x, y) => y[1] - x[1])[0][0];
++  // "Boshqa yozilishi": guruhda faqat show_variants yoqilgan bo'lsa; o'g'li/qizi yoki katta-kichik harf farqi hisobga olinmaydi
++  const seenN = new Set([scholarName(e.name).toLowerCase()]);
++  const cand = g ? (g.show ? [...g.variants, ...Object.keys(e.names)] : []) : Object.keys(e.names);
++  e.other = cand.filter((n) => { const s2 = scholarName(n).toLowerCase(); if (seenN.has(s2)) return false; seenN.add(s2); return true; });
++}
++const authorHref = (n) => `/author/${resolveKey(n)}/`;
+ const authorLinks = (a) => a.authors.map((n) => `<a href="${authorHref(n)}">${esc(n)}</a>`).join(', ');
+ 
+ // ---------- iqtiboslar ----------
+@@ -239,10 +276,12 @@ out('authors/index.html', page({
+ <div class="wrap block"><ul class="authors-grid">${AU.map((e) => `<li><a href="/author/${e.key}/">${esc(e.name)}</a><span class="muted">${plural(e.items.length, 'nashr')}</span></li>`).join('')}</ul></div>`,
+ }));
+ for (const e of AU) {
+-  const other = Object.keys(e.names).filter((n) => n !== e.name);
++  const other = e.other;
++  const pld = { '@context': 'https://schema.org', ...personLd(e.name) };
++  if (other.length) pld.alternateName = other.map(scholarName);
+   out(`author/${e.key}/index.html`, page({
+     t: `${e.name} - ${S.name}`, d: `${e.name}: ${plural(e.items.length, 'nashr')}`, p: `/author/${e.key}/`, type: 'profile',
+-    head: `<script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@type': 'Person', name: e.name, url: `${BASE}/author/${e.key}/` }).replace(/</g, '\\u003c')}</script>\n`,
++    head: `<script type="application/ld+json">${JSON.stringify(pld).replace(/</g, '\\u003c')}</script>\n`,
+     body: `<section class="hero slim"><div class="wrap hero-in"><p class="eyebrow"><a href="/authors/">Mualliflar</a></p><h1>${esc(e.name)}</h1><p class="lead">${plural(e.items.length, 'nashr')}${other.length ? ` · boshqa yozilishi: ${esc(other.join('; '))}` : ''}</p></div></section>
+ <div class="wrap block">${ledger(e.items)}</div>`,
+   }));
+@@ -348,6 +387,9 @@ out('data/index.json', JSON.stringify({ built: new Date().toISOString(), article
+ const urls = [['/'], ...(C.length ? [['/collections/']] : []), ...C.map((c) => [`/collection/${c._id}/`]), ['/authors/'], ...AU.map((e) => [`/author/${e.key}/`]),
+   ...A.map((a) => [`/article/${a._id}/`, a.updated || a.date]), ...PAGES.map(([k]) => [`/${k}/`])];
+ out('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(([u, m]) => `<url><loc>${BASE}${u}</loc>${m && OK.date.test(m) ? `<lastmod>${esc(m)}</lastmod>` : ''}</url>`).join('\n')}\n</urlset>\n`);
++// Birlashtirilgan mualliflarning eski sahifalari asosiy sahifaga 301 bilan yo'naltiriladi
++const REDIR = Object.entries(KEYMAP).filter(([v, k]) => AUTH[k] && !AUTH[v]).flatMap(([v, k]) => [`/author/${v}/ /author/${k}/ 301`, `/author/${v} /author/${k}/ 301`]);
++if (REDIR.length) out('_redirects', REDIR.join('\n') + '\n');
+ out('robots.txt', `User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /admin.html\nDisallow: /stats\nDisallow: /*?dl=1\n\nSitemap: ${BASE}/sitemap.xml\n`);
+ out('_headers', `/*
+   X-Content-Type-Options: nosniff
+diff --git a/functions/api/site.js b/functions/api/site.js
+index 6d49dc9..5237920 100644
+--- a/functions/api/site.js
++++ b/functions/api/site.js
+@@ -1,11 +1,32 @@
+ // functions/api/site.js -> POST /api/site
+ // Sayt nomi/tavsifi va ma'lumot sahifalarini (Portal haqida, Tahririyat hay'ati, Nashr etikasi, Aloqa ...) tahrirlash.
+-//   { site: { name, description, publisher, email }, pages: { "<kalit>": { title, text: "paragraf\n\nparagraf" } } }
++//   { site: { name, description, publisher, email, author_groups }, pages: { "<kalit>": { title, text: "paragraf\n\nparagraf" } } }
+ import { json, clean, UserError, isAdmin, updateData, ghReady } from '../../lib/common.js';
+ 
+ const RESERVED = new Set(['article', 'collection', 'author', 'pdf', 'api', 'stats', 'data', 'css', 'js', 'admin', 'year']);
+ const KEY_RE = /^[a-z0-9][a-z0-9-]{1,39}$/;
+ 
++// Muallif ismlarini birlashtirish: [{ name, variants: [..], show_variants: bool }]
++function cleanGroups(raw) {
++  if (!Array.isArray(raw)) throw new UserError("Muallif ismlari ro'yxati noto'g'ri");
++  const fold = (x) => x.toLowerCase().replace(/[ʻʼ‘’`´']/g, '').replace(/\s+/g, ' ').trim();
++  const used = new Set(), out = [];
++  for (const g of raw.slice(0, 100)) {
++    const name = clean(g && g.name, 200);
++    const variants = [...new Set([].concat((g && g.variants) || []).map((v) => clean(v, 200)).filter(Boolean))].slice(0, 20);
++    if (!name && !variants.length) continue;
++    if (!name) throw new UserError("Muallif ismlari: asosiy ism bo'sh qolgan guruh bor");
++    const vs = variants.filter((v) => fold(v) !== fold(name));
++    if (!vs.length) throw new UserError(`"${name}" uchun kamida bitta boshqa yozilish kiriting`);
++    for (const x of [name, ...vs]) {
++      if (used.has(fold(x))) throw new UserError(`"${x}" bir nechta guruhda takrorlangan`);
++      used.add(fold(x));
++    }
++    out.push({ name, variants: vs, show_variants: g.show_variants === true });
++  }
++  return out;
++}
++
+ export async function onRequestPost({ request, env }) {
+   try {
+     if (!ghReady(env)) return json({ success: false, error: "Server sozlamalari to'liq emas" }, 500);
+@@ -31,6 +52,10 @@ export async function onRequestPost({ request, env }) {
+     }
+ 
+     await updateData(env, 'Sayt sahifalari yangilandi', (data) => {
++      if (site && site.author_groups !== undefined) {
++        const groups = cleanGroups(site.author_groups);
++        if (groups.length) data.site.author_groups = groups; else delete data.site.author_groups;
++      }
+       if (site) {
+         for (const [f, max] of [['name', 120], ['description', 400], ['publisher', 200], ['email', 120]]) {
+           if (site[f] !== undefined) {
+diff --git a/js/admin.js b/js/admin.js
+index 93ac47c..ea6f172 100644
+--- a/js/admin.js
++++ b/js/admin.js
+@@ -73,8 +73,8 @@
+     list.forEach((n) => {
+       const f = fold(nameParts(n).family);
+       if (!known[f]) return;
+-      const diff = [...known[f]].filter((k) => fold(scholarName(k)) !== fold(scholarName(n)));
+-      if (diff.length) out.push(`"${n}" boshqa nashrlarda ${diff.map((k) => `"${k}"`).join(', ')} deb yozilgan. Bir odam bo'lsa, hamma joyda bir xil yozing: Google Scholar turlicha yozilgan ismlarni turli muallif deb hisoblaydi.`);
++      const diff = [...known[f]].filter((k) => fold(scholarName(k)) !== fold(scholarName(n)) && !sameGroup(k, n));
++      if (diff.length) out.push(`"${n}" boshqa nashrlarda ${diff.map((k) => `"${k}"`).join(', ')} deb yozilgan. Bir odam bo'lsa, ismni PDF dagidek qoldiring va "Sahifalar > Muallif ismlari" bo'limida birlashtiring.`);
+     });
+     return out;
+   }
+@@ -525,8 +525,41 @@
+       <label class="field"><span class="hint">Matn</span><textarea data-ptext rows="5">${esc((p.text || []).join('\n\n'))}</textarea></label>
+     </div>`;
+   }
++  // ---------- Muallif ismlarini birlashtirish ----------
++  function groupBlock(g) {
++    return `<div class="pageblock" data-group>
++      <div class="between"><span class="lbl">Muallif</span><button type="button" class="btn danger sm" data-gremove>O'chirish</button></div>
++      <label class="field"><span class="hint">Asosiy ism (sahifada shu ko'rinadi)</span><input data-gname maxlength="200" value="${esc(g.name || '')}" placeholder="Ikromov, Muhammadyusuf Tursunali o'g'li"></label>
++      <label class="field"><span class="hint">Boshqa yozilishlari (har biri yangi qatorda)</span><textarea data-gvars rows="2" placeholder="Ikromov, Maxamadyusub Tursunali o'g'li">${esc((g.variants || []).join('\n'))}</textarea></label>
++      <label class="check"><input type="checkbox" data-gshow${g.show_variants ? ' checked' : ''}> Boshqa yozilishlarni muallif sahifasida ko'rsatish</label>
++    </div>`;
++  }
++  function bindGroupRemove() {
++    $('groupsBox').querySelectorAll('[data-gremove]').forEach((b) => (b.onclick = () => b.closest('[data-group]').remove()));
++  }
++  function renderGroups() {
++    $('groupsBox').innerHTML = (state.site.author_groups || []).map(groupBlock).join('');
++    bindGroupRemove();
++  }
++  function readGroups() {
++    return [...$('groupsBox').querySelectorAll('[data-group]')].map((el) => ({
++      name: el.querySelector('[data-gname]').value.trim(),
++      variants: el.querySelector('[data-gvars]').value.split(/[;\n]+/).map((x) => x.trim()).filter(Boolean),
++      show_variants: el.querySelector('[data-gshow]').checked,
++    })).filter((g) => g.name || g.variants.length);
++  }
++  // Birlashtirilgan ismlar (ogohlantirishda hisobga olinadi)
++  function sameGroup(a, b) {
++    const fa = fold(scholarName(a)), fb = fold(scholarName(b));
++    return (state.site.author_groups || []).some((g) => {
++      const all = [g.name, ...(g.variants || [])].map((x) => fold(scholarName(x)));
++      return all.includes(fa) && all.includes(fb);
++    });
++  }
++
+   let removedPages = [];
+   function renderPages() {
++    renderGroups();
+     $('s_name').value = state.site.name || '';
+     $('s_publisher').value = state.site.publisher || '';
+     $('s_description').value = state.site.description || '';
+@@ -555,7 +588,7 @@
+     msg($('siteMsg'), 'Saqlanmoqda...', 'info');
+     try {
+       await postJson('/api/site', {
+-        site: { name: $('s_name').value, publisher: $('s_publisher').value, description: $('s_description').value, email: $('s_email').value },
++        site: { name: $('s_name').value, publisher: $('s_publisher').value, description: $('s_description').value, email: $('s_email').value, author_groups: readGroups() },
+         pages, remove: removedPages,
+       });
+       msg($('siteMsg'), 'Saqlandi. 1-2 daqiqada saytda aks etadi.', 'ok');
+@@ -618,6 +651,10 @@
+   $('collDelete').onclick = () => state.collEditing && deleteColl(state.collEditing);
+   $('collForm').onsubmit = saveColl;
+   $('siteForm').onsubmit = saveSite;
++  $('g_add').onclick = () => {
++    $('groupsBox').insertAdjacentHTML('beforeend', groupBlock({ name: '', variants: [], show_variants: false }));
++    bindGroupRemove();
++  };
+   $('np_add').onclick = () => {
+     const k = $('np_key').value.trim().toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '');
+     const t = $('np_title').value.trim();
