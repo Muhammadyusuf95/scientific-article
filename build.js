@@ -275,6 +275,7 @@ const page = ({ t, d, body, p = '/', head = '', l = 'uz', type = 'website', scri
 <title>${esc(t)}</title><meta name="description" content="${esc(String(d || '').slice(0, 300))}"><link rel="canonical" href="${BASE}${p}">${robots ? `<meta name="robots" content="${robots}">` : ''}
 <link rel="alternate" type="application/atom+xml" title="${esc(S.name)}: yangi nashrlar" href="/feed.xml">
 <meta name="theme-color" content="#0b3c42"><link rel="icon" href="${ICON}">
+<script src="/js/i18n.js?v=${BUILD}"></script>
 ${prop('og:site_name', S.name)}${prop('og:type', type)}${prop('og:title', t)}${prop('og:description', String(d || '').slice(0, 300))}${prop('og:url', BASE + p)}${meta('twitter:card', 'summary')}${head}<link rel="stylesheet" href="/css/style.css?v=${BUILD}">
 ${scripts.map((s) => `<script src="/js/${s}.js?v=${BUILD}" defer></script>`).join('\n')}
 </head><body>
@@ -282,6 +283,7 @@ ${scripts.map((s) => `<script src="/js/${s}.js?v=${BUILD}" defer></script>`).joi
 <header class="site-head"><div class="wrap head-in">
 <a class="brand" href="/"><span class="brand-mark" aria-hidden="true"></span><span>${esc(S.name)}</span></a>
 <nav class="nav" aria-label="Asosiy menyu">${NAV.map(([h, n]) => `<a href="${h}"${(h === '/' ? p === '/' : p.startsWith(h) || (h === '/journals/' && p.startsWith('/journal/')) || (h === '/conferences/' && p.startsWith('/conference/'))) ? ' aria-current="page"' : ''}>${esc(n)}</a>`).join('')}<a class="nav-search" href="/search/" aria-label="Qidiruv"${p === '/search/' ? ' aria-current="page"' : ''}>${I.search}</a></nav>
+<div class="lang" data-lang-switch><button type="button" class="lang-btn" aria-haspopup="true" aria-expanded="false" aria-label="Tilni tanlash"><span class="lang-code">UZ</span></button><ul class="lang-menu" role="menu" data-noi18n hidden></ul></div>
 </div></header>
 <main id="main">${body}</main>
 <footer class="site-foot"><div class="wrap foot-in">

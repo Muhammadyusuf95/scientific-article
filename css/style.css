@@ -311,3 +311,35 @@ svg{width:1.1em;height:1.1em;fill:none;stroke:currentColor;stroke-width:2;stroke
 .prof-links a{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);padding:.35rem .8rem;border-radius:99px;text-decoration:none;font-weight:600;font-size:.88rem}
 .prof-links a:hover{background:rgba(255,255,255,.22)}
 @media(max-width:980px){.au-grid{grid-template-columns:1fr}.au-grid .side{position:static}}
+
+/* ===== Til tanlash (bayroqlar) ===== */
+html.i18n-wait body{opacity:0}
+.head-in{position:relative}
+.lang{position:relative;margin-left:auto}
+.nav+.lang{margin-left:0}
+.lang-btn{display:inline-flex;align-items:center;gap:.4rem;height:2.2rem;padding:0 .6rem;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink);font:650 .82rem var(--sans);cursor:pointer}
+.lang-btn:hover{border-color:var(--accent)}
+.flag{display:inline-flex;width:1.45rem;height:1rem;border-radius:3px;overflow:hidden;box-shadow:0 0 0 1px rgba(0,0,0,.12);flex:none}
+.flag svg{width:100%;height:100%;display:block;stroke:none;vertical-align:0}
+.lang-menu{position:absolute;right:0;top:calc(100% + .4rem);z-index:40;list-style:none;margin:0;padding:.35rem;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 30px rgba(15,31,38,.18);min-width:11rem}
+.lang-menu button{display:flex;align-items:center;gap:.6rem;width:100%;padding:.55rem .65rem;border:0;border-radius:8px;background:none;color:var(--ink);font:550 .93rem var(--sans);cursor:pointer;text-align:left}
+.lang-menu button:hover,.lang-menu button[aria-checked="true"]{background:var(--surface-2)}
+.lang-menu button[aria-checked="true"]::after{content:"✓";margin-left:auto;color:var(--accent);font-weight:700}
+@media(max-width:760px){.lang{position:absolute;right:1.25rem;top:.9rem}.head-in>.brand{padding-right:5rem}}
+@media print{.lang{display:none!important}}
+/* sarlavha: logo | menyu | til (til tugmasi doim o'ngda) */
+.head-in{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:.5rem 1.2rem;flex-wrap:nowrap}
+.head-in>.nav{justify-content:flex-end;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;min-width:0}
+.head-in>.nav::-webkit-scrollbar{display:none}
+.head-in>.nav a{white-space:nowrap}
+.lang{margin:0}
+@media(max-width:760px){
+  .head-in{grid-template-columns:minmax(0,1fr) auto}
+  .head-in>.brand{padding-right:0}
+  .head-in>.lang{position:static;grid-column:2;grid-row:1}
+  .head-in>.nav{grid-column:1/-1;grid-row:2;justify-content:flex-start;width:auto;margin:0 -.4rem}
+}
+.head-in>.nav{justify-content:normal}
+.head-in>.nav>a:first-child{margin-left:auto}
+@media(max-width:1320px) and (min-width:761px){.head-in>.nav a{padding:.42rem .5rem;font-size:.9rem}}
+@media(max-width:760px){.head-in>.nav>a:first-child{margin-left:0}}
