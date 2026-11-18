@@ -9,6 +9,9 @@
   "collections": [],
   "articles": [
     {
+      "pdf": "fitonimlarda-xalqning-dunyoqarashi-va-etnomadaniy-qadriyatla-613c6b.pdf",
+      "pdf_size": 257985,
+      "created": "2026-11-18",
       "id": "fitonimlarda-xalqning-dunyoqarashi-va-etnomadaniy-qadriyatla-613c6b",
       "item_type": "konferensiya-maqolasi",
       "language": "uz",
@@ -28,7 +31,7 @@
       ],
       "year": 2026,
       "date": "2026-02-25",
-      "conference_org": "«Борбордук Азия элдеринин  өнүгүшүндөгү  байыркы кол жазмалар жана алардын эл аралык деңгээлдеги ролу: тил, адабият, маданият жана билим берүү маселелери (XI-XXIи кылымга чейин)»",
+      "conference_org": "«Борбордук Азия элдеринин  өнүгүшүндөгү байыркы кол жазмалар жана алардын эл аралык деңгээлдеги ролу: тил, адабият, маданият жана билим берүү маселелери (XI-XXI кылымга чейин)»",
       "conference_place": "ОШ МАМЛЕКЕТТИК УНИВЕРСИТЕТИ",
       "conference_date": "25.02.2026",
       "pages": "873-879",
@@ -43,9 +46,7 @@
         "Суперанская А.В. Общая теория имени собственного. – Изд. 2-е, испр. – Москва: URSS, 2007. – C. 186, 189.",
         "Хошимхўжаева М.М. Оламнинг лисоний тасвирида фитонимлар (инглиз, рус ва ўзбек тиллари мисолида). Филол. фан. фалс. док. ... дисс. автореф. – Тошкент, 2018. – Б. 22."
       ],
-      "pdf": "fitonimlarda-xalqning-dunyoqarashi-va-etnomadaniy-qadriyatla-613c6b.pdf",
-      "pdf_size": 257985,
-      "created": "2026-11-18"
+      "updated": "2026-11-18"
     },
     {
       "pdf": "fitonimlarning-ramziy-va-etnomadaniy-xususiyatlari-c98742-mwlopcjr.pdf",
