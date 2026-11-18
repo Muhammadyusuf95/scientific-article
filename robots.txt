@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
+Disallow: /api/
 
-Sitemap: https://scientific-article.pages.dev/sitemap.xml
+Sitemap: https://uzlibrary.uz/sitemap.xml
