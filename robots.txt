@@ -1,5 +1,8 @@
 User-agent: *
 Allow: /
 Disallow: /api/
+Disallow: /admin.html
+Disallow: /stats
+Disallow: /*?dl=1
 
 Sitemap: https://uzlibrary.uz/sitemap.xml
