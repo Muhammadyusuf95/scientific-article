@@ -19,7 +19,7 @@ const qt = (t) => '“' + (/[.!?]$/.test(t) ? t : t + '.') + '”';
 const PATRONYM = /^(?:o['ʻʼ‘’`´]?g['ʻʼ‘’`´]?li|ogli|ugli|ogly|ugly|qizi|kizi|kyzy|ўғли|ўгли|угли|қизи|кизи|оглы|кызы)$/i;
 const cleanTok = (t) => String(t).replace(/^[,;:]+|[,;:]+$/g, '');
 // BUTUN KATTA HARFDA yozilgan so'zni "Bosh harf bilan" ko'rinishga keltiradi (IKROMOV -> Ikromov)
-const capTok = (t) => (t.length > 1 && t === t.toUpperCase() && t !== t.toLowerCase()
+const capTok = (t) => (t.length > 1 && !t.includes(".") && t === t.toUpperCase() && t !== t.toLowerCase()
   ? t.toLowerCase().replace(/(^|-)(\p{L})/gu, (m, a, b) => a + b.toUpperCase()) : t);
 function initial(tok) {
   return tok.split('-').map((part) => {
@@ -36,6 +36,7 @@ function parseName(full) {
   if (s.includes(',')) { const k = s.indexOf(','); family = s.slice(0, k).trim(); given = s.slice(k + 1).trim(); }
   else { const sp = s.indexOf(' '); if (sp > 0) { family = s.slice(0, sp); given = s.slice(sp + 1).trim(); } }
   family = capTok(cleanTok(family));
+  given = given.replace(/\.(?=\p{L})/gu, '. '); // "M.T." -> "M. T." (qo'shib yozilgan initsiallar)
   const toks = given.split(' ').map(cleanTok).filter((t) => t && !PATRONYM.test(t)).map(capTok);
   const ini = toks.map(initial).filter(Boolean);
   return { family, toks, ini };
