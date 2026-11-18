@@ -20,7 +20,6 @@ const ALIAS = { jurnal: 'jurnal-maqolasi', konferensiya: 'konferensiya-maqolasi'
 const AB = { uz: 'Annotatsiya', en: 'Abstract', ru: 'Аннотация' }, KW = { uz: "Kalit so'zlar", en: 'Keywords', ru: 'Ключевые слова' };
 const OK = { issn: /^\d{4}-\d{3}[\dXx]$/, isbn: /^(?:\d[- ]?){9}[\dXx]$|^(?:\d[- ]?){12}\d$/, doi: /^10\.\d{4,9}\/\S+$/, date: /^\d{4}-\d{2}-\d{2}$/ };
 const PDF_OK = /^[A-Za-z0-9][A-Za-z0-9._-]{0,150}\.pdf$/i;
-const PATRONYM = /^(?:o['ʻʼ‘’`´]?g['ʻʼ‘’`´]?li|ogli|ugli|qizi|kizi|kyzy|ўғли|қизи|оглы|кызы|угли)$/i;
 const RESERVED = new Set(['article', 'collection', 'collections', 'author', 'authors', 'pdf', 'api', 'stats', 'data', 'css', 'js', 'admin']);
 
 // ---------- yordamchilar ----------
@@ -52,15 +51,9 @@ const pubDate = (a) => (a.date ? a.date.replace(/-/g, '/') : String(a.year));
 const fmtDate = (d) => (OK.date.test(d || '') ? d.split('-').reverse().join('.') : '');
 
 // Ism: "Familiya, Ism Otasining ismi o'g'li" -> Scholar uchun "Familiya, Ism Otasining ismi"
-function nameParts(full) {
-  const s = String(full || '').replace(/\s+/g, ' ').trim();
-  let family = s, given = '';
-  if (s.includes(',')) { const k = s.indexOf(','); family = s.slice(0, k).trim(); given = s.slice(k + 1).trim(); }
-  else { const sp = s.indexOf(' '); if (sp > 0) { family = s.slice(0, sp); given = s.slice(sp + 1).trim(); } }
-  const toks = given.split(' ').filter((t) => t && !PATRONYM.test(t));
-  return { family, toks };
-}
-const scholarName = (full) => { const n = nameParts(full); return n.toks.length ? `${n.family}, ${n.toks.join(' ')}` : n.family; };
+// (yagona manba: citations.js; admin panel ham shu qoidaga amal qiladi)
+const nameParts = (full) => { const n = CITE.parseName(full); return { family: n.family, toks: n.toks }; };
+const scholarName = CITE.scholarName;
 const authorKey = (full) => { const n = nameParts(full); return translit([n.family, n.toks[0] || ''].join(' ')); };
 
 // ---------- tekshiruv ----------
@@ -80,6 +73,7 @@ for (const x of A) {
   if (x.doi && !OK.doi.test(doi(x))) bad.push(`${x.id}: DOI formati noto'g'ri`);
   if (x.date && !OK.date.test(x.date)) bad.push(`${x.id}: sana YYYY-MM-DD bo'lishi kerak`);
   if (x.pdf && !PDF_OK.test(x.pdf)) bad.push(`${x.id}: pdf fayl nomi noto'g'ri: ${x.pdf}`);
+  for (const n of x.authors || []) if (!String(n).includes(',')) warn.push(`${x.id}: muallif ismida vergul yo'q ("${n}"), birinchi so'z familiya deb olindi. To'g'ri shakl: "Familiya, Ism Otasining ismi"`);
   if (x.date && Number(x.date.slice(0, 4)) !== Number(x.year)) warn.push(`${x.id}: yil (${x.year}) va sana (${x.date}) mos emas`);
 }
 if (bad.length) { console.error(bad.join('\n')); process.exit(1); }
@@ -112,12 +106,22 @@ function citeMeta(a, k, url) {
   };
 }
 
+// schema.org Person: name - Scholar shaklida; familyName / givenName / additionalName (otasining ismi) alohida
+function personLd(full) {
+  const n = nameParts(full);
+  const p = { '@type': 'Person', name: scholarName(full), familyName: n.family };
+  if (n.toks[0]) p.givenName = n.toks[0];
+  if (n.toks.length > 1) p.additionalName = n.toks.slice(1).join(' ');
+  p.url = `${BASE}${authorHref(full)}`;
+  return p;
+}
+
 function buildJsonLd(a, k, d, url, fp, lp, c) {
   const obj = {
     '@context': 'https://schema.org',
     '@type': k === 'book' ? 'Book' : 'ScholarlyArticle',
     headline: title(a).slice(0, 110), name: title(a),
-    author: a.authors.map((name) => ({ '@type': 'Person', name, url: `${BASE}${authorHref(name)}` })),
+    author: a.authors.map(personLd),
     datePublished: a.date || String(a.year), inLanguage: lang(a), url, mainEntityOfPage: url,
     isAccessibleForFree: true, license: 'https://creativecommons.org/licenses/by/4.0/',
     publisher: { '@type': 'Organization', name: a.publisher || S.publisher, url: BASE },
@@ -262,7 +266,7 @@ for (const a of A) {
     + refs.map((r) => meta('citation_reference', r)).join('')
     // Dublin Core (boshqa indeksatorlar uchun)
     + `<link rel="schema.DC" href="http://purl.org/dc/elements/1.1/">\n`
-    + meta('DC.title', title(a)) + a.authors.map((x) => meta('DC.creator', x)).join('') + meta('DC.date', a.date || a.year)
+    + meta('DC.title', title(a)) + a.authors.map((x) => meta('DC.creator', scholarName(x))).join('') + meta('DC.date', a.date || a.year)
     + meta('DC.type', 'Text') + meta('DC.format', 'application/pdf') + meta('DC.language', L) + meta('DC.identifier', d ? `https://doi.org/${d}` : url)
     + meta('DC.rights', 'https://creativecommons.org/licenses/by/4.0/')
     + prop('article:published_time', a.date || String(a.year))
