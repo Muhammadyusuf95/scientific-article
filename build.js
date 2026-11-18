@@ -344,8 +344,7 @@ out('data/index.json', JSON.stringify({ built: new Date().toISOString(), article
 const urls = [['/'], ...(C.length ? [['/collections/']] : []), ...C.map((c) => [`/collection/${c._id}/`]), ['/authors/'], ...AU.map((e) => [`/author/${e.key}/`]),
   ...A.map((a) => [`/article/${a._id}/`, a.updated || a.date]), ...PAGES.map(([k]) => [`/${k}/`])];
 out('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(([u, m]) => `<url><loc>${BASE}${u}</loc>${m && OK.date.test(m) ? `<lastmod>${esc(m)}</lastmod>` : ''}</url>`).join('\n')}\n</urlset>\n`);
-out('robots.txt', `User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /admin.html\nDisallow: /stats\n\nSitemap: ${BASE}/sitemap.xml\n`);
-
+out('robots.txt', `User-agent: *\nAllow: /\nDisallow: /api/\nDisallow: /admin.html\nDisallow: /stats\nDisallow: /*?dl=1\n\nSitemap: ${BASE}/sitemap.xml\n`);
 out('_headers', `/*
   X-Content-Type-Options: nosniff
   X-Frame-Options: SAMEORIGIN
