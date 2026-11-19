@@ -28,6 +28,23 @@ const list = (v, sep, maxItems, maxLen) =>
 // Muallif: ortiqcha bo'shliqlarni olib tashlash
 const normAuthor = (s) => s.replace(/\s+/g, ' ').replace(/\s*,\s*/g, ', ').trim();
 
+// Muallif paneli: [{ family, given, patronymic }] (JSON). Yaroqsiz yoki bo'sh bo'lsa [] qaytaradi (eski usulga o'tiladi).
+const nameTok = (v) => String(v || '').replace(/[;,\n\r]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60);
+function parseAuthorNames(raw) {
+  let arr;
+  try { arr = JSON.parse(String(raw || '')); } catch { return []; }
+  if (!Array.isArray(arr)) return [];
+  const out = [];
+  for (const x of arr.slice(0, 30)) {
+    if (!x || typeof x !== 'object') continue;
+    const family = nameTok(x.family), given = nameTok(x.given), patronymic = nameTok(x.patronymic);
+    if (!family) continue;
+    out.push({ family, ...(given ? { given } : {}), ...(patronymic ? { patronymic } : {}) });
+  }
+  return out;
+}
+const composeAuthor = (n) => { const rest = [n.given, n.patronymic].filter(Boolean).join(' '); return rest ? `${n.family}, ${rest}` : n.family; };
+
 // Adabiyot: raqamlash, ortiqcha bo'shliq va kuzatuv (utm) parametrlarini tozalash
 function cleanRef(r) {
   let s = r.replace(/\s+/g, ' ').trim();
@@ -74,13 +91,19 @@ export async function onRequestPost({ request, env }) {
     if (!article['abstract_' + lang]) throw new UserError(`Asosiy til (${lang.toUpperCase()}) da annotatsiya kiritilmagan (Google Scholar uchun shart)`);
     if (!article['keywords_' + lang]) throw new UserError(`Asosiy til (${lang.toUpperCase()}) da kamida bitta kalit so'z kiriting`);
 
-    const authors = list(form.get('authors'), /[;\n]+/, 30, 120).map(normAuthor).filter(Boolean);
+    // Yangi muallif paneli: Familiya / Ism / Otasining ismi alohida (author_names, JSON).
+    // Bo'lsa, authors shundan "Familiya, Ism Otasining ismi" ko'rinishida yasaladi; bo'lmasa eski matn maydoni ishlatiladi.
+    const authorNames = parseAuthorNames(form.get('author_names'));
+    const authors = authorNames.length
+      ? authorNames.map(composeAuthor)
+      : list(form.get('authors'), /[;\n]+/, 30, 120).map(normAuthor).filter(Boolean);
     if (!authors.length) throw new UserError('Kamida bitta muallif kiriting (bir nechta bo\'lsa ";" bilan ajrating)');
     const year = /^\d{4}$/.test(g('year', 4)) ? Number(g('year', 4)) : new Date().getUTCFullYear();
     const dateIn = g('date', 10);
     const date = /^\d{4}-\d{2}-\d{2}$/.test(dateIn) ? dateIn : '';
     if (date && Number(date.slice(0, 4)) !== year) throw new UserError(`Nashr yili (${year}) va nashr sanasi (${date}) bir-biriga mos emas`);
     Object.assign(article, { authors, year });
+    if (authorNames.length) article.author_names = authorNames;
 
     // Mualliflar haqida: har bir qator tartib bo'yicha bitta muallifga mos ("Ish joyi | ORCID")
     const infoLines = clean(form.get('author_info'), 20000).split('\n').map((s) => s.trim());

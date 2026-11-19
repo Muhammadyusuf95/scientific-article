@@ -415,6 +415,7 @@
     renderExtraFields();
 
     $('authors').value = (a.authors || []).join('; ');
+    if (window.AuthorPanel) window.AuthorPanel.load(a); // Familiya / Ism / Otasining ismi qatorlari
     $('author_info').value = (a.authors || []).map((n, i) => { const x = (a.author_info || [])[i] || {}; return x.org || x.orcid ? [x.org || '', x.orcid || ''].join(' | ').replace(/ \| $/, '') : ''; }).join('\n').replace(/\n+$/, '');
     $('section').value = a.section || '';
     $('field').value = a.field || '';

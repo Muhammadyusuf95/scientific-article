@@ -283,3 +283,33 @@ input:focus, textarea:focus, select:focus {
 .addpage { margin: 6px 0 4px; }
 .addpage summary { cursor: pointer; font-weight: 600; color: var(--accent); }
 #references { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.86rem; line-height: 1.5; white-space: pre; overflow-x: auto; }
+
+/* ===== Muallif paneli (Familiya / Ism / Otasining ismi) ===== */
+#ap_rows { display: grid; gap: 8px; margin: 6px 0 8px; }
+.ap-row {
+  display: grid;
+  grid-template-columns: 24px 1fr 1fr 1fr auto;
+  gap: 8px;
+  align-items: end;
+  padding: 8px 10px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.ap-no { align-self: center; text-align: center; font-weight: 600; color: var(--muted); }
+.ap-f { display: block; min-width: 0; }
+.ap-l { display: block; font-size: 0.78rem; color: var(--muted); margin-bottom: 3px; }
+.ap-l.req::after { content: " *"; color: var(--accent); }
+.ap-btns { display: flex; gap: 4px; }
+.ap-btns button {
+  width: 32px; height: 36px; padding: 0; line-height: 1;
+  background: var(--card); color: inherit; cursor: pointer;
+  border: 1px solid var(--line); border-radius: 6px; font-size: 1rem;
+}
+.ap-btns button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.ap-btns button:disabled { opacity: 0.35; cursor: default; }
+@media (max-width: 640px) {
+  .ap-row { grid-template-columns: 24px 1fr; }
+  .ap-row .ap-f, .ap-row .ap-btns { grid-column: 2; }
+  .ap-btns { justify-content: flex-end; }
+}

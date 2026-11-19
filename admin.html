@@ -10,7 +10,8 @@
 <link rel="stylesheet" href="/css/admin.css?v=6">
 <script src="/js/refs.js?v=6" defer></script>
 <script src="/js/fulltext.js?v=1" defer></script>
-<script src="/js/admin.js?v=6" defer></script>
+<script src="/js/author-panel.js?v=1" defer></script>
+<script src="/js/admin.js?v=7" defer></script>
 </head>
 <body>
 
@@ -90,10 +91,17 @@
               </select>
               <span class="hint">PDF qaysi tilda yozilgan bo'lsa, shuni tanlang.</span>
             </label>
+            <div class="field full" id="ap_panel">
+              <span class="lbl req">Mualliflar <span class="opt">(familiya, ism va otasining ismi alohida)</span></span>
+              <div id="ap_rows"></div>
+              <input type="hidden" name="author_names" id="author_names">
+              <button class="btn ghost sm" type="button" id="ap_add">+ Muallif qo'shish</button>
+              <span class="hint">Maqola PDF idagi tartibda kiriting. Metama'lumotda (Google Scholar) "Familiya, Ism Otasining ismi" ko'rinishida chiqadi; "o'g'li/qizi" so'zlari avtomatik olib tashlanadi.</span>
+            </div>
             <label class="field full">
-              <span class="lbl req">Mualliflar</span>
+              <span class="lbl">Mualliflar <span class="opt">(tayyor yozuv: yuqoridagilardan avtomatik to'ldiriladi, eski usulda qo'lda ham yozish mumkin)</span></span>
               <textarea name="authors" id="authors" rows="2" maxlength="4000" placeholder="Aliyev Vali; Valiyev Sami" required></textarea>
-              <span class="hint">Bir nechta muallif bo'lsa, nuqtali vergul (;) yoki yangi qator bilan ajrating. Vergul muallifni ajratmaydi.</span>
+              <span class="hint">Bir nechta muallif bo'lsa, nuqtali vergul (;) yoki yangi qator bilan ajrating. Vergul muallifni ajratmaydi. Bu maydon o'zgartirilsa, yuqoridagi qatorlar undan qayta quriladi.</span>
             </label>
             <label class="field full">
               <span class="lbl">Mualliflar haqida <span class="opt">(ixtiyoriy: ish joyi va ORCID)</span></span>

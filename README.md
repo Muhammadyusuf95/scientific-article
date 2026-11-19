@@ -4,6 +4,7 @@ Cloudflare Pages: build buyrug'i `node build.js`, chiqish papkasi `dist`. PDF fa
 
 ## Admin panel (`/admin.html`)
 * **Nashr joylash**: yangi maqola yoki tahrirlash. PDF tanlanganda Google Scholar tekshiruvi (hajm, matn qatlami, sarlavha va mualliflar birinchi betda, adabiyotlar bo'limi) avtomatik o'tkaziladi.
+* **Mualliflar paneli**: har bir muallif uchun Familiya, Ism va Otasining ismi alohida maydonlarda (`js/author-panel.js`). Ular avtomatik "Familiya, Ism Otasining ismi" ko'rinishida `authors` ga yoziladi, qo'shimcha ravishda maqolada `author_names` saqlanadi. Eski matn maydoni ("Mualliflar") ishlashda qoladi: unga qo'lda yozilsa qatorlar qayta quriladi. `author_names` bo'lmagan eski maqolalar `authors` matnidan o'qiladi, `articles.json` ni o'zgartirish shart emas.
 * **Foydalanilgan adabiyotlar (References)**: maydon bo'sh qolsa, saqlash paytida ro'yxat PDF oxiridan avtomatik olinadi (har bir manba alohida qatorda).
 * **Nashrlar**: ro'yxat, ko'rishlar va yuklab olishlar soni, Google Scholar bo'yicha ogohlantirishlar.
 * **To'plamlar**: yaratish, tahrirlash, maqolalarni biriktirish, o'chirish (maqolalar saytda qoladi).
