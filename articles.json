@@ -4,7 +4,16 @@
     "description": "Ushbu saytga individual mualliflarning ilmiy ishlari, konferensiya to'plamlari mualliflar va tashkilotchilarning roziligiga asosan joylab boriladi. Ushbu saytga joylangan materiallar google hamda google scholar bazalarida indekslanishi ko'zda tutilgan.",
     "publisher": "Ilmiy ishlar portali",
     "url": "https://uzlibrary.uz",
-    "email": "mukhammadyusuf@mail.ru"
+    "email": "mukhammadyusuf@mail.ru",
+    "author_groups": [
+      {
+        "name": "Ikromov, Maxamadyusub Tursunali o‘g‘li",
+        "variants": [
+          "Ikromov, Muhammadyusuf Tursunali o‘g‘li"
+        ],
+        "show_variants": true
+      }
+    ]
   },
   "collections": [],
   "articles": [
@@ -533,7 +542,7 @@
       ]
     },
     "ethics": {
-      "title": "Saytda materiallarni joylashtirish talabi:",
+      "title": "Saytda materiallarni joylashtirish talabi",
       "text": [
         "Portalda joylashtirilgan maqolalar original bo'lishi, boshqa nashrlarda e'lon qilinmagan bo'lishi va mualliklik huquqlarini buzmasligi kerak.",
         "Boshqa mualliflarning ishlaridan foydalanilganda, foydalanilgan adabiyotlar ro'yxatida ularga to'g'ri havola keltirilishi shart.",
