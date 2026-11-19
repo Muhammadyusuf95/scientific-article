@@ -9,6 +9,81 @@
   "collections": [],
   "articles": [
     {
+      "id": "fitonimlarning-etnomadaniy-xususiyatlari-tadqiqida-genetik-t-96ff2f",
+      "item_type": "konferensiya-maqolasi",
+      "language": "uz",
+      "title_uz": "Fitonimlarning etnomadaniy xususiyatlari tadqiqida genetik tahlilning ahamiyati",
+      "abstract_uz": "Mazkur maqolada XV—XVI asrlar o‘zbek adabiy tili va madaniyatining nodir yodnomalari sifatida tan olingan Zahiriddin Muhammad Boburning \"Boburnoma\" asari fitonimik leksika manbayi sifatida tahlilga tortiladi. Asarda berilgan fitonimlarni genetik tahlil qilish orqali ularda yashiringan etnomadaniy semantika ochib berildi",
+      "keywords_uz": [
+        "Bonurnoma",
+        "etnomadaniyat",
+        "genetik tahlil",
+        "fitonim",
+        "etnolingvistika",
+        "madaniyat",
+        "urf-odat",
+        "lingvistika",
+        "leksika"
+      ],
+      "abstract_en": "This article examines Zahiriddin Muhammad Babur’s \"Baburnama\" – a rare and invaluable monument of 15th–16th century Uzbek literary language and culture — as a primary source of phytonymic vocabulary. Through the genetic analysis of phytonyms presented in the work, the ethnocultural semantics embedded within them has been revealed",
+      "keywords_en": [
+        "Baburnama",
+        "ethnoculture",
+        "genetic analysis",
+        "phytonym",
+        "ethnolinguistics",
+        "culture",
+        "customs and traditions",
+        "linguistics",
+        "vocabulary"
+      ],
+      "abstract_ru": "В данной статье произведение Захириддина Мухаммада Бабура «Бабурнаме» — признанный редкий памятник узбекского литературного языка и культуры XV–XVI веков — рассматривается в качестве источника фитонимической лексики.\r\nПосредством генетического анализа фитонимов, представленных в произведении, была раскрыта скрытая в них этнокультурная семантика",
+      "keywords_ru": [
+        "Бабурнаме",
+        "этнокультура",
+        "генетический анализ",
+        "фитоним",
+        "этнолингвистика",
+        "культура",
+        "обычаи и традиции",
+        "лингвистика",
+        "лексика"
+      ],
+      "authors": [
+        "Ikromov Maxamadyusub Tursunali o‘g‘li"
+      ],
+      "year": 2026,
+      "author_info": [
+        {
+          "org": "Andijon davlat universiteti",
+          "orcid": "0009-0008-6064-3987"
+        }
+      ],
+      "section": "Tilshunoslik",
+      "field": "Filologiya fanlari",
+      "date": "2026-05-15",
+      "conference_org": "Lisoniy meros va tilshunoslik taraqqiyoti 157",
+      "conference_place": "Andijon davlat universiteti",
+      "conference_date": "15.05.2026",
+      "pages": "157-160",
+      "doi": "10.5281/zenodo.20336012",
+      "references": [
+        "Bobur Z. M. Bobumoma:. –T.: «Yangi asr avlodi», 2015. – B. 8.",
+        "Ikromov, M. (2025). BOTANIK TERMINLARNI ANTROPOSENTRIK PARADIGMADA O‘RGANISHNING AHAMIYATI. NamDU Ilmiy Axborotnomasi.",
+        "Ikromov, M. (2025). BOTANIK TERMINLARNING ETNOMADANIY TADQIQI\"«ЭТНОКУЛЬТУРНОЕ ИЗУЧЕНИЕ БОТАНИЧЕСКИХ ТЕРМИНОВ»\" ETHNOCULTURAL STUDY OF BOTANICAL TERMS. FarDU. Ilmiy xabarlar–Scientific journal of the Fergana State University.",
+        "Rahmatullayev Sh. O‘zbek tilining etimologik lug‘ati, 3-jild. – T.: Universitet, 2009, – B. 11.",
+        "Ибрагимов А. Бобур асарлари лексикасининг лингвостатистик, семантик ва генетик тадқиқи (“девон”, “мубаййин”, “аруз”): Филол. фан. док. дисс. автореф. – Тошкент, 2008. – Б.29.",
+        "Пазлитдинова Н.З. Ўзбек тили фитонимларининг лексик-семантик хусусиятлари. Филол. фан. фалс. док. дисс. автореф. – Фарғона, 2018. – Б.9.",
+        "Кузнецов А.М. От компонентного анализа к компонентному синтезу. - М.: Наука, 1986. – C. 14.",
+        "Холмонова З. “Бобурнома” – тил қомуси. – Тошкент: Академншр, 2021. – Б.260."
+      ],
+      "references_auto": true,
+      "pdf": "fitonimlarning-etnomadaniy-xususiyatlari-tadqiqida-genetik-t-96ff2f.pdf",
+      "pdf_size": 145472,
+      "pdf_pages": 4,
+      "created": "2026-11-19"
+    },
+    {
       "id": "fitonimlar-xalq-etnomadaniyati-ifodasi-sifatida-27c53b",
       "item_type": "jurnal-maqolasi",
       "language": "uz",
