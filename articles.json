@@ -9,6 +9,86 @@
   "collections": [],
   "articles": [
     {
+      "id": "fitonimlar-xalq-etnomadaniyati-ifodasi-sifatida-27c53b",
+      "item_type": "jurnal-maqolasi",
+      "language": "uz",
+      "title_uz": "Fitonimlar xalq etnomadaniyati ifodasi sifatida",
+      "abstract_uz": "Ushbu maqolada til, etnos va madaniyat oʻ rtasidagi uzviy bogʻ liqlik V. Gumboldt, G. Shteyntal, V. Vundt va A.E. Karlinskiy kabi tilshunoslarning nazariy qarashlari asosida tahlil qilinadi. Til nafaqat kommunikativ, balki xalqning tafakkuri, dunyoqarashi va ijtimoiy ongini ifodalovchi kumulyativ vosita sifatida koʻ rib chiqiladi. Maqolaning asosiy e’tibori fitonimlarning etnomadaniy birlik sifatidagi tabiatini aniqlashga qaratilgan: har qanday oʻ simlik nomi emas, balki xalq ijtimoiy ongida simvolik, funksional va assotsiativ qimmat kasb etgan fitonimlargina etnomadaniy birlik hisoblanishi asoslab beriladi. Oʻ zbek, rus va boshqird tillaridan olingan qiyosiy misollar (terak, olma, shaftoli, oʻ rik, uzum, gilos, qayin, eman) yordamida fitonimlarning turli xalqlar tilida turlicha etnosemantik ma’no kasb etishi koʻ rsatib beriladi. Shuningdek, fitonimning etnosemantik mundarijasi kengayishi yoki torayishi bilan uning etnomadaniy ahamiyati oʻ rtasidagi bogʻ liqlik nazariy jihatdan asoslanadi. Tadqiqot natijalari fitonimlarning etnolingvistik va lingvokulturologik tadqiqotlar uchun muhim manba boʻ la olishini koʻ rsatadi",
+      "keywords_uz": [
+        "til",
+        "etnos",
+        "etnomadaniyat",
+        "fitonim",
+        "etnolingvistika",
+        "lisoniy manzara",
+        "etnosemantika",
+        "fitomorf kod"
+      ],
+      "title_en": "Phytonyms as an expression of the ethnic culture of a nation",
+      "abstract_en": "The article analyzes the interrelation between language, ethnos and culture based on the theoretical views of W. von Humboldt, H. Steinthal, W. Wundt and A.E. Karlinsky. Language is examined not merely as a means of communication but as a cumulative instrument reflecting the thinking, worldview and social consciousness of a people. The main focus of the article is on determining the nature of phytonyms as ethnocultural units: it is argued that not every plant name, but only those phytonyms that have acquired symbolic, functional and associative value in the social consciousness of a people, can be regarded as ethnocultural units.\r\nUsing comparative examples from the Uzbek, Russian and Bashkir languages (poplar, apple, peach, apricot, grape, cherry, birch, oak), the article demonstrates that phytonyms acquire different ethnosemantic meanings across the languages of different peoples.\r\nFurthermore, the relationship between the expansion or narrowing of a phytonym’s ethnosemantic content and its ethnocultural significance is theoretically substantiated. The findings show that phytonyms can serve as an important source for ethnolinguistic and linguoculturological research",
+      "keywords_en": [
+        "language",
+        "ethnos",
+        "ethnic culture",
+        "phytonym",
+        "ethnolinguistics",
+        "linguistic worldview",
+        "ethnosemantics",
+        "phytomorphic code"
+      ],
+      "title_ru": "Фитонимы как выражение этнокультуры народа",
+      "abstract_ru": "В статье анализируется взаимосвязь языка, этноса и культуры на основе теоретических взглядов В.\r\nГумбольдта, Г. Штейнталя, В. Вундта и А.Е. Карлинского. Язык рассматривается не только как коммуникативное средство, но и как кумулятивный инструмент, отражающий мышление, мировоззрение и общественное сознание народа.\r\nОсновное внимание уделяется выявлению природы фитонимов как этнокультурных единиц: обосновывается, что этнокультурной единицей можно считать не любое название растения, а лишь те фитонимы, которые приобрели символическую, функциональную и ассоциативную ценность в общественном сознании народа. На сопоставительных примерах из узбекского, русского и башкирского языков (тополь, яблоко, персик, абрикос, виноград, черешня, берёза, дуб) показано, что фитонимы приобретают различное этносемантическое значение в языках разных народов. Кроме того, теоретически обосновывается взаимосвязь между расширением или сужением этносемантического содержания фитонима и его этнокультурной значимостью. Результаты исследования показывают, что фитонимы могут служить важным источником для этнолингвистических и лингвокультурологических исследований",
+      "keywords_ru": [
+        "язык",
+        "этнос",
+        "этнокультура",
+        "фитоним",
+        "этнолингвистика",
+        "языковая картина мира",
+        "этносемантика",
+        "фитоморфный код"
+      ],
+      "authors": [
+        "Ikromov, Maxamadyusub Tursunali oʻgʻli"
+      ],
+      "year": 2026,
+      "author_info": [
+        {
+          "org": "Andijon davlat universiteti",
+          "orcid": "0009-0008-6064-3987"
+        }
+      ],
+      "section": "Tilshunoslik",
+      "field": "Filologiya fanlari",
+      "date": "2026-09-28",
+      "journal_name": "NAMANGAN DAVLAT UNIVERSITETI ILMIY AXBOROTNOMASI",
+      "issue": "2026-9",
+      "pages": "689-694",
+      "issn": "2181-1458",
+      "udk": "811.512.133′373.6:39",
+      "references": [
+        "Ikromov M. T. Botanik terminlarni antroposentrik paradigmada oʻ rganishning ahamiyati // NamDU Ilmiy axborotnomasi.. 2025. №",
+        "Ikromov M. T. Botanik terminlarning etnomadaniy tadqiqi // FarDU. Ilmiy xabarlar. 2025. Tom 31, №",
+        "Vundt V. Problemi psixologii narodov (Izvlecheniya)// Istoriya yazikoznaniya ХІХ i XX vekov v ocherkax i izvlecheniyax, ch.1.-M.: Prosvesheniye, 1964.-s.170-174.",
+        "Gimaletdinova R. R. Fitonimi v bashkirskoy i russkoy yazikovoy kartine mira/ Ill Mejdunarodnaya nauchnaya konferensiya. AKTUALNIYE VOPROSI FILOLOGICHESKIX NAUK. – Kazan. 2015. – S. 39.",
+        "Gumboldt V. Izbranniye trudi po yazikoznaniyu.. – M.: «Progress», 2000. – 400 s.",
+        "Dyakova T. A. \"Etnokulturnaya osnova ispolzovaniya fitonimov leksiko-semanticheskoy gruppi «Dikorastushiye travi» (na materiale sbornika M. Matusovskogo «Zemlya moix otsov-Donbass») // Voprosi jurnalistiki, pedagogiki, yazikoznaniya. 38.4 (2019), – C. 508-515.",
+        "Karlinskiy A.YE. Prinsipi, metodi i premi lingvisticheskix issledovaniy.- Almat: KazUMOiMYA im. Abilayxana, 2003. –S. 67.",
+        "Konovalova N. I. Narodnaya fitonimiya kak fragment yazikovoy kartini mira / N. I. Konovalova. – Yekaterinburg: Dom uchitelya, 2001. – S. 5..",
+        "Muqimova G.R. Fitomorf metaforalarning lingvopoetik, lingvokulturologik xususiyatlari va leksikografik talqini: Filol. fan. b. fals. dok. ...diss. avtoref. – Buxoro, 2023. – B. 12.",
+        "Postovalova V.I. Kartina mira v jiznedeyatelnosti cheloveka // Rol chelovecheskogo faktora v yazike: Yazik i kartina mira / otv. red B.A. Serebrennikov. M.: Nauka, 1988. S. 11.",
+        "Xoshimxoʻ jayeva M.M. Olamning lisoniy tasvirida fitonimlar (ingliz, rus va oʻ zbek tillari misolida). Filol. fan. fals. dok. ... diss. avtoref. – Toshkent. 2018. – B. 22.",
+        "Shteyntal G. Grammatika, logika i psixologiya (ix prinsipi i ix vzaimootnosheniya)// Istoriya yazikoznaniya ХІХ i XX vekov v ocherkax i izvlecheniyax, ch.1.- M.: Prosvesheniye, 1964.-s.127-135.",
+        "https://americasroads.us",
+        "https://shedevrum.ai/post/112882411ccb11efb717dec7a036f011/"
+      ],
+      "references_auto": true,
+      "pdf": "fitonimlar-xalq-etnomadaniyati-ifodasi-sifatida-27c53b.pdf",
+      "pdf_size": 704335,
+      "pdf_pages": 6,
+      "created": "2026-11-19"
+    },
+    {
       "pdf": "fitonimlarda-xalqning-dunyoqarashi-va-etnomadaniy-qadriyatla-613c6b.pdf",
       "pdf_size": 257985,
       "created": "2026-11-18",
@@ -202,5 +282,8 @@
         "+998973329333"
       ]
     }
-  }
+  },
+  "series": [],
+  "news": [],
+  "profiles": []
 }
