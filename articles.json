@@ -284,6 +284,10 @@
       "updated": "2026-11-19"
     },
     {
+      "pdf": "fitonimlar-xalq-etnomadaniyati-ifodasi-sifatida-27c53b.pdf",
+      "pdf_size": 704335,
+      "pdf_pages": 6,
+      "created": "2026-11-19",
       "id": "fitonimlar-xalq-etnomadaniyati-ifodasi-sifatida-27c53b",
       "item_type": "jurnal-maqolasi",
       "language": "uz",
@@ -327,9 +331,16 @@
         "Ikromov, Maxamadyusub Tursunali oʻgʻli"
       ],
       "year": 2026,
+      "author_names": [
+        {
+          "family": "Ikromov",
+          "given": "Maxamadyusub",
+          "patronymic": "Tursunali oʻgʻli"
+        }
+      ],
       "author_info": [
         {
-          "org": "Andijon davlat universiteti",
+          "org": "Andijon davlat pedagogika instituti",
           "orcid": "0009-0008-6064-3987"
         }
       ],
@@ -357,11 +368,7 @@
         "https://americasroads.us",
         "https://shedevrum.ai/post/112882411ccb11efb717dec7a036f011/"
       ],
-      "references_auto": true,
-      "pdf": "fitonimlar-xalq-etnomadaniyati-ifodasi-sifatida-27c53b.pdf",
-      "pdf_size": 704335,
-      "pdf_pages": 6,
-      "created": "2026-11-19"
+      "updated": "2026-11-20"
     },
     {
       "pdf": "fitonimlarda-xalqning-dunyoqarashi-va-etnomadaniy-qadriyatla-613c6b.pdf",
