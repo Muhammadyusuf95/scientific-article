@@ -381,9 +381,23 @@
         "onomasiologiya"
       ],
       "authors": [
-        "Ikromov M.T."
+        "Ikromov, M.T."
       ],
       "year": 2026,
+      "author_names": [
+        {
+          "family": "Ikromov",
+          "given": "M.T."
+        }
+      ],
+      "author_info": [
+        {
+          "org": "Andijon davlat universiteti",
+          "orcid": "0009-0008-6064-3987"
+        }
+      ],
+      "section": "Tilshunoslik",
+      "field": "Filologiya fanlari",
       "date": "2026-02-25",
       "conference_org": "«Борбордук Азия элдеринин  өнүгүшүндөгү байыркы кол жазмалар жана алардын эл аралык деңгээлдеги ролу: тил, адабият, маданият жана билим берүү маселелери (XI-XXI кылымга чейин)»",
       "conference_place": "ОШ МАМЛЕКЕТТИК УНИВЕРСИТЕТИ",
@@ -400,7 +414,7 @@
         "Суперанская А.В. Общая теория имени собственного. – Изд. 2-е, испр. – Москва: URSS, 2007. – C. 186, 189.",
         "Хошимхўжаева М.М. Оламнинг лисоний тасвирида фитонимлар (инглиз, рус ва ўзбек тиллари мисолида). Филол. фан. фалс. док. ... дисс. автореф. – Тошкент, 2018. – Б. 22."
       ],
-      "updated": "2026-11-18"
+      "updated": "2026-11-20"
     },
     {
       "pdf": "fitonimlarning-ramziy-va-etnomadaniy-xususiyatlari-c98742-mwlopcjr.pdf",
