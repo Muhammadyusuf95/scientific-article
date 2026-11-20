@@ -2,6 +2,8 @@
 // Maqola sahifasiga (/article/<id>/) to'liq matnni server tomonida qo'yadi (R2: text/<id>.json).
 // Google va Google Scholar matnni sahifaning o'zida to'liq ko'radi; citation_fulltext_html_url shu sahifani ko'rsatadi.
 // Matn bo'lmasa, sahifa o'zgarishsiz qaytadi.
+import { cleanBlocks } from '../../lib/fulltext-clean.js';
+
 const PAGE = /^\/article\/([a-z0-9-]{1,120})\/$/;
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const linkify = (s) => esc(s).replace(/(https?:\/\/[^\s<]+[^\s<.,;:)\]])/g, '<a href="$1" rel="nofollow noopener noreferrer">$1</a>');
@@ -24,12 +26,16 @@ export async function onRequest({ request, env, next }) {
   } catch (e) { console.error('fulltext', e); }
   if (!data || !Array.isArray(data.blocks) || !data.blocks.length) return res;
 
-  const html = data.blocks.map((b) => (b.t === 'h' ? `<h3>${esc(b.x)}</h3>` : `<p>${linkify(b.x)}</p>`)).join('\n');
+  // Sahifada alohida "Adabiyotlar" bo'limi bor bo'lsa (data-has-refs), matn ichidagi takroriy ro'yxat chiqarilmaydi
+  const render = (list) => list.map((b) => (b.t === 'h' ? `<h3>${esc(b.x)}</h3>` : `<p>${linkify(b.x)}</p>`)).join('\n');
+  const withRefs = cleanBlocks(data.blocks, true), plain = cleanBlocks(data.blocks, false);
+  if (!plain.length) return res;
+  let hasRefs = false;
   const self = `${url.origin}${url.pathname}`;
   const out = new HTMLRewriter()
     .on('head', { element(e) { e.append(`<meta name="citation_fulltext_html_url" content="${esc(self)}">\n`, { html: true }); } })
-    .on('[data-fulltext]', { element(e) { e.removeAttribute('hidden'); } })
-    .on('[data-fulltext-body]', { element(e) { e.setInnerContent(html, { html: true }); } })
+    .on('[data-fulltext]', { element(e) { hasRefs = e.hasAttribute('data-has-refs'); e.removeAttribute('hidden'); } })
+    .on('[data-fulltext-body]', { element(e) { e.setInnerContent(render(hasRefs && withRefs.length ? withRefs : plain), { html: true }); } })
     .on('[data-ft-only]', { element(e) { e.removeAttribute('hidden'); } })
     .transform(res);
   const final = new Response(out.body, out);

@@ -1,38 +1,22 @@
-YANGILANISHNI O'RNATISH
+YANGILANISHNI O'RNATISH (Google / Google Scholar moslashuvi)
 
-Eng oson yo'l (hamma fayl bir martada):
 1. Ushbu ZIP ni kompyuteringizda oching (Extract).
-2. GitHub'da scientific-article repozitoriysini oching.
-3. "Add file" -> "Upload files" ni bosing.
-4. Ochilgan papka ichidagi HAMMA narsani (css, functions, js, lib papkalari va
-   admin.html, build.js, README.md fayllari) brauzer oynasiga sudrab tashlang.
+2. GitHub'da scientific-article repozitoriysini oching: "Add file" -> "Upload files".
+3. Ochilgan papka ichidagi HAMMA narsani (build.js, README.md, favicon.ico, ORNATISH.txt
+   fayllari va functions, img, lib papkalarini) brauzer oynasiga sudrab tashlang.
    GitHub papkalar tuzilishini saqlaydi, bor fayllarni almashtiradi, yangilarini qo'shadi.
-5. Pastdagi "Commit changes" tugmasini bosing. Cloudflare 1-2 daqiqada saytni qayta quradi.
+4. "Commit changes" ni bosing. Cloudflare 1-2 daqiqada saytni qayta quradi.
 
-ALMASHTIRILADIGAN fayllar (mavjud):
-  admin.html
+ALMASHTIRILADIGAN fayllar:
   build.js
   README.md
-  css/style.css
-  css/admin.css
-  functions/api/articles.js
-  functions/api/upload.js
-  functions/pdf/[name].js
-  js/admin.js
-  js/app.js
-  js/refs.js
-  js/vendor/pdf.worker.min.js   (oldingisi bo'sh edi, faqat litsenziya matni bor edi)
+  functions/article/_middleware.js
 
 YANGI fayllar:
-  functions/api/collections.js
-  functions/api/site.js
-  functions/stats.js
-  js/viewer.js
-  lib/common.js
-  lib/stats.js
+  favicon.ico
+  img/favicon.svg, img/icon-48.png, img/icon-192.png, img/icon-512.png,
+  img/apple-touch-icon.png, img/og-default.png
+  lib/fulltext-clean.js
 
-O'zgarmaydigan fayllar: articles.json, citations.js, wrangler.toml, package.json,
-functions/_middleware.js, functions/api/_middleware.js, functions/api/delete.js,
-js/cite.js, js/vendor/pdf.min.js, robots.txt, sitemap.xml.
-
-Diqqat: articles.json ni almashtirmang, unda saytdagi barcha ma'lumotlar bor.
+Diqqat: articles.json ni YUKLAMANG va almashtirmang. Bu ZIP da u yo'q: saytdagi barcha
+ma'lumot (maqolalar, mualliflar) shu faylda, admin panel uni doimiy yangilab turadi.

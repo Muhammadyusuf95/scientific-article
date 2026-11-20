@@ -22,7 +22,7 @@ const OK = { issn: /^\d{4}-\d{3}[\dXx]$/, isbn: /^(?:\d[- ]?){9}[\dXx]$|^(?:\d[-
 const PDF_OK = /^[A-Za-z0-9][A-Za-z0-9._-]{0,150}\.pdf$/i;
 const RESERVED = new Set(['article', 'collection', 'collections', 'author', 'authors', 'pdf', 'api', 'stats', 'data', 'css', 'js', 'admin',
   'journal', 'journals', 'conference', 'conferences', 'news', 'archive', 'search', 'feed', 'oai',
-  'field', 'fields', 'organization', 'organizations', 'latest']);
+  'field', 'fields', 'organization', 'organizations', 'latest', 'img']);
 const LANG_NAME = { uz: "O'zbekcha", en: 'English', ru: 'Русский' };
 const TODAY = new Date().toISOString().slice(0, 10);
 
@@ -37,6 +37,15 @@ const out = (p, h) => { const f = path.join('dist', p); fs.mkdirSync(path.dirnam
 const meta = (n, v) => (v || v === 0 ? `<meta name="${n}" content="${esc(v)}">\n` : '');
 const prop = (n, v) => (v || v === 0 ? `<meta property="${n}" content="${esc(v)}">\n` : '');
 const plural = (n, w) => `${n} ta ${w}`;
+// Meta description: Google qidiruvda ~155-160 belgi ko'rsatadi. Gap yoki so'z chegarasida to'liq tugatiladi (so'z o'rtasida uzilmaydi).
+const metaDesc = (t, n = 158) => {
+  t = String(t || '').replace(/\s+/g, ' ').trim();
+  if (t.length <= n) return t;
+  const cut = t.slice(0, n + 1), m = [...cut.matchAll(/[.!?](?=\s|$)/g)].pop();
+  if (m && m.index >= 90) return cut.slice(0, m.index + 1);
+  const sp = cut.lastIndexOf(' ');
+  return cut.slice(0, sp > 40 ? sp : n).replace(/[\s,;:\-–—(]+$/, '') + '…';
+};
 
 const C = (D.collections || []).map((c) => ({ ...c, _id: slug(c.id) }));
 const A = D.articles.map((a) => ({ ...a, _id: slug(a.id), _t: ALIAS[a.item_type] || a.item_type || 'jurnal-maqolasi' }));
@@ -68,7 +77,7 @@ for (const a of A) {
     a.issn = a.issn || (c && c.issn) || (s && (s.issn || s.eissn)) || '';
   }
   a._publisher = (s && s.publisher) || (c && c.publisher) || (k === 'book' ? a.publisher : '') || S.publisher;
-  a._info = (a.authors || []).map((n, i) => ((a.author_info || [])[i] || {}));
+  a._info = (a.authors || []).map((n, i) => ({ ...((a.author_info || [])[i] || {}) }));
   a._field = String(a.field || (s && s.field) || '').trim();
 }
 const HAS_ORGS = A.some((a) => a._info.some((x) => x.org));
@@ -184,6 +193,17 @@ for (const e of Object.values(AUTH)) {
 const authorHref = (n) => `/author/${resolveKey(n)}/`;
 const authorLinks = (a) => a.authors.map((n) => `<a href="${authorHref(n)}">${esc(n)}</a>`).join(', ');
 const ORCID_RE = /^\d{4}-\d{4}-\d{4}-\d{3}[\dX]$/;
+// Bir muallifning (birlashtirilgan kalit bo'yicha) ORCID i yoki ish joyi bitta nashrda ko'rsatilgan bo'lsa, shu muallifning
+// boshqa nashrlarida ham citation_author_orcid / citation_author_institution chiqishi uchun to'ldiriladi.
+// ORCID shaxsga tegishli, shuning uchun har doim o'tkaziladi. Ish joyi esa faqat muallifda bitta ish joyi bo'lsa (ko'chib o'tgan bo'lishi mumkin).
+// Nashrda qo'lda kiritilgan qiymatlar hech qachon o'zgartirilmaydi.
+for (const a of A) a.authors.forEach((n, i) => {
+  const e = AUTH[resolveKey(n)], inf = a._info[i];
+  if (!e) return;
+  if (!inf.orcid && e.orcid && ORCID_RE.test(e.orcid)) inf.orcid = e.orcid;
+  const orgs = Object.keys(e.orgs);
+  if (!inf.org && orgs.length === 1) inf.org = orgs[0];
+});
 const orcidLink = (o) => (o && ORCID_RE.test(o) ? `<a class="orcid" href="https://orcid.org/${o}" rel="noopener noreferrer" title="ORCID: ${o}" aria-label="ORCID ${o}">iD</a>` : '');
 // Mualliflar bloki: ism, ORCID va ish joyi (afilliatsiya) raqamlari bilan
 function byline(a) {
@@ -253,7 +273,11 @@ const LOOSE = C.filter((c) => !serOf(c)); // seriyaga biriktirilmagan to'plamlar
 const NAV = [['/', 'Bosh sahifa'], ...(JOUR.length ? [['/journals/', 'Jurnallar']] : []), ...(CONF.length ? [['/conferences/', 'Konferensiyalar']] : []),
   ...(LOOSE.length ? [['/collections/', "To'plamlar"]] : []), ...(FIELD_LIST.length ? [['/fields/', 'Fan sohalari']] : []), ['/archive/', 'Arxiv'], ['/authors/', 'Mualliflar'], ...(NEWS.length ? [['/news/', "E'lonlar"]] : []),
   ...PAGES.filter(([k]) => k === 'about').map(([k, t]) => [`/${k}/`, t.title])];
-const ICON = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b3c42'/%3E%3Cpath d='M18 18h18a10 10 0 0 1 10 10v18H28a10 10 0 0 1-10-10z' fill='%23fff'/%3E%3Cpath d='M26 30h14M26 37h10' stroke='%230b3c42' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E";
+// Favicon: Google qidiruv natijalarida ko'rsatishi uchun alohida, skanerlanadigan fayllar kerak (data: manzil ishlamaydi)
+const ICONS = `<link rel="icon" href="/favicon.ico" sizes="48x48"><link rel="icon" href="/img/favicon.svg" type="image/svg+xml"><link rel="icon" href="/img/icon-192.png" type="image/png" sizes="192x192"><link rel="apple-touch-icon" href="/img/apple-touch-icon.png">`;
+const OG_IMAGE = '/img/og-default.png';
+// Sarlavhaga sayt nomi faqat 70 belgidan oshmasa qo'shiladi (uzun sarlavha qidiruvda kesilmasligi uchun)
+const withSite = (t) => ((`${t} - ${S.name}`).length <= 70 ? `${t} - ${S.name}` : t);
 const I = {
   pdf: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>',
   down: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg>',
@@ -272,11 +296,11 @@ const I = {
 const page = ({ t, d, body, p = '/', head = '', l = 'uz', type = 'website', scripts = ['app'], robots = '' }) => `<!doctype html>
 <html lang="${l}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="google-site-verification" content="vQNgaEMkoKVjJBtF3rtL4v_wphIuwCbRxkA3h495RTY">
-<title>${esc(t)}</title><meta name="description" content="${esc(String(d || '').slice(0, 300))}"><link rel="canonical" href="${BASE}${p}">${robots ? `<meta name="robots" content="${robots}">` : ''}
+<title>${esc(t)}</title><meta name="description" content="${esc(metaDesc(d))}"><link rel="canonical" href="${BASE}${p}">${robots ? `<meta name="robots" content="${robots}">` : ''}
 <link rel="alternate" type="application/atom+xml" title="${esc(S.name)}: yangi nashrlar" href="/feed.xml">
-<meta name="theme-color" content="#0b3c42"><link rel="icon" href="${ICON}">
+<meta name="theme-color" content="#0b3c42">${ICONS}
 <script src="/js/i18n.js?v=${BUILD}"></script>
-${prop('og:site_name', S.name)}${prop('og:type', type)}${prop('og:title', t)}${prop('og:description', String(d || '').slice(0, 300))}${prop('og:url', BASE + p)}${meta('twitter:card', 'summary')}${head}<link rel="stylesheet" href="/css/style.css?v=${BUILD}">
+${prop('og:site_name', S.name)}${prop('og:type', type)}${prop('og:title', t)}${prop('og:description', metaDesc(d))}${prop('og:url', BASE + p)}${prop('og:locale', { uz: 'uz_UZ', ru: 'ru_RU', en: 'en_US' }[l] || 'uz_UZ')}${prop('og:image', BASE + OG_IMAGE)}${prop('og:image:width', 1200)}${prop('og:image:height', 630)}${meta('twitter:card', 'summary_large_image')}${head}<link rel="stylesheet" href="/css/style.css?v=${BUILD}">
 ${scripts.map((s) => `<script src="/js/${s}.js?v=${BUILD}" defer></script>`).join('\n')}
 </head><body>
 <a class="skip" href="#main">Asosiy mazmunga o'tish</a>
@@ -361,9 +385,11 @@ const YEARS = [...new Set(A.map((a) => a.year))].sort((x, y) => y - x);
 const yearChips = () => `<p class="years">${YEARS.map((y) => `<a class="chip" href="/archive/${y}/">${y} <span class="muted">${A.filter((a) => a.year === y).length}</span></a>`).join('')}</p>`;
 const LATEST = A.slice().sort(byDate).slice(0, 12);
 
+// Bosh sahifa: admin panelda kiritilgan tavsif qisqa bo'lsa, o'sha ishlatiladi; uzun bo'lsa (qoidalar matni), qidiruv uchun avtomatik tavsif tuziladi
+const HOME_DESC = S.description && S.description.length <= 170 ? S.description : `${S.name}: ochiq kirishdagi ilmiy jurnal maqolalari va konferensiya materiallari to'plami. Nashrlar: ${A.length}, mualliflar: ${nAuthors}.`;
 out('index.html', page({
-  t: S.name, d: S.description, p: '/',
-  head: ld({ '@type': 'WebSite', name: S.name, url: BASE + '/', description: S.description, publisher: { '@type': 'Organization', name: S.publisher }, potentialAction: { '@type': 'SearchAction', target: `${BASE}/search/?q={q}`, 'query-input': 'required name=q' } }),
+  t: `${S.name} - ilmiy maqolalar va konferensiya materiallari`, d: HOME_DESC, p: '/',
+  head: ld({ '@type': 'WebSite', name: S.name, url: BASE + '/', description: HOME_DESC, publisher: { '@type': 'Organization', name: S.publisher, url: BASE + '/', logo: { '@type': 'ImageObject', url: BASE + '/img/icon-512.png', width: 512, height: 512 } }, potentialAction: { '@type': 'SearchAction', target: `${BASE}/search/?q={q}`, 'query-input': 'required name=q' } }),
   body: `<section class="hero"><div class="wrap hero-in">
 <p class="eyebrow">Ochiq ilmiy repozitoriy</p>
 <h1>${esc(S.name)}</h1>
@@ -545,7 +571,7 @@ for (const e of AU) {
   const co = coauthors(e);
   const groups = TYPE_GROUPS.map(([k, ttl]) => [ttl, e.items.filter((a) => KIND[a._t] === k)]).filter((g) => g[1].length);
   out(`author/${e.key}/index.html`, page({
-    t: `${e.name} - ${S.name}`, d: pr.bio ? clip(pr.bio.join(' '), 200) : `${e.name}${org ? ', ' + org : ''}: ${plural(e.items.length, 'nashr')}`, p: `/author/${e.key}/`, type: 'profile',
+    t: `${e.name} - ${S.name}`, d: pr.bio ? clip(pr.bio.join(' '), 200) : `${e.name}${org ? ', ' + org : ''}: ${plural(e.items.length, 'nashr')}. ${e.items.slice().sort(byDate).slice(0, 3).map(title).join('; ')}`, p: `/author/${e.key}/`, type: 'profile',
     head: `<script type="application/ld+json">${JSON.stringify(pld).replace(/</g, '\\u003c')}</script>\n`,
     body: `<section class="hero slim"><div class="wrap hero-in"><p class="eyebrow"><a href="/authors/">Mualliflar</a></p><h1>${esc(e.name)}${orcidLink(e.orcid)}</h1>
 <p class="lead">${esc([pr.degree, pr.position].filter(Boolean).join(', ')) || plural(e.items.length, 'nashr')}${other.length ? ` · boshqa yozilishi: ${esc(other.join('; '))}` : ''}</p>
@@ -651,7 +677,11 @@ for (const a of A) {
     + meta('DC.type', 'Text') + meta('DC.format', 'application/pdf') + meta('DC.language', L) + meta('DC.identifier', d ? `https://doi.org/${d}` : url)
     + meta('DC.rights', 'https://creativecommons.org/licenses/by/4.0/')
     + prop('article:published_time', a.date || String(a.year))
-    + buildJsonLd(a, k, d, url, fp, lp, c);
+    + buildJsonLd(a, k, d, url, fp, lp, c)
+    // Navigatsiya zanjiri (sahifadagi "Bosh sahifa / ..." yo'liga mos): qidiruv natijasida yo'l ko'rinadi
+    + ld({ '@type': 'BreadcrumbList', itemListElement: [['Bosh sahifa', '/'], ...(a._s ? [[a._s.short || a._s.name, serHref(a._s)]] : []),
+      ...(c ? [[(a._s && issueLabel(c)) || c.name, `/collection/${c._id}/`]] : [[String(a.year), `/archive/${a.year}/`]]), [clip(title(a), 90), `/article/${a._id}/`]]
+      .map(([name, p], i) => ({ '@type': 'ListItem', position: i + 1, name, item: BASE + p })) });
 
   const s = a._s;
   const rows = [['Turi', TYPES[a._t]], ['Nashr yili', a.year], ['Nashr sanasi', fmtDate(a.date)],
@@ -710,7 +740,7 @@ ${a.pdf ? `<div class="side-card"><a class="btn block" href="${pdfPath(a)}" targ
   const relBox = rel.length ? `<section class="panel" id="related"><h2>${I.layers} O'xshash maqolalar</h2><ul class="rel">${rel.map((b) => `<li><a href="/article/${b._id}/" lang="${lang(b)}">${esc(title(b))}</a><span class="muted">${esc(b.authors.join(', '))} · ${esc(b.year)}</span></li>`).join('')}</ul></section>` : '';
 
   out(`article/${a._id}/index.html`, page({
-    t: `${title(a)} - ${S.name}`, d: abstract(a) || title(a), p: `/article/${a._id}/`, l: L, type: 'article', scripts: ['app', 'viewer'],
+    t: withSite(title(a)), d: abstract(a) || title(a), p: `/article/${a._id}/`, l: L, type: 'article', scripts: ['app', 'viewer'],
     head,
     body: `<div class="wrap art-wrap"><nav class="crumbs" aria-label="Yo'l"><a href="/">Bosh sahifa</a>${s ? ` <span>/</span> <a href="${serHref(s)}">${esc(s.short || s.name)}</a>` : ''}${c ? ` <span>/</span> <a href="/collection/${c._id}/">${esc(s && issueLabel(c) ? issueLabel(c) : c.name)}</a>` : ` <span>/</span> <a href="/archive/${a.year}/">${esc(a.year)}</a>`}</nav>
 <div class="art-grid"><article class="paper" data-article="${esc(a._id)}">
@@ -720,7 +750,7 @@ ${byline(a)}
 <p class="paper-src">${esc(srcText(a))}${a.year ? `, ${esc(a.year)}` : ''}</p></header>
 <dl class="facts card-facts">${dl}</dl>
 <div id="abstract">${ab}</div>
-<section class="panel fulltext" id="fulltext" data-fulltext hidden lang="${L}"><h2>${I.doc} Maqola matni</h2>
+<section class="panel fulltext" id="fulltext" data-fulltext${refs.length ? ' data-has-refs' : ''} hidden lang="${L}"><h2>${I.doc} Maqola matni</h2>
 <p class="ft-note">Matn PDF fayldan avtomatik olingan. Jadval, formula va rasmlar uchun PDF nusxaga qarang.</p>
 <div class="ft-body" data-fulltext-body></div><button type="button" class="btn ghost sm ft-more" data-ft-more hidden>Matnni to'liq ko'rsatish</button></section>
 ${viewer}${refsBox}${citeBox}${relBox}
@@ -752,7 +782,7 @@ for (const [k, t] of PAGES) out(`${k}/index.html`, page({
   t: `${t.title} - ${S.name}`, d: (t.text || []).join(' ').slice(0, 200) || t.title, p: `/${k}/`,
   body: `<section class="hero slim"><div class="wrap hero-in"><h1>${esc(t.title)}</h1></div></section><div class="wrap block"><div class="prose">${(t.text || []).map((x) => `<p>${esc(x).replace(/([\w.+-]+@[\w-]+\.[\w.-]+)/g, '<a href="mailto:$1">$1</a>').replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" rel="noopener">$1</a>')}</p>`).join('')}</div></div>`,
 }));
-out('404.html', page({ t: 'Sahifa topilmadi', d: S.name, p: '/404.html', body: `<section class="hero slim"><div class="wrap hero-in"><h1>Sahifa topilmadi</h1><p class="lead">Manzil noto'g'ri yoki sahifa ko'chirilgan.</p><p><a class="btn" href="/">Bosh sahifaga qaytish</a></p></div></section>` }));
+out('404.html', page({ t: 'Sahifa topilmadi', d: `Sahifa topilmadi. ${S.name} bosh sahifasi yoki arxiv orqali kerakli nashrni toping.`, p: '/404.html', body: `<section class="hero slim"><div class="wrap hero-in"><h1>Sahifa topilmadi</h1><p class="lead">Manzil noto'g'ri yoki sahifa ko'chirilgan.</p><p><a class="btn" href="/">Bosh sahifaga qaytish</a></p></div></section>` }));
 
 // ---------- xizmat fayllari ----------
 // Funksiyalar uchun indeks: statistikani tekshirish va eski PDF havolalarini yo'naltirish
@@ -791,12 +821,14 @@ out('data/oai.json', JSON.stringify({
   })),
 }));
 
-const urls = [['/'], ...(C.length ? [['/collections/']] : []), ...C.map((c) => [`/collection/${c._id}/`]), ['/authors/'], ...AU.map((e) => [`/author/${e.key}/`]),
-  ...(JOUR.length ? [['/journals/']] : []), ...(CONF.length ? [['/conferences/']] : []),
-  ...SER.flatMap((x) => [[serHref(x)], ...(paras(x.guidelines).length ? [[serHref(x) + 'guidelines/']] : []), ...(paras(x.ethics).length ? [[serHref(x) + 'ethics/']] : [])]),
-  ['/archive/'], ...YEARS.map((y) => [`/archive/${y}/`]), ['/latest/'],
-  ...(FIELD_LIST.length ? [['/fields/'], ...FIELD_LIST.map((f) => [`/field/${f.key}/`])] : []),
-  ...(ORG_LIST.length ? [['/organizations/'], ...ORG_LIST.map((o) => [`/organization/${o.key}/`])] : []), ...(NEWS.length ? [['/news/'], ...NEWS.map((n) => [`/news/${n._id}/`, n.date])] : []),
+// Ro'yxat sahifalari uchun lastmod: ichidagi eng yangi nashrning o'zgargan sanasi
+const lastOf = (L) => L.map((a) => a.updated || a.created || a.date || '').filter((m) => OK.date.test(m)).sort().pop();
+const urls = [['/', lastOf(A)], ...(C.length ? [['/collections/', lastOf(A)]] : []), ...C.map((c) => [`/collection/${c._id}/`, lastOf(collArts(c))]), ['/authors/', lastOf(A)], ...AU.map((e) => [`/author/${e.key}/`, lastOf(e.items)]),
+  ...(JOUR.length ? [['/journals/', lastOf(A)]] : []), ...(CONF.length ? [['/conferences/', lastOf(A)]] : []),
+  ...SER.flatMap((x) => [[serHref(x), lastOf(serArts(x))], ...(paras(x.guidelines).length ? [[serHref(x) + 'guidelines/']] : []), ...(paras(x.ethics).length ? [[serHref(x) + 'ethics/']] : [])]),
+  ['/archive/', lastOf(A)], ...YEARS.map((y) => [`/archive/${y}/`, lastOf(A.filter((a) => a.year === y))]), ['/latest/', lastOf(A)],
+  ...(FIELD_LIST.length ? [['/fields/', lastOf(A)], ...FIELD_LIST.map((f) => [`/field/${f.key}/`, lastOf(f.items)])] : []),
+  ...(ORG_LIST.length ? [['/organizations/', lastOf(A)], ...ORG_LIST.map((o) => [`/organization/${o.key}/`, lastOf(o.items)])] : []), ...(NEWS.length ? [['/news/'], ...NEWS.map((n) => [`/news/${n._id}/`, n.date])] : []),
   ...A.map((a) => [`/article/${a._id}/`, a.updated || a.date]), ...PAGES.map(([k]) => [`/${k}/`])];
 out('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(([u, m]) => `<url><loc>${BASE}${u}</loc>${m && OK.date.test(m) ? `<lastmod>${esc(m)}</lastmod>` : ''}</url>`).join('\n')}\n</urlset>\n`);
 // Birlashtirilgan mualliflarning eski sahifalari asosiy sahifaga 301 bilan yo'naltiriladi
@@ -824,6 +856,10 @@ out('_headers', `/*
   X-Robots-Tag: noindex
   Cache-Control: public, max-age=60
 
+/img/*
+  Cache-Control: public, max-age=2592000
+/favicon.ico
+  Cache-Control: public, max-age=2592000
 /css/*
   Cache-Control: public, max-age=31536000, immutable
 /js/*
@@ -832,6 +868,7 @@ out('_headers', `/*
   Cache-Control: public, max-age=31536000, immutable
 `);
 
-for (const dir of ['css', 'js']) if (fs.existsSync(dir)) fs.cpSync(dir, path.join('dist', dir), { recursive: true });
+for (const dir of ['css', 'js', 'img']) if (fs.existsSync(dir)) fs.cpSync(dir, path.join('dist', dir), { recursive: true });
+if (fs.existsSync('favicon.ico')) fs.copyFileSync('favicon.ico', path.join('dist', 'favicon.ico'));
 if (fs.existsSync('admin.html')) fs.writeFileSync(path.join('dist', 'admin.html'), fs.readFileSync('admin.html', 'utf8').replace(/\?v=\w+/g, `?v=${BUILD}`));
 console.log(`Tayyor: ${A.length} nashr, ${SER.length} seriya, ${C.length} son/to'plam, ${NEWS.length} e'lon, ${AU.length} muallif, ${urls.length} sahifa (sitemap)`);
