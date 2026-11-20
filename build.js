@@ -193,16 +193,12 @@ for (const e of Object.values(AUTH)) {
 const authorHref = (n) => `/author/${resolveKey(n)}/`;
 const authorLinks = (a) => a.authors.map((n) => `<a href="${authorHref(n)}">${esc(n)}</a>`).join(', ');
 const ORCID_RE = /^\d{4}-\d{4}-\d{4}-\d{3}[\dX]$/;
-// Bir muallifning (birlashtirilgan kalit bo'yicha) ORCID i yoki ish joyi bitta nashrda ko'rsatilgan bo'lsa, shu muallifning
-// boshqa nashrlarida ham citation_author_orcid / citation_author_institution chiqishi uchun to'ldiriladi.
-// ORCID shaxsga tegishli, shuning uchun har doim o'tkaziladi. Ish joyi esa faqat muallifda bitta ish joyi bo'lsa (ko'chib o'tgan bo'lishi mumkin).
-// Nashrda qo'lda kiritilgan qiymatlar hech qachon o'zgartirilmaydi.
+// Bir muallifning (birlashtirilgan kalit bo'yicha) ORCID i bitta nashrda ko'rsatilgan bo'lsa, shu muallifning boshqa nashrlarida ham
+// citation_author_orcid chiqishi uchun to'ldiriladi (ORCID shaxsga tegishli). Nashrda qo'lda kiritilgan qiymat o'zgartirilmaydi.
+// Ish joyi (org) ATAYLAB o'tkazilmaydi: muallif turli nashrlarda turli tashkilotda bo'lishi mumkin va u har bir PDF dagi yozuvga mos bo'lishi kerak.
 for (const a of A) a.authors.forEach((n, i) => {
   const e = AUTH[resolveKey(n)], inf = a._info[i];
-  if (!e) return;
-  if (!inf.orcid && e.orcid && ORCID_RE.test(e.orcid)) inf.orcid = e.orcid;
-  const orgs = Object.keys(e.orgs);
-  if (!inf.org && orgs.length === 1) inf.org = orgs[0];
+  if (e && !inf.orcid && e.orcid && ORCID_RE.test(e.orcid)) inf.orcid = e.orcid;
 });
 const orcidLink = (o) => (o && ORCID_RE.test(o) ? `<a class="orcid" href="https://orcid.org/${o}" rel="noopener noreferrer" title="ORCID: ${o}" aria-label="ORCID ${o}">iD</a>` : '');
 // Mualliflar bloki: ism, ORCID va ish joyi (afilliatsiya) raqamlari bilan
