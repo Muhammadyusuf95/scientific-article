@@ -512,6 +512,21 @@
         "Ikromov, Maxamadyusub Tursunali o‘g‘li"
       ],
       "year": 2026,
+      "author_names": [
+        {
+          "family": "Ikromov",
+          "given": "Maxamadyusub",
+          "patronymic": "Tursunali o‘g‘li"
+        }
+      ],
+      "author_info": [
+        {
+          "org": "Andijon davlat universiteti",
+          "orcid": "0009-0008-6064-3987"
+        }
+      ],
+      "section": "Tilshunoslik",
+      "field": "Filologiya fanlari",
       "date": "2026-10-14",
       "conference_org": "Filologiyaning dolzarb masalalari",
       "conference_place": "Qo‘qon davlat universiteti",
@@ -530,7 +545,7 @@
         "https://www.infoabad.com/5780-tutovnik-zhivoi-simvol-i-ekologicheskoe-nasledie-turkmenistana-nuzhdaetsja-v-vozrozhdenii.html",
         "https://xn----8sbgjbjpvpkiwni6b4f.xn--p1ai/news/legenda-o-tutovom-dereve/"
       ],
-      "updated": "2026-11-18"
+      "updated": "2026-11-20"
     }
   ],
   "pages": {
