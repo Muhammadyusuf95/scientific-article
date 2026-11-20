@@ -28,7 +28,11 @@ export async function onRequest({ request, env, next }) {
 
   // Sahifada alohida "Adabiyotlar" bo'limi bor bo'lsa (data-has-refs), matn ichidagi takroriy ro'yxat chiqarilmaydi
   const render = (list) => list.map((b) => (b.t === 'h' ? `<h3>${esc(b.x)}</h3>` : `<p>${linkify(b.x)}</p>`)).join('\n');
-  const withRefs = cleanBlocks(data.blocks, true), plain = cleanBlocks(data.blocks, false);
+  // Adabiyotlar ro'yxati sahifaning o'zidan olinadi (izohlarni nusxa sifatida aniqlash uchun)
+  const html = await res.clone().text();
+  const refs = [...((html.match(/<ol class="ref-list">([\s\S]*?)<\/ol>/) || [])[1] || '').matchAll(/<li>([\s\S]*?)<\/li>/g)]
+    .map((x) => x[1].replace(/<[^>]+>/g, '').replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&'));
+  const withRefs = cleanBlocks(data.blocks, true, refs), plain = cleanBlocks(data.blocks, false);
   if (!plain.length) return res;
   let hasRefs = false;
   const self = `${url.origin}${url.pathname}`;

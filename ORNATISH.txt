@@ -20,3 +20,5 @@ YANGI fayllar:
 
 Diqqat: articles.json ni YUKLAMANG va almashtirmang. Bu ZIP da u yo'q: saytdagi barcha
 ma'lumot (maqolalar, mualliflar) shu faylda, admin panel uni doimiy yangilab turadi.
+
+QO'SHIMCHA (izohlar): "Maqola matni"dagi PDF izohlari ("42 Дьякова...", "43 2.Ikromov...") adabiyotlar ro'yxatidagi manbaning nusxasi bo'lsa, sahifada ko'rsatilmaydi. Faqat lib/fulltext-clean.js va functions/article/_middleware.js o'zgardi.
