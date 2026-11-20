@@ -442,6 +442,21 @@
         "Ikromov, Muhammadyusuf Tursunali o‘g‘li"
       ],
       "year": 2026,
+      "author_names": [
+        {
+          "family": "Ikromov",
+          "given": "Muhammadyusuf",
+          "patronymic": "Tursunali o‘g‘li"
+        }
+      ],
+      "author_info": [
+        {
+          "org": "Andijon davlat universiteti",
+          "orcid": "0009-0008-6064-3987"
+        }
+      ],
+      "section": "Tilshunoslik",
+      "field": "Filologiya fanlari",
       "date": "2026-04-24",
       "conference_org": "GLOBALLASHUV JARAYONIDA TA’LIM, ILM-FAN, TEXNOLOGIYA VA SUN’IY INTELLEKTNING O‘RNI",
       "conference_place": "“UNIVERSITY OF ECONOMICS AND PEDAGOGY” NOTM",
@@ -456,7 +471,7 @@
         "Пазлитдинова Н.З. Ўзбек тили фитонимларининг лексик-семантик хусусиятлари. Филол. фан. фалс. док. дисс. автореф. – Фарғона, 2018. – Б.9.",
         "Ходжиева Н. Х. Лексика фрукта в лирике Алишера Наваи //Современная наука: актуальные вопросы, достижения и инновации. – 2021. – С. 148-150."
       ],
-      "updated": "2026-11-18"
+      "updated": "2026-11-20"
     },
     {
       "pdf": "fitonim-tushunchasi-va-uning-lisoniy-xususiyatlari-8b005e-mwloyill.pdf",
