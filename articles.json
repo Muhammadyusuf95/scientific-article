@@ -19,6 +19,83 @@
   "collections": [],
   "articles": [
     {
+      "id": "telegram-muloqotining-lingvistik-xususiyatlari-va-noverbal-v-393e18",
+      "item_type": "jurnal-maqolasi",
+      "language": "uz",
+      "title_uz": "Telegram muloqotining lingvistik xususiyatlari va noverbal vositalar",
+      "abstract_uz": "Mazkur maqolada Telegram platformasidagi muloqotning lingvistik xususiyatlari va noverbal vositalari tahlil qilingan. Xususan, foydalanuvchilar tomonidan ishlatiladigan yozma nutq shakllari, emoji, gif va memlar kabi vositalarning semantik va pragmatik funksiyalari o‘rganilgan. Telegramdagi chat va kanallarda muloqotning og‘zaki nutqqa yaqinligi, qisqaligi va informalligi, shuningdek, multimodal belgilar orqali ifoda kuchaytirilishi ilmiy asosda tahlil etilgan",
+      "keywords_uz": [
+        "Telegram",
+        "muloqot",
+        "emoji",
+        "gif",
+        "noverbal vositalar",
+        "multimodal",
+        "pragmatika"
+      ],
+      "title_en": "Linguistic features of communication on telegram and nonverbal means",
+      "abstract_en": "This article analyzes the linguistic features of communication on the Telegram platform and the role of nonverbal elements. It focuses on the written forms of user speech and explores the semantic and pragmatic functions of emojis, gifs, and memes.\r\nCommunication in Telegram chats and channels is shown to be close to spoken language, marked by brevity, informality, and the frequent use of multimodal signs to enhance meaning",
+      "keywords_en": [
+        "Telegram",
+        "communication",
+        "emoji",
+        "gif",
+        "nonverbal elements",
+        "multimodal",
+        "pragmatics"
+      ],
+      "title_ru": "Языковые особенности телеграммного общения и невербальные средства",
+      "abstract_ru": "В статье рассматриваются лингвистические особенности общения на платформе Telegram, а также роль невербальных средств. Особое внимание уделено анализу письменной речи пользователей, а также семантическим и прагматическим функциям эмодзи, гифок и мемов. Установлено, что коммуникация в чатах и каналах Telegram приближена к устной речи, характеризуется краткостью, неформальностью и активным использованием мультимодальных элементов",
+      "keywords_ru": [
+        "Telegram",
+        "коммуникация",
+        "эмодзи",
+        "гифки",
+        "невербальные средства",
+        "мультимодал",
+        "прагматика"
+      ],
+      "authors": [
+        "Axmedov, Baxtiyorjon Ravshanbek o'g'li"
+      ],
+      "year": 2025,
+      "author_names": [
+        {
+          "family": "Axmedov",
+          "given": "Baxtiyorjon",
+          "patronymic": "Ravshanbek o'g'li"
+        }
+      ],
+      "author_info": [
+        {
+          "org": "Andijon davlat universiteti",
+          "orcid": "0009-0001-6478-4452"
+        }
+      ],
+      "section": "Tilshunoslik",
+      "field": "Filologiya fanlari",
+      "date": "2025-07-31",
+      "journal_name": "NAMANGAN DAVLAT UNIVERSITETI ILMIY AXBOROTNOMASI",
+      "issue": "7",
+      "pages": "465-468",
+      "issn": "2181-0427",
+      "references": [
+        "Долгова, Т. А. Мультимодальные аспекты цифрового общения: эмодзи и стикеры как элементы прагматики. Вопросы когнитивной лингвистики. – 2021. 4(049), – 98–106 pp.",
+        "Шейгал, Е. И. Язык массмедиа как объект лингвистической экспертизы. Филология и человек. – 2018. №1, – 57–64 с.",
+        "Crystal, D. Language and the Internet (2nd ed.). Cambridge: Cambridge University Press. –2006. – 318 pp.",
+        "Daft, R. L., & Lengel, R. H. Organizational Information Requirements, Media Richness and Structural Design. Management Science. – 1986. 32(5), – 554–571 pp.",
+        "Herring, S. C. A Faceted Classification Scheme for Computer-Mediated Discourse. Language@Internet. –2007. – 4.",
+        "Jewitt, C. (Ed.). The Routledge Handbook of Multimodal Analysis (2nd ed.). NY: Routledge. – 2014. – 562 pp.",
+        "Androutsopoulos, J. (2008). Potentials and Limitations of Discourse-Centered Online Ethnography. Language@Internet. –2008. – 5.",
+        "https://lib.cspu.uz/index.php?do=download&id=14300"
+      ],
+      "references_auto": true,
+      "pdf": "telegram-muloqotining-lingvistik-xususiyatlari-va-noverbal-v-393e18.pdf",
+      "pdf_size": 645950,
+      "pdf_pages": 4,
+      "created": "2026-11-20"
+    },
+    {
       "pdf": "item-14d1bb.pdf",
       "pdf_size": 763692,
       "pdf_pages": 7,
