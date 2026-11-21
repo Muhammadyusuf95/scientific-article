@@ -19,6 +19,69 @@
   "collections": [],
   "articles": [
     {
+      "id": "yangi-onomastik-terminlar-lisoniy-shakl-va-konseptual-mazmun-c239bd",
+      "item_type": "konferensiya-maqolasi",
+      "language": "uz",
+      "title_uz": "Yangi onomastik terminlar: lisoniy shakl va konseptual mazmun",
+      "abstract_uz": "Ushbu maqola yangi onomastik terminlarni lisoniy shakl va konseptual mazmunning o‘zaro dialektik aloqasi prizmasi orqali kompleks tadqiq etishga bag‘ishlangan. Zamonaviy tilshunoslikda onomastik maydonning tobora kengayib borishi, yangi paydo bo‘layotgan nomlash hodisalarini tavsiflash uchun aniq terminologik apparatni shakllantirish zaruratini yuzaga keltirmoqda. Muallif mazkur terminlarning strukturaviy evolyutsiyasini tahlil qilar ekan, ularning yasalish mexanizmlari va ilmiy leksikaga integratsiyalashuv jarayonlarini yoritib beradi. Tadqiqotning asosiy qismi yangi onomastik birliklarning konseptual ko‘lamiga qaratilgan bo‘lib, unda termin shunchaki lisoniy qobiq emas, balki murakkab ijtimoiy-madaniy va kognitiv axborot tashuvchisi ekanligi asoslanadi.\r\nTerminning shakli va u ifodalaydigan mazmun o‘rtasidagi bog‘liqlikni o‘rganish orqali maqolada zamonaviy onomastikadagi paradigma o‘zgarishlari ko‘rsatib berilgan. Tadqiqot natijalari o‘zbek onomastik terminologiyasini tizimlashtirishga va nomlash jarayonlari jamiyat dinamikasini qanday aks ettirishini tushunishga xizmat qiladi",
+      "keywords_uz": [
+        "Onomastika",
+        "terminologiya",
+        "lisoniy shakl",
+        "konseptual mazmun",
+        "atoqli otlar",
+        "neologizmlar",
+        "kognitiv tilshunoslik",
+        "nomlash tizimlari",
+        "terminologik apparat",
+        "etnonimlar",
+        "toponimlar"
+      ],
+      "authors": [
+        "Sattarova, N",
+        "Xamidjanova, F"
+      ],
+      "year": 2026,
+      "author_names": [
+        {
+          "family": "Sattarova",
+          "given": "N"
+        },
+        {
+          "family": "Xamidjanova",
+          "given": "F"
+        }
+      ],
+      "author_info": [
+        {
+          "org": "Andijon davlat pedagogika isntituti"
+        },
+        {}
+      ],
+      "section": "Tilshunoslik",
+      "field": "Filologiya fanlari",
+      "conference_org": "ZAMONAVIY LINGVOPOETIKA VA LINGVOMADANIYATSHUNOSLIKNING DOLZARB MASALALARI",
+      "conference_place": "Farg'ona davlat universiteti",
+      "pages": "464-468",
+      "references": [
+        "McLuhan M. Understanding Media: The Extensions of Man. – New York: McGraw-Hill, 1964. – 359 p.",
+        "Маклюэн М. Галактика Гутенберга: Становление человека печатающего / Пер. с англ. И. Тюриной. – М.: Академический Проект, 2005. – 496 с.",
+        "Langacker R.W. Concept, Image, and Symbol: The Cognitive Basis of Grammar. – Berlin; New York: Mouton de Gruyter, 1991. – 395 p.",
+        "Кубрякова Е.С. Номинативный аспект речевой деятельности. – М.: Наука, 1986. – 156 с.",
+        "Березович Е.Л. Русская ономастика на стыке этнолингвистики и когнитивной лингвистики: промежуточные итоги // Вопросы ономастики. – 2010. – № 1(8). – С. 7–26.",
+        "Бегматов Э. Ўзбек исмлари маъноси. – Тошкент: Ўзбекистон миллий энциклопедияси, 2007. – 608 б.",
+        "Бегматов Э. Ўзбек тили антропонимикаси. – Тошкент: Фан, 2013. – 184 б.",
+        "Улуқов Н. Ўзбек тили ономастикаси терминолoгиясининг шаклланиши ва тараққиёти: Филол. фан. док. ... дисс. – Тошкент, 2009. – 320 б.",
+        "Madrahimov A. O‘zbek onomastikasi. – Toshkent: Mumtoz so‘z, 2017. – 164 b.",
+        "Sattarova N. O‘zbek tili godonimlarining lingvistik xususiyatlari (Andijon viloyati materiallari asosida): Filol. fan. bo‘yicha falsafa dok. (PhD) ... diss. – Andijon, 2024. – 154 b."
+      ],
+      "references_auto": true,
+      "pdf": "yangi-onomastik-terminlar-lisoniy-shakl-va-konseptual-mazmun-c239bd.pdf",
+      "pdf_size": 466036,
+      "pdf_pages": 5,
+      "created": "2026-11-21"
+    },
+    {
       "pdf": "telegram-muloqotining-lingvistik-xususiyatlari-va-noverbal-v-393e18.pdf",
       "pdf_size": 645950,
       "pdf_pages": 4,
