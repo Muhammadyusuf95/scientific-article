@@ -1,24 +1,35 @@
-YANGILANISHNI O'RNATISH (Google / Google Scholar moslashuvi)
+YANGILANISHNI O'RNATISH (Google Scholar tekshiruvidan keyingi tuzatishlar)
 
-1. Ushbu ZIP ni kompyuteringizda oching (Extract).
-2. GitHub'da scientific-article repozitoriysini oching: "Add file" -> "Upload files".
-3. Ochilgan papka ichidagi HAMMA narsani (build.js, README.md, favicon.ico, ORNATISH.txt
-   fayllari va functions, img, lib papkalarini) brauzer oynasiga sudrab tashlang.
-   GitHub papkalar tuzilishini saqlaydi, bor fayllarni almashtiradi, yangilarini qo'shadi.
-4. "Commit changes" ni bosing. Cloudflare 1-2 daqiqada saytni qayta quradi.
+NIMA O'ZGARDI
+  1. build.js
+     - Har bir maqola sahifasiga <meta name="citation_fulltext_world_readable" content=""> tegi qo'shildi
+       (Google Scholar: to'liq matn hammaga bepul ochiq ekanini bildiradi).
+     - Sarlavha va annotatsiyadagi ortiqcha bo'shliq / qator uzilishlari (\r\n) meta teglarda va JSON-LD da
+       tozalanadi (articles.json dagi asl matn o'zgarmaydi).
+  2. README.md - yangi imkoniyatlar yozildi.
+  3. articles.json (ixtiyoriy, pastga qarang) - faqat matndagi yozuv xatolari:
+     - "Ilmiy ishlar portalii" -> "Ilmiy ishlar portali" ("Open access" sahifasi)
+     - "“Boburnoma"da" -> "“Boburnoma”da" (sarlavhadagi aralash qo'shtirnoq)
+     - "oʻ rtasidagi", "bogʻ liqlik", "koʻ rib" kabi so'z ichidagi ortiqcha bo'shliq (oʻ, gʻ dan keyin)
+       "Fitonimlar xalq etnomadaniyati ifodasi sifatida" annotatsiyasi va adabiyotlar ro'yxatida
+     - Qirg'iz konferensiya nomidagi qo'sh bo'shliq
+  Boshqa hamma fayl (functions, js, css, lib, img, admin.html va h.k.) O'ZGARMAGAN, saytdagi barcha funksiyalar saqlanadi.
 
-ALMASHTIRILADIGAN fayllar:
-  build.js
-  README.md
-  functions/article/_middleware.js
+QANDAY O'RNATILADI
+  1. GitHub'da scientific-article repozitoriysini oching: "Add file" -> "Upload files".
+  2. Faqat build.js va README.md ni yuklang (bor fayllarni almashtiradi). "Commit changes" ni bosing.
+  3. articles.json: admin panel uni doimiy yangilab turadi, shuning uchun uni FAQAT saytga hali yangi
+     nashr qo'shmagan bo'lsangiz yuklang. Aks holda GitHub'dagi fayldan o'sha 7 ta tuzatishni qo'lda kiriting
+     (yoki admin panel orqali tahrirlang).
+  4. Cloudflare 1-2 daqiqada saytni qayta quradi.
 
-YANGI fayllar:
-  favicon.ico
-  img/favicon.svg, img/icon-48.png, img/icon-192.png, img/icon-512.png,
-  img/apple-touch-icon.png, img/og-default.png
-  lib/fulltext-clean.js
-
-Diqqat: articles.json ni YUKLAMANG va almashtirmang. Bu ZIP da u yo'q: saytdagi barcha
-ma'lumot (maqolalar, mualliflar) shu faylda, admin panel uni doimiy yangilab turadi.
-
-QO'SHIMCHA (izohlar): "Maqola matni"dagi PDF izohlari ("42 Дьякова...", "43 2.Ikromov...") adabiyotlar ro'yxatidagi manbaning nusxasi bo'lsa, sahifada ko'rsatilmaydi. Faqat lib/fulltext-clean.js va functions/article/_middleware.js o'zgardi.
+QO'LDA TEKSHIRISH KERAK (men o'zgartirmadim, chunki bu maqola mazmuni yoki PDF fayllariga tegishli)
+  - PDF birinchi betida sarlavha eng tepada bo'lishi kerak. "Fitonimlarni xalq etnomadaniyatining..." PDF sida
+    tepada universitet/nashriyot/konferensiya yozuvi, sarlavha undan keyin. Google Scholar sarlavhani birinchi qatorlardan
+    qidiradi. Imkoni bo'lsa, shu yozuvni PDF ning pastiga ko'chiring yoki PDF ning birinchi betiga sarlavhani tepaga qo'ying.
+  - "Namangan davlat universiteti ilmiy axborotnomasi" uchun ikki maqolada ikki xil ISSN kiritilgan:
+    2181-0427 va 2181-1458. Bitta jurnalning ISSN i bitta bo'lishi kerak. To'g'risini jurnal saytidan tekshiring.
+  - Usmanov maqolasida DOI "...pp210-216", betlar esa "211-216". Qaysi biri to'g'ri ekanini tekshiring.
+  - Muallif ismi turlicha: "Maxamadyusub", "Muhammadyusuf", "M.T.". Bitta odam bo'lsa, Google Scholar profilida
+    ularni birlashtirish osonroq bo'lishi uchun PDF dagi yozuvni bir xil qilish tavsiya etiladi.
+  - Saytda 8 nashr ko'rinadi, zip da esa 9 ta (Axmedov, "Telegram muloqoti..."). Zip saytdagidan yangiroq.

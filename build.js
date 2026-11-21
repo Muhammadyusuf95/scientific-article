@@ -88,7 +88,9 @@ const FIELD_LIST = Object.values(FIELDS).map((f) => ({ ...f, name: Object.entrie
 
 const lang = (a) => (LANGS.includes(a.language) ? a.language : 'uz');
 const first = (a, k) => a[k + '_' + lang(a)] || LANGS.map((l) => a[k + '_' + l]).find((v) => v && v.length);
-const title = (a) => first(a, 'title'), abstract = (a) => first(a, 'abstract'), kws = (a) => first(a, 'keywords') || [];
+// Matndagi ortiqcha bo'shliq va qator uzilishlari (PDF dan nusxalashdan qolgan) bir bo'shliqqa keltiriladi: meta teglar va JSON-LD toza chiqadi
+const tidy = (s) => (typeof s === 'string' ? s.replace(/\s+/g, ' ').trim() : s);
+const title = (a) => tidy(first(a, 'title')), abstract = (a) => tidy(first(a, 'abstract')), kws = (a) => first(a, 'keywords') || [];
 const order = (a) => [lang(a), ...LANGS.filter((l) => l !== lang(a))];
 const doi = (a) => (a.doi || '').replace(/^https?:\/\/(dx\.)?doi\.org\//i, '');
 const pdfPath = (a) => `/pdf/${encodeURIComponent(a.pdf)}`;
@@ -666,6 +668,8 @@ for (const a of A) {
     + meta('citation_doi', d) + meta('citation_issn', a.issn) + meta('citation_isbn', a.isbn) + meta('citation_language', L)
     + meta('citation_keywords', kws(a).join('; '))
     + meta('citation_abstract_html_url', url) + (scholarPdf(a) ? meta('citation_pdf_url', pdfUrl(a)) : '')
+    // Google Scholar: to'liq matn hammaga bepul ochiq ekanini bildiradigan mashina o'qiydigan belgi (qiymati bo'sh bo'ladi)
+    + (a.pdf ? '<meta name="citation_fulltext_world_readable" content="">\n' : '')
     + refs.map((r) => meta('citation_reference', r)).join('')
     // Dublin Core (boshqa indeksatorlar uchun)
     + `<link rel="schema.DC" href="http://purl.org/dc/elements/1.1/">\n`
